@@ -12,10 +12,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
+import com.example.induztek_ingeniera_app.data.ProtocoloDbHelper
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // TEMPORAL (Paso 6): abre la BD una vez para que se cree y poder revisarla.
+        ProtocoloDbHelper(this).readableDatabase
         enableEdgeToEdge()
         setContent {
             InduztekTheme {
@@ -29,6 +32,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
 
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {

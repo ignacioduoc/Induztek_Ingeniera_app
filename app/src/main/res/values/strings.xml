@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    res/values/strings.xml: TEXTOS de la app.
+    Buena práctica: no escribir textos "en duro" en el código.
+    En Compose se leen con stringResource(R.string.nombre).
+    Ventaja: traducir la app = crear values-en/strings.xml con los mismos nombres.
+-->
+<resources>
+    <string name="app_name">Induztek Protocolos</string>
+
+    <!-- Descripciones para accesibilidad (TalkBack) -->
+    <string name="cd_mostrar_contrasena">Mostrar contraseña</string>
+    <string name="cd_ocultar_contrasena">Ocultar contraseña</string>
+    <string name="cd_volver">Volver</string>
+    <string name="cd_menu">Abrir menú</string>
+</resources>

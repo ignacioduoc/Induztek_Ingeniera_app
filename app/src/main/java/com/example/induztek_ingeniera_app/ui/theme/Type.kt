@@ -1,0 +1,43 @@
+package com.example.induztek_ingeniera_app.ui.theme
+
+import androidx.compose.material3.Typography
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+
+// =====================================================================
+//  Type.kt  —  TIPOGRAFÍA (equivale a font-family / font-size en CSS)
+//  ---------------------------------------------------------------------
+//  Material 3 define "roles" de texto: titleLarge, bodyMedium, labelLarge...
+//  Aquí solo sobrescribimos los que usamos; el resto queda por defecto.
+//  Los botones usan automáticamente el rol "labelLarge".
+//  Unidad "sp": como "dp" pero respeta el tamaño de letra del usuario.
+// =====================================================================
+
+val Tipografia = Typography(
+    titleLarge = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.Bold,
+        fontSize = 24.sp,
+        lineHeight = 30.sp
+    ),
+    titleMedium = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 17.sp,
+        lineHeight = 22.sp
+    ),
+    bodyMedium = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.Normal,
+        fontSize = 15.sp,
+        lineHeight = 21.sp
+    ),
+    labelLarge = TextStyle(             // <- texto de TODOS los botones
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 15.sp,
+        letterSpacing = 0.3.sp
+    )
+)

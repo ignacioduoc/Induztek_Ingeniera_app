@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import com.example.induztek_ingeniera_app.data.ProtocoloRepository
 import com.example.induztek_ingeniera_app.model.Equipo
+import com.example.induztek_ingeniera_app.model.Protocolo
 import com.example.induztek_ingeniera_app.model.Usuario
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,8 +16,9 @@ import kotlinx.coroutines.flow.asStateFlow
 //  Igual que el UsuariosViewModel del profe: se crea en AppNavegacion,
 //  FUERA del NavHost. Así sobrevive a los cambios de pantalla y todas
 //  las pantallas ven los mismos datos.
-//  Guarda quién inició sesión y la lista de equipos; en los próximos
-//  pasos se le suman los protocolos.
+//  Guarda quién inició sesión y la lista de equipos, y guarda en la BD
+//  los protocolos nuevos. En los próximos pasos se suman las listas
+//  de protocolos.
 // =====================================================================
 
 class ProtocolosViewModel(application: Application) : AndroidViewModel(application) {
@@ -38,6 +40,14 @@ class ProtocolosViewModel(application: Application) : AndroidViewModel(applicati
     // (La sesión ya la guardó el Repository al comprobar el usuario.)
     fun registrarIngreso(usuario: Usuario) {
         _usuarioActual.value = usuario
+    }
+
+    // Para el formulario: el equipo que se va a probar (READ por su id)
+    fun obtenerEquipo(id: Long): Equipo? = repositorio.buscarEquipo(id)
+
+    // INSERT: el protocolo nuevo que armó el formulario
+    fun guardarProtocolo(protocolo: Protocolo) {
+        repositorio.guardarProtocolo(protocolo)
     }
 
     fun cerrarSesion() {

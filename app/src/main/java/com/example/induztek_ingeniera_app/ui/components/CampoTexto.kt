@@ -31,6 +31,7 @@ import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
 // =====================================================================
 
 /**
+ * @param icono      ícono de la izquierda (R.drawable.xxx), o null si no lleva.
  * @param error      mensaje de error bajo el campo; null = sin error.
  * @param tipoTeclado Text, Email, Number, Phone... (cambia el teclado del celular)
  */
@@ -39,7 +40,8 @@ fun CampoTexto(
     valor: String,
     onValorCambia: (String) -> Unit,
     etiqueta: String,
-    @DrawableRes icono: Int,
+    // CAMBIO (Ícono opcional): igual que el ícono de BotonPrincipal del profe
+    @DrawableRes icono: Int? = null,
     modifier: Modifier = Modifier,
     error: String? = null,
     tipoTeclado: KeyboardType = KeyboardType.Text
@@ -49,12 +51,18 @@ fun CampoTexto(
         onValueChange = onValorCambia,
         modifier = modifier.fillMaxWidth(),
         label = { Text(etiqueta) },                       // texto flotante (como <label>)
-        leadingIcon = {                                   // ícono a la izquierda
-            Icon(
-                painter = painterResource(id = icono),
-                contentDescription = null,
-                modifier = Modifier.size(Dimens.tamanoIcono)
-            )
+        // CAMBIO (Ícono opcional): si hay ícono se pasa la función que lo dibuja;
+        // si no hay (null), el campo no deja un espacio vacío a la izquierda.
+        leadingIcon = if (icono != null) {
+            {                                             // ícono a la izquierda
+                Icon(
+                    painter = painterResource(id = icono),
+                    contentDescription = null,
+                    modifier = Modifier.size(Dimens.tamanoIcono)
+                )
+            }
+        } else {
+            null
         },
         // NUEVO (Ícono de error): lo pide la pauta. Solo aparece cuando hay error
         // y Material lo pinta rojo solo, porque el campo está en estado de error.
@@ -84,7 +92,7 @@ fun CampoTexto(
 private fun CampoTextoPreview() {
     InduztekTheme {
         CampoTexto(
-            valor = "ana@",
+            valor = "tecnico@",
             onValorCambia = {},
             etiqueta = "Correo electrónico",
             icono = R.drawable.ic_correo,

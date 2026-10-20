@@ -29,6 +29,24 @@
     <string name="indicacion_equipos">Toca un equipo para registrar una nueva prueba.</string>
     <string name="lista_vacia_equipos">No hay equipos registrados</string>
 
+    <!-- Pantalla 3: Nuevo protocolo (formulario del técnico) -->
+    <string name="titulo_nuevo_protocolo">Nuevo protocolo</string>
+    <string name="seccion_equipo">Equipo</string>
+    <string name="fecha_hora">Fecha y hora: %1$s</string>
+    <string name="seccion_prueba">Prueba</string>
+    <string name="campo_tipo_prueba">Tipo de prueba</string>
+    <string name="seccion_mediciones">Mediciones</string>
+
+    <!-- MEDICIÓN: nombre de cada medición (lo que se ve en el formulario) -->
+    <string name="campo_at_bt">AT – BT (GΩ)</string>
+    <string name="campo_at_tierra">AT – Tierra (GΩ)</string>
+    <string name="campo_bt_tierra">BT – Tierra (GΩ)</string>
+    <string name="campo_indice_pol">Índice de polarización</string>
+    <string name="seccion_resultado">Resultado</string>
+    <string name="campo_observaciones">Observaciones</string>
+    <string name="btn_guardar_protocolo">Guardar protocolo</string>
+    <string name="protocolo_guardado">Protocolo guardado: el cliente ya puede verlo.</string>
+
     <!-- Pantalla 4: Inicio del cliente -->
     <string name="titulo_inicio_cliente">Mis protocolos</string>
 

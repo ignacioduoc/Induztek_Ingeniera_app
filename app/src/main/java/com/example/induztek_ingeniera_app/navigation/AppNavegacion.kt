@@ -5,14 +5,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.induztek_ingeniera_app.model.Rol
 import com.example.induztek_ingeniera_app.model.Usuario
 import com.example.induztek_ingeniera_app.ui.screens.InicioClienteScreen
 import com.example.induztek_ingeniera_app.ui.screens.InicioTecnicoScreen
 import com.example.induztek_ingeniera_app.ui.screens.LoginScreen
+import com.example.induztek_ingeniera_app.ui.screens.NuevoProtocoloScreen
 import com.example.induztek_ingeniera_app.viewmodel.ProtocolosViewModel
 
 // =====================================================================
@@ -31,6 +34,10 @@ import com.example.induztek_ingeniera_app.viewmodel.ProtocolosViewModel
 //  Navegación por ROL: después del login, el técnico va a "inicio_tecnico"
 //  y el cliente a "inicio_cliente". Si quedó una sesión guardada, la app
 //  parte directo en la pantalla de inicio de ese usuario.
+//
+//  Dos formas de pasar datos en esta app (igual que en la app del profe):
+//    1) ViewModel compartido -> todas las pantallas (usuarioActual, equipos)
+//    2) Argumento de ruta    -> Equipos -> Nuevo protocolo (el id del equipo)
 // =====================================================================
 
 @Composable
@@ -64,6 +71,8 @@ fun AppNavegacion() {
             InicioTecnicoScreen(
                 usuario = usuarioActual,
                 equipos = equipos,                  // la lista viene del compartido
+                // "nuevo_protocolo/1" -> el id del equipo VIAJA en la ruta
+                onNuevaPrueba = { idEquipo -> navController.navigate(Ruta.NuevoProtocolo.crear(idEquipo)) },
                 onCerrarSesion = {
                     protocolosViewModel.cerrarSesion()
                     navController.navigate(Ruta.Login.ruta) {
@@ -71,6 +80,25 @@ fun AppNavegacion() {
                     }
                 }
             )
+        }
+
+        // Ruta con argumento: navArgument declara el "hueco" {idEquipo} y su tipo (Long);
+        // al llegar se LEE desde la entrada del historial.
+        composable(
+            route = Ruta.NuevoProtocolo.ruta,
+            arguments = listOf(navArgument("idEquipo") { type = NavType.LongType })
+        ) { entrada ->
+            val idEquipo = entrada.arguments?.getLong("idEquipo") ?: 0L     // dato recibido
+            val equipo = remember(idEquipo) { protocolosViewModel.obtenerEquipo(idEquipo) }
+            val tecnico = usuarioActual
+            if (equipo != null && tecnico != null) {
+                NuevoProtocoloScreen(
+                    equipo = equipo,
+                    tecnicoId = tecnico.id,
+                    onGuardar = { protocolo -> protocolosViewModel.guardarProtocolo(protocolo) },  // INSERT
+                    onVolver = { navController.navigateUp() }
+                )
+            }
         }
 
         composable(Ruta.InicioCliente.ruta) {

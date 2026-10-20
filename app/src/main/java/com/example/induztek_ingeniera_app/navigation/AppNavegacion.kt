@@ -13,6 +13,7 @@ import androidx.navigation.navArgument
 import com.example.induztek_ingeniera_app.model.Rol
 import com.example.induztek_ingeniera_app.model.Usuario
 import com.example.induztek_ingeniera_app.ui.screens.DetalleProtocoloScreen
+import com.example.induztek_ingeniera_app.ui.screens.HistorialScreen
 import com.example.induztek_ingeniera_app.ui.screens.InicioClienteScreen
 import com.example.induztek_ingeniera_app.ui.screens.InicioTecnicoScreen
 import com.example.induztek_ingeniera_app.ui.screens.LoginScreen
@@ -40,6 +41,7 @@ import com.example.induztek_ingeniera_app.viewmodel.ProtocolosViewModel
 //    1) ViewModel compartido -> todas las pantallas (usuarioActual, equipos, protocolos)
 //    2) Argumento de ruta    -> Equipos -> Nuevo protocolo (el id del equipo)
 //                               Mis protocolos -> Detalle (el id del protocolo)
+//                               Equipos / Detalle -> Historial (el id del equipo)
 // =====================================================================
 
 @Composable
@@ -76,6 +78,8 @@ fun AppNavegacion() {
                 equipos = equipos,                  // la lista viene del compartido
                 // "nuevo_protocolo/1" -> el id del equipo VIAJA en la ruta
                 onNuevaPrueba = { idEquipo -> navController.navigate(Ruta.NuevoProtocolo.crear(idEquipo)) },
+                // Ícono del gráfico -> "historial/1"
+                onVerHistorial = { idEquipo -> navController.navigate(Ruta.Historial.crear(idEquipo)) },
                 onCerrarSesion = {
                     protocolosViewModel.cerrarSesion()
                     navController.navigate(Ruta.Login.ruta) {
@@ -86,7 +90,7 @@ fun AppNavegacion() {
         }
 
         // Ruta con argumento: navArgument declara el "hueco" {idEquipo} y su tipo (Long);
-        // al llegar se LEE desde la entrada del historial.
+        // al llegar se LEE desde la "entrada" (la pantalla guardada en el back stack).
         composable(
             route = Ruta.NuevoProtocolo.ruta,
             arguments = listOf(navArgument("idEquipo") { type = NavType.LongType })
@@ -134,6 +138,26 @@ fun AppNavegacion() {
                         protocolosViewModel.formalizar(protocolo.id)              // UPDATE
                         navController.navigateUp()
                     },
+                    // El id del equipo viene dentro del protocolo (columna id_equipo)
+                    onVerHistorial = { navController.navigate(Ruta.Historial.crear(protocolo.equipoId)) },
+                    onVolver = { navController.navigateUp() }
+                )
+            }
+        }
+
+        // Historial de UN equipo: se lee el equipo y sus pruebas (READ) una sola vez.
+        // Llegan aquí el técnico (ícono del gráfico) y el cliente (botón del detalle).
+        composable(
+            route = Ruta.Historial.ruta,
+            arguments = listOf(navArgument("idEquipo") { type = NavType.LongType })
+        ) { entrada ->
+            val idEquipo = entrada.arguments?.getLong("idEquipo") ?: 0L
+            val equipo = remember(idEquipo) { protocolosViewModel.obtenerEquipo(idEquipo) }
+            val historial = remember(idEquipo) { protocolosViewModel.historialDe(idEquipo) }
+            if (equipo != null) {
+                HistorialScreen(
+                    equipo = equipo,
+                    historial = historial,
                     onVolver = { navController.navigateUp() }
                 )
             }

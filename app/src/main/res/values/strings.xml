@@ -36,7 +36,7 @@
     <string name="seccion_prueba">Prueba</string>
     <string name="campo_tipo_prueba">Tipo de prueba</string>
     <string name="seccion_mediciones">Mediciones</string>
-    <!-- MEDICIÓN: nombre de cada medición (lo que se ve en el formulario y en el detalle) -->
+    <!-- MEDICIÓN: nombre de cada medición (se ve en el formulario, el detalle y el historial) -->
     <string name="campo_at_bt">AT – BT (GΩ)</string>
     <string name="campo_at_tierra">AT – Tierra (GΩ)</string>
     <string name="campo_bt_tierra">BT – Tierra (GΩ)</string>
@@ -64,13 +64,20 @@
     <!-- Pantalla 5: Detalle del protocolo (cliente) -->
     <string name="titulo_detalle">Detalle del protocolo</string>
     <string name="tecnico_nombre">Técnico: %1$s</string>
-    <!-- MEDICIÓN: el valor con 1 decimal (13.1 -> "13,1" en un teléfono en español) -->
-    <string name="formato_medicion">%1$.1f</string>
     <string name="observaciones_detalle">Observaciones: %1$s</string>
     <string name="sin_foto">Este protocolo no tiene foto de evidencia.</string>
+    <string name="btn_historial">Ver historial del equipo</string>
     <string name="btn_formalizar">Formalizar protocolo</string>
     <string name="dialogo_formalizar_titulo">¿Formalizar el protocolo?</string>
     <string name="dialogo_formalizar_mensaje">Das tu conformidad con la prueba del equipo %1$s. Esto no se puede deshacer.</string>
+
+    <!-- Pantalla 6: Historial del equipo (gráfico de comparación) -->
+    <string name="titulo_historial">Historial del equipo</string>
+    <string name="seccion_grafico">Comparación de pruebas</string>
+    <string name="campo_medicion">Medición</string>
+    <string name="leyenda_grafico">Últimas 6 pruebas, de la más antigua (izquierda) a la más nueva (derecha). El color de cada barra es su resultado.</string>
+    <string name="seccion_pruebas">Pruebas registradas</string>
+    <string name="sin_pruebas">Este equipo todavía no tiene pruebas registradas.</string>
 
     <!-- Descripciones para accesibilidad (TalkBack) -->
     <string name="cd_mostrar_contrasena">Mostrar contraseña</string>

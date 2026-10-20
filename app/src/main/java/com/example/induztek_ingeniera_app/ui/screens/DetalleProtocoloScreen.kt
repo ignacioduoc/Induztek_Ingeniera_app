@@ -37,11 +37,13 @@ import com.example.induztek_ingeniera_app.model.EstadoProtocolo
 import com.example.induztek_ingeniera_app.model.Protocolo
 import com.example.induztek_ingeniera_app.model.Resultado
 import com.example.induztek_ingeniera_app.ui.components.BotonPrincipal
+import com.example.induztek_ingeniera_app.ui.components.BotonSecundario
 import com.example.induztek_ingeniera_app.ui.components.EtiquetaEstado
 import com.example.induztek_ingeniera_app.ui.components.FotoEvidencia
 import com.example.induztek_ingeniera_app.ui.components.TarjetaSeccion
 import com.example.induztek_ingeniera_app.ui.components.colorDe
 import com.example.induztek_ingeniera_app.ui.formatearFecha
+import com.example.induztek_ingeniera_app.ui.formatearMedicion
 import com.example.induztek_ingeniera_app.ui.theme.Dimens
 import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
 
@@ -50,6 +52,7 @@ import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
 //  ---------------------------------------------------------------------
 //  Muestra el protocolo completo leído de la BD (con JOIN): equipo, prueba,
 //  técnico, mediciones, resultado, estado y la foto de evidencia.
+//  Botón "Ver historial del equipo" = compara con las pruebas anteriores.
 //  Botón "Formalizar protocolo" = UPDATE del estado. Antes pide confirmación
 //  con un AlertDialog (igual que "Eliminar" en la lista del profe), porque
 //  no se puede deshacer. Si ya está formalizado, el botón queda bloqueado.
@@ -61,6 +64,7 @@ import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
 fun DetalleProtocoloScreen(
     protocolo: Protocolo,
     onFormalizar: () -> Unit,
+    onVerHistorial: () -> Unit,
     onVolver: () -> Unit
 ) {
     // ¿Se muestra el diálogo "¿Formalizar el protocolo?"? Es estado de la pantalla.
@@ -170,6 +174,13 @@ fun DetalleProtocoloScreen(
                 }
             }
 
+            // Comparar con las pruebas anteriores del mismo equipo (lo pide el caso)
+            BotonSecundario(
+                texto = stringResource(R.string.btn_historial),
+                onClick = onVerHistorial,
+                modifier = Modifier.fillMaxWidth()
+            )
+
             // Solo se puede formalizar si está "Registrado en terreno";
             // si ya está formalizado, el botón queda bloqueado (gris).
             BotonPrincipal(
@@ -195,8 +206,8 @@ private fun FilaMedicion(etiqueta: String, valor: Double) {
     ) {
         Text(text = etiqueta, style = MaterialTheme.typography.bodyMedium)
         Text(
-            // "%1$.1f" -> el número con 1 decimal (13.1 se ve "13,1" en un teléfono en español)
-            text = stringResource(R.string.formato_medicion, valor),
+            // 13.1 -> "13,1" (Formatos.kt: el mismo formato que usa el gráfico)
+            text = formatearMedicion(valor),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold
         )
@@ -214,15 +225,15 @@ private val protocoloPreview = Protocolo(
     instalacion = "Planta Lampa · S/E-02", nombreTecnico = "Matías Rojas"
 )
 
-@Preview(showBackground = true, heightDp = 1100)
+@Preview(showBackground = true, heightDp = 1200)
 @Composable
 private fun DetalleRegistradoPreview() {
     InduztekTheme {
-        DetalleProtocoloScreen(protocolo = protocoloPreview, onFormalizar = {}, onVolver = {})
+        DetalleProtocoloScreen(protocolo = protocoloPreview, onFormalizar = {}, onVerHistorial = {}, onVolver = {})
     }
 }
 
-@Preview(showBackground = true, heightDp = 1100, name = "Ya formalizado")
+@Preview(showBackground = true, heightDp = 1200, name = "Ya formalizado")
 @Composable
 private fun DetalleFormalizadoPreview() {
     InduztekTheme {
@@ -233,6 +244,7 @@ private fun DetalleFormalizadoPreview() {
                 estado = EstadoProtocolo.FORMALIZADO
             ),
             onFormalizar = {},
+            onVerHistorial = {},
             onVolver = {}
         )
     }

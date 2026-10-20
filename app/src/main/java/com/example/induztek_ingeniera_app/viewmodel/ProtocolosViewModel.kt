@@ -60,7 +60,7 @@ class ProtocolosViewModel(application: Application) : AndroidViewModel(applicati
         recargar()
     }
 
-    // Para el formulario: el equipo que se va a probar (READ por su id)
+    // Para el formulario y el historial: el equipo (READ por su id)
     fun obtenerEquipo(id: Long): Equipo? = repositorio.buscarEquipo(id)
 
     // INSERT: el protocolo nuevo que armó el formulario
@@ -71,6 +71,9 @@ class ProtocolosViewModel(application: Application) : AndroidViewModel(applicati
 
     // Para el detalle: el protocolo tocado en la lista (READ por su id, con JOIN)
     fun obtenerProtocolo(id: Long): Protocolo? = repositorio.buscarProtocolo(id)
+
+    // Para el historial: todas las pruebas de UN equipo, de la más nueva a la más antigua
+    fun historialDe(equipoId: Long): List<Protocolo> = repositorio.historialDeEquipo(equipoId)
 
     // UPDATE: el cliente da su conformidad y el estado pasa a FORMALIZADO.
     // Después se recarga la lista para que el chip cambie de color.

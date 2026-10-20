@@ -10,9 +10,10 @@ package com.example.induztek_ingeniera_app.navigation
 //  Si escribo navigate("inicio_tecnco") por error, compila y la app falla.
 //  Con Ruta.InicioTecnico.ruta el compilador revisa el nombre por nosotros.
 //
-//  Rutas CON ARGUMENTO: "nuevo_protocolo/{idEquipo}" y
-//  "detalle_protocolo/{idProtocolo}". Lo que va entre { } es un "hueco"
-//  que se rellena al navegar: "nuevo_protocolo/1", "detalle_protocolo/5".
+//  Rutas CON ARGUMENTO: "nuevo_protocolo/{idEquipo}",
+//  "detalle_protocolo/{idProtocolo}" e "historial/{idEquipo}".
+//  Lo que va entre { } es un "hueco" que se rellena al navegar:
+//  "nuevo_protocolo/1", "detalle_protocolo/5", "historial/1".
 //  Así el dato (qué equipo o qué protocolo) viaja DENTRO de la ruta.
 // =====================================================================
 
@@ -29,5 +30,10 @@ sealed class Ruta(val ruta: String) {
     // crear(5) -> "detalle_protocolo/5"  (igual que "editar/{id}" del profe)
     data object DetalleProtocolo : Ruta("detalle_protocolo/{idProtocolo}") {
         fun crear(idProtocolo: Long) = "detalle_protocolo/$idProtocolo"
+    }
+
+    // crear(1) -> "historial/1"  (el historial de UN equipo)
+    data object Historial : Ruta("historial/{idEquipo}") {
+        fun crear(idEquipo: Long) = "historial/$idEquipo"
     }
 }

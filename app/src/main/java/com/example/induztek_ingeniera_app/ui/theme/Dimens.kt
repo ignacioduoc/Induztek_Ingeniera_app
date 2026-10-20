@@ -36,8 +36,8 @@ object Dimens {
 
     // Imágenes
     val altoBanner = 200.dp
-    val altoPortada = 180.dp
+    val altoFoto = 180.dp       // CAMBIO (Foto de evidencia): antes se llamaba altoPortada
     val tamanoAvatar = 120.dp
-    val bordeAvatar = 4.dp
+    val bordeFoto = 4.dp        // CAMBIO (Foto de evidencia): antes se llamaba bordeAvatar
     val tamanoIcono = 20.dp
 }

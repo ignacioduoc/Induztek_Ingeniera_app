@@ -29,14 +29,19 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     // Público y de solo lectura: la pantalla lo observa
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
-    // Cada letra escrita llega aquí. Se borra el error de ese campo y el de
-    // credenciales, porque el usuario está corrigiendo.
+    // Cada letra escrita llega aquí. Se borran los errores y el resultado anterior,
+    // porque el usuario está corrigiendo (como registroExitoso = false en el
+    // FormularioViewModel del profe).
     fun onCorreoCambia(valor: String) {
-        _uiState.update { it.copy(correo = valor.trim(), errorCorreo = null, errorCredenciales = null) }
+        _uiState.update {
+            it.copy(correo = valor.trim(), errorCorreo = null, errorCredenciales = null, usuarioIngresado = null)
+        }
     }
 
     fun onContrasenaCambia(valor: String) {
-        _uiState.update { it.copy(contrasena = valor, errorContrasena = null, errorCredenciales = null) }
+        _uiState.update {
+            it.copy(contrasena = valor, errorContrasena = null, errorCredenciales = null, usuarioIngresado = null)
+        }
     }
 
     fun onAlternarVisibilidad() {

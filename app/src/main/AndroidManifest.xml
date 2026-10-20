@@ -2,6 +2,21 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" >
 
+    <!-- Permisos: PASO 1 de 4 -> DECLARAR lo que la app necesita.
+         Sin esta línea, Android NI SIQUIERA muestra el diálogo al pedir el permiso. -->
+
+    <!-- Cámara: permiso PELIGROSO (dangerous): además de declararlo
+         hay que PEDIRLO al usuario mientras la app se ejecuta.
+         Se usa para la foto de evidencia del protocolo. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Cámara: la app USA la cámara, pero no es obligatoria (required="false").
+         Al declarar el permiso CAMERA, Google Play supondría que la cámara es obligatoria
+         y ocultaría la app en equipos sin cámara. Esta línea lo evita. -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"

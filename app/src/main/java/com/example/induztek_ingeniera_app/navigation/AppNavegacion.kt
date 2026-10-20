@@ -12,6 +12,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.induztek_ingeniera_app.model.Rol
 import com.example.induztek_ingeniera_app.model.Usuario
+import com.example.induztek_ingeniera_app.ui.screens.DetalleProtocoloScreen
 import com.example.induztek_ingeniera_app.ui.screens.InicioClienteScreen
 import com.example.induztek_ingeniera_app.ui.screens.InicioTecnicoScreen
 import com.example.induztek_ingeniera_app.ui.screens.LoginScreen
@@ -36,18 +37,20 @@ import com.example.induztek_ingeniera_app.viewmodel.ProtocolosViewModel
 //  parte directo en la pantalla de inicio de ese usuario.
 //
 //  Dos formas de pasar datos en esta app (igual que en la app del profe):
-//    1) ViewModel compartido -> todas las pantallas (usuarioActual, equipos)
+//    1) ViewModel compartido -> todas las pantallas (usuarioActual, equipos, protocolos)
 //    2) Argumento de ruta    -> Equipos -> Nuevo protocolo (el id del equipo)
+//                               Mis protocolos -> Detalle (el id del protocolo)
 // =====================================================================
 
 @Composable
 fun AppNavegacion() {
     val navController = rememberNavController()
 
-    // ViewModel compartido y el usuario con sesión iniciada
+    // ViewModel compartido y lo que muestran las pantallas
     val protocolosViewModel: ProtocolosViewModel = viewModel()
     val usuarioActual by protocolosViewModel.usuarioActual.collectAsStateWithLifecycle()
     val equipos by protocolosViewModel.equipos.collectAsStateWithLifecycle()
+    val protocolos by protocolosViewModel.protocolos.collectAsStateWithLifecycle()
 
     // La pantalla inicial se decide UNA sola vez, al abrir la app
     val rutaInicial = remember { rutaDeInicio(usuarioActual) }
@@ -104,13 +107,36 @@ fun AppNavegacion() {
         composable(Ruta.InicioCliente.ruta) {
             InicioClienteScreen(
                 usuario = usuarioActual,
+                protocolos = protocolos,            // la lista viene del compartido
                 onCerrarSesion = {
                     protocolosViewModel.cerrarSesion()
                     navController.navigate(Ruta.Login.ruta) {
                         popUpTo(Ruta.InicioCliente.ruta) { inclusive = true }
                     }
-                }
+                },
+                // "detalle_protocolo/5" -> el id del protocolo VIAJA en la ruta
+                onVerProtocolo = { idProtocolo -> navController.navigate(Ruta.DetalleProtocolo.crear(idProtocolo)) }
             )
+        }
+
+        // Igual que la ruta "Editar" del profe: se lee el id, se busca en la BD y,
+        // después del UPDATE, se vuelve atrás a la lista (que ya se recargó).
+        composable(
+            route = Ruta.DetalleProtocolo.ruta,
+            arguments = listOf(navArgument("idProtocolo") { type = NavType.LongType })
+        ) { entrada ->
+            val idProtocolo = entrada.arguments?.getLong("idProtocolo") ?: 0L
+            val protocolo = remember(idProtocolo) { protocolosViewModel.obtenerProtocolo(idProtocolo) }
+            if (protocolo != null) {
+                DetalleProtocoloScreen(
+                    protocolo = protocolo,
+                    onFormalizar = {
+                        protocolosViewModel.formalizar(protocolo.id)              // UPDATE
+                        navController.navigateUp()
+                    },
+                    onVolver = { navController.navigateUp() }
+                )
+            }
         }
     }
 }

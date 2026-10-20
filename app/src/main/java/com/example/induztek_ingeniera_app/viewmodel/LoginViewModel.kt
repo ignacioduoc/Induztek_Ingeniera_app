@@ -83,6 +83,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         return usuario
     }
 
+
     // Al destruirse el ViewModel se cierra la conexión con la BD
     override fun onCleared() {
         repositorio.cerrar()

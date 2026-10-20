@@ -15,7 +15,20 @@
     <string name="campo_contrasena">Contraseña</string>
     <string name="btn_ingresar">Ingresar</string>
     <string name="nota_login">La app reconoce si eres técnico o cliente según tu cuenta y te muestra tus pantallas.</string>
+
+    <!-- Pantallas de inicio (técnico y cliente): saludo y menú para cerrar sesión -->
     <string name="saludo">Hola, %1$s</string>
+    <string name="rol_empresa">%1$s · %2$s</string>
+    <string name="menu_cerrar_sesion">Cerrar sesión</string>
+    <string name="dialogo_titulo">¿Cerrar sesión?</string>
+    <string name="dialogo_mensaje">Tendrás que ingresar de nuevo con tu correo y contraseña.</string>
+    <string name="dialogo_cancelar">Cancelar</string>
+
+    <!-- Pantalla 2: Inicio del técnico -->
+    <string name="titulo_inicio_tecnico">Equipos</string>
+
+    <!-- Pantalla 4: Inicio del cliente -->
+    <string name="titulo_inicio_cliente">Mis protocolos</string>
 
     <!-- Descripciones para accesibilidad (TalkBack) -->
     <string name="cd_mostrar_contrasena">Mostrar contraseña</string>

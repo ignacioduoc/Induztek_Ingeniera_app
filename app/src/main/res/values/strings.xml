@@ -8,6 +8,15 @@
 <resources>
     <string name="app_name">Induztek Protocolos</string>
 
+    <!-- Pantalla 1: Inicio de sesión -->
+    <string name="titulo_login">Protocolos en Terreno</string>
+    <string name="subtitulo_login">Ingresa con tu cuenta</string>
+    <string name="campo_correo">Correo electrónico</string>
+    <string name="campo_contrasena">Contraseña</string>
+    <string name="btn_ingresar">Ingresar</string>
+    <string name="nota_login">La app reconoce si eres técnico o cliente según tu cuenta y te muestra tus pantallas.</string>
+    <string name="saludo">Hola, %1$s</string>
+
     <!-- Descripciones para accesibilidad (TalkBack) -->
     <string name="cd_mostrar_contrasena">Mostrar contraseña</string>
     <string name="cd_ocultar_contrasena">Ocultar contraseña</string>

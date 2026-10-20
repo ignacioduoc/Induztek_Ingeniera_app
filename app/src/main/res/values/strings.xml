@@ -26,6 +26,8 @@
 
     <!-- Pantalla 2: Inicio del técnico -->
     <string name="titulo_inicio_tecnico">Equipos</string>
+    <string name="indicacion_equipos">Toca un equipo para registrar una nueva prueba.</string>
+    <string name="lista_vacia_equipos">No hay equipos registrados</string>
 
     <!-- Pantalla 4: Inicio del cliente -->
     <string name="titulo_inicio_cliente">Mis protocolos</string>
@@ -35,4 +37,5 @@
     <string name="cd_ocultar_contrasena">Ocultar contraseña</string>
     <string name="cd_volver">Volver</string>
     <string name="cd_menu">Abrir menú</string>
+    <string name="cd_historial">Ver historial del equipo</string>
 </resources>

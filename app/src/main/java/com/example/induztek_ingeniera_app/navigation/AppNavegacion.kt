@@ -40,6 +40,7 @@ fun AppNavegacion() {
     // ViewModel compartido y el usuario con sesión iniciada
     val protocolosViewModel: ProtocolosViewModel = viewModel()
     val usuarioActual by protocolosViewModel.usuarioActual.collectAsStateWithLifecycle()
+    val equipos by protocolosViewModel.equipos.collectAsStateWithLifecycle()
 
     // La pantalla inicial se decide UNA sola vez, al abrir la app
     val rutaInicial = remember { rutaDeInicio(usuarioActual) }
@@ -62,6 +63,7 @@ fun AppNavegacion() {
         composable(Ruta.InicioTecnico.ruta) {
             InicioTecnicoScreen(
                 usuario = usuarioActual,
+                equipos = equipos,                  // la lista viene del compartido
                 onCerrarSesion = {
                     protocolosViewModel.cerrarSesion()
                     navController.navigate(Ruta.Login.ruta) {

@@ -5,6 +5,8 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.induztek_ingeniera_app.data.dao.ProtocoloDao
+import com.example.induztek_ingeniera_app.data.dao.UsuarioDao
 import com.example.induztek_ingeniera_app.data.entities.*
 import java.util.concurrent.Executors
 
@@ -15,7 +17,8 @@ import java.util.concurrent.Executors
 )
 abstract class AppDatabase : RoomDatabase() {
 
-    // Aquí irán tus DAOs más adelante
+    abstract fun usuarioDao(): UsuarioDao
+    abstract fun protocoloDao(): ProtocoloDao
 
     companion object {
         @Volatile

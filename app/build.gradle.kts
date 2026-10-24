@@ -57,4 +57,9 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
     // NUEVO (Navegación): NavHost, composable() y rememberNavController() para cambiar de pantalla
     implementation("androidx.navigation:navigation-compose:2.10.2")
+
+    // NUEVO: Implementación de Room Database
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+    annotationProcessor("androidx.room:room-compiler:2.6.1")
 }

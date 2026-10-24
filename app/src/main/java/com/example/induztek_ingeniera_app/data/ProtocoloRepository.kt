@@ -1,9 +1,11 @@
 package com.example.induztek_ingeniera_app.data
 
-import android.content.Context
-import com.example.induztek_ingeniera_app.model.Equipo
-import com.example.induztek_ingeniera_app.model.Protocolo
-import com.example.induztek_ingeniera_app.model.Usuario
+import com.example.induztek_ingeniera_app.data.dao.ProtocoloDao
+import com.example.induztek_ingeniera_app.data.dao.UsuarioDao
+import com.example.induztek_ingeniera_app.data.entities.ProtocoloConDetalles
+import com.example.induztek_ingeniera_app.data.entities.ProtocoloEntity
+import com.example.induztek_ingeniera_app.data.entities.UsuarioEntity
+import kotlinx.coroutines.flow.Flow
 
 /**
  * REPOSITORIO
@@ -12,58 +14,38 @@ import com.example.induztek_ingeniera_app.model.Usuario
  * más adelante podrían venir de un microservicio sin que el ViewModel ni la
  * vista tengan que cambiar.
  */
-class ProtocoloRepository(context: Context) {
-
-    // Acceso a las tablas (SQLite)
-    private val db = ProtocoloDbHelper(context)
-
-    // Acceso a la sesión guardada (SharedPreferences)
-    private val sesion = SesionPreferencias(context)
-
-    // ----------------------------- SESIÓN ----------------------------
-
-    // Busca al usuario en la BD. Si existe, guarda su id para recordar la sesión.
-    // Devuelve el usuario, o null si el correo o la contraseña no coinciden.
-    fun iniciarSesion(correo: String, contrasena: String): Usuario? {
-        val usuario = db.iniciarSesion(correo, contrasena)
-        if (usuario != null) {
-            sesion.guardar(usuario.id)
-        }
-        return usuario
+class ProtocoloRepository(
+    private val usuarioDao: UsuarioDao,
+    private val protocoloDao: ProtocoloDao
+) {
+    // Autenticación de sesiones de usuario
+    suspend fun iniciarSesion(correo: String, contrasena: String): UsuarioEntity? {
+        return usuarioDao.iniciarSesion(correo, contrasena)
     }
 
-    // Al abrir la app: el usuario que dejó la sesión abierta (null = no hay sesión).
-    // Si no hay id guardado, leer() devuelve -1 y la BD no encuentra a nadie.
-    fun usuarioConSesion(): Usuario? = db.buscarUsuarioPorId(sesion.leer())
-
-    fun cerrarSesion() {
-        sesion.borrar()
+    suspend fun buscarUsuarioPorId(id: Long): UsuarioEntity? {
+        return usuarioDao.buscarUsuarioPorId(id)
     }
 
-    // ----------------------------- EQUIPOS ---------------------------
+    // Escritura de Órdenes de Trabajo (Soporta flujos asíncronos nativos suspend)
+    suspend fun insertarProtocolo(protocolo: ProtocoloEntity): Long {
+        return protocoloDao.insertarProtocolo(protocolo)
+    }
 
-    fun listarEquipos(): List<Equipo> = db.listarEquipos()
+    suspend fun formalizarProtocolo(id: Long): Boolean {
+        return protocoloDao.formalizarProtocolo(id) > 0
+    }
 
-    fun buscarEquipo(id: Long): Equipo? = db.buscarEquipoPorId(id)
+    // Lecturas Reactivas en Tiempo Real para tus componentes Compose
+    fun listarProtocolosDeCliente(clienteId: Long): Flow<List<ProtocoloConDetalles>> {
+        return protocoloDao.listarProtocolosDeCliente(clienteId)
+    }
 
-    // ---------------------------- PROTOCOLOS -------------------------
+    fun listarProtocolosDeEquipo(equipoId: Long): Flow<List<ProtocoloConDetalles>> {
+        return protocoloDao.listarProtocolosDeEquipo(equipoId)
+    }
 
-    // Devuelve el id del protocolo nuevo (o -1 si no se pudo guardar)
-    fun guardarProtocolo(protocolo: Protocolo): Long = db.insertarProtocolo(protocolo)
-
-    fun protocolosDeCliente(clienteId: Long): List<Protocolo> =
-        db.listarProtocolosDeCliente(clienteId)
-
-    fun historialDeEquipo(equipoId: Long): List<Protocolo> =
-        db.listarProtocolosDeEquipo(equipoId)
-
-    fun buscarProtocolo(id: Long): Protocolo? = db.buscarProtocoloPorId(id)
-
-    // Devuelve cuántas filas cambió (1 = formalizado)
-    fun formalizar(id: Long): Int = db.formalizarProtocolo(id)
-
-    // Cierra la conexión con la BD (lo llama el ViewModel cuando se destruye)
-    fun cerrar() {
-        db.close()
+    suspend fun buscarProtocoloPorId(id: Long): ProtocoloConDetalles? {
+        return protocoloDao.buscarProtocoloPorId(id)
     }
 }

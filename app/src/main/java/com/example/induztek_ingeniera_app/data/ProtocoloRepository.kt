@@ -6,13 +6,13 @@ import com.example.induztek_ingeniera_app.data.entities.ProtocoloConDetalles
 import com.example.induztek_ingeniera_app.data.entities.ProtocoloEntity
 import com.example.induztek_ingeniera_app.data.entities.UsuarioEntity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 
 /**
  * REPOSITORIO
  * Es la única fuente de datos de la app. Hoy los protocolos vienen de SQLite
- * (ProtocoloDbHelper) y la sesión de SharedPreferences (SesionPreferencias);
- * más adelante podrían venir de un microservicio sin que el ViewModel ni la
- * vista tengan que cambiar.
+ * y la sesión de Room / SharedPreferences; más adelante podrían venir de un
+ * microservicio sin que el ViewModel ni la vista tengan que cambiar.
  */
 class ProtocoloRepository(
     private val usuarioDao: UsuarioDao,
@@ -20,11 +20,11 @@ class ProtocoloRepository(
 ) {
     // Autenticación de sesiones de usuario
     suspend fun iniciarSesion(correo: String, contrasena: String): UsuarioEntity? {
-        return usuarioDao.iniciarSesion(correo, contrasena)
+        return usuarioDao.iniciarSesion(correo, contrasena).firstOrNull()
     }
 
     suspend fun buscarUsuarioPorId(id: Long): UsuarioEntity? {
-        return usuarioDao.buscarUsuarioPorId(id)
+        return usuarioDao.buscarUsuarioPorId(id).firstOrNull()
     }
 
     // Escritura de Órdenes de Trabajo (Soporta flujos asíncronos nativos suspend)
@@ -46,6 +46,6 @@ class ProtocoloRepository(
     }
 
     suspend fun buscarProtocoloPorId(id: Long): ProtocoloConDetalles? {
-        return protocoloDao.buscarProtocoloPorId(id)
+        return protocoloDao.buscarProtocoloPorId(id).firstOrNull()
     }
 }

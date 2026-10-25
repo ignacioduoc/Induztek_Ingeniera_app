@@ -1,16 +1,19 @@
 package com.example.induztek_ingeniera_app.data.dao
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
 import com.example.induztek_ingeniera_app.data.entities.ProtocoloConDetalles
 import com.example.induztek_ingeniera_app.data.entities.ProtocoloEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ProtocoloDao {
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertarProtocolo(protocolo: ProtocoloEntity): Long
 
-    // Los JOIN tradicionales mapeados de forma limpia y reactiva a través de Flow
     @Query("""
         SELECT p.*, e.codigo, e.tipo, e.instalacion, t.nombre AS nombre_tecnico 
         FROM protocolos p 
@@ -31,6 +34,7 @@ interface ProtocoloDao {
     """)
     fun listarProtocolosDeEquipo(equipoId: Long): Flow<List<ProtocoloConDetalles>>
 
+    // FIX 1: Cambiado a Flow para evitar el choque de tipos en el generador de KSP con JOIN manuales
     @Query("""
         SELECT p.*, e.codigo, e.tipo, e.instalacion, t.nombre AS nombre_tecnico 
         FROM protocolos p 
@@ -38,8 +42,9 @@ interface ProtocoloDao {
         INNER JOIN usuarios t ON p.id_tecnico = t.id_usuario
         WHERE p.id_protocolo = :id LIMIT 1
     """)
-    suspend fun buscarProtocoloPorId(id: Long): ProtocoloConDetalles?
+    fun buscarProtocoloPorId(id: Long): Flow<ProtocoloConDetalles?>
 
+    // FIX 2: Removido 'suspend' ya que en Room las consultas UPDATE/DELETE no-reactivas deben ser llamadas dentro de transacciones o corrutinas desde el Repository/ViewModel
     @Query("UPDATE protocolos SET estado = 'FORMALIZADO' WHERE id_protocolo = :id")
-    suspend fun formalizarProtocolo(id: Long): Int
+    fun formalizarProtocolo(id: Long): Int
 }

@@ -1,96 +1,147 @@
 package com.example.induztek_ingeniera_app.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.induztek_ingeniera_app.data.ProtocoloRepository
+import com.example.induztek_ingeniera_app.data.entities.ProtocoloConDetalles
+import com.example.induztek_ingeniera_app.data.entities.ProtocoloEntity
 import com.example.induztek_ingeniera_app.model.Equipo
+import com.example.induztek_ingeniera_app.model.EstadoProtocolo
 import com.example.induztek_ingeniera_app.model.Protocolo
-import com.example.induztek_ingeniera_app.model.Rol
+import com.example.induztek_ingeniera_app.model.Resultado
 import com.example.induztek_ingeniera_app.model.Usuario
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 // =====================================================================
-//  ProtocolosViewModel.kt  —  EL VIEWMODEL COMPARTIDO DE LA APP
+//  ProtocolosViewModel.kt  —  EL VIEWMODEL COMPARTIDO (Room Reactivo)
 //  ---------------------------------------------------------------------
-//  Igual que el UsuariosViewModel del profe: se crea en AppNavegacion,
-//  FUERA del NavHost. Así sobrevive a los cambios de pantalla y todas
-//  las pantallas ven los mismos datos.
-//  Guarda quién inició sesión, la lista de equipos y la lista de
-//  protocolos del cliente. Después de cada cambio en la BD (INSERT del
-//  técnico, UPDATE del cliente) RECARGA la lista, igual que el profe.
+//  Hereda de ViewModel() estándar y recibe el repositorio inyectado.
+//  Usa flujos reactivos de Room para actualizar la UI automáticamente.
 // =====================================================================
 
-class ProtocolosViewModel(application: Application) : AndroidViewModel(application) {
+class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewModel() {
 
-    // Única puerta a los datos (BD + sesión)
-    private val repositorio = ProtocoloRepository(application)
-
-    // Usuario con sesión iniciada. Al abrir la app se busca la sesión guardada:
-    // si alguien no cerró sesión, entra directo sin pasar por el login.
-    private val _usuarioActual = MutableStateFlow(repositorio.usuarioConSesion())
+    // Usuario con sesión iniciada
+    private val _usuarioActual = MutableStateFlow<Usuario?>(null)
     val usuarioActual: StateFlow<Usuario?> = _usuarioActual.asStateFlow()
 
-    // Equipos que el técnico puede probar (con la empresa de cada cliente).
-    // Se CARGAN desde la BD, igual que la lista de usuarios del profe.
-    private val _equipos = MutableStateFlow(repositorio.listarEquipos())
+    // Equipos disponibles
+    private val _equipos = MutableStateFlow<List<Equipo>>(emptyList())
     val equipos: StateFlow<List<Equipo>> = _equipos.asStateFlow()
 
-    // Protocolos de los equipos del cliente con sesión ("Mis protocolos"),
-    // del más nuevo al más antiguo.
-    private val _protocolos = MutableStateFlow(protocolosDe(_usuarioActual.value))
-    val protocolos: StateFlow<List<Protocolo>> = _protocolos.asStateFlow()
+    // CONSULTA REACTIVA: Cada vez que cambie el usuario actual, este bloque
+    // se suscribe automáticamente al Flow de Room del Cliente correspondiente.
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val protocolos: StateFlow<List<Protocolo>> = _usuarioActual
+        .flatMapLatest { usuario ->
+            if (usuario != null && usuario.rolId == 2L) { // 2L = Rol Cliente
+                repository.listarProtocolosDeCliente(usuario.id).map { listaEntities ->
+                    listaEntities.map { it.toDomainModel() }
+                }
+            } else {
+                flowOf(emptyList())
+            }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
-    // Vuelve a leer la lista desde la BD (igual que recargar() del profe).
-    // Se llama después de cada cambio: ingreso, INSERT, UPDATE y cierre de sesión.
-    private fun recargar() {
-        _protocolos.value = protocolosDe(_usuarioActual.value)
-    }
-
-    // Solo el cliente tiene "Mis protocolos". Sin sesión o para el técnico: lista vacía.
-    private fun protocolosDe(usuario: Usuario?): List<Protocolo> =
-        if (usuario != null && usuario.rolId == Rol.ID_CLIENTE) repositorio.protocolosDeCliente(usuario.id)
-        else emptyList()
-
-    // Lo llama AppNavegacion cuando el login fue exitoso.
-    // (La sesión ya la guardó el Repository al comprobar el usuario.)
+    // Se llama desde AppNavegacion al iniciar sesión con éxito
     fun registrarIngreso(usuario: Usuario) {
         _usuarioActual.value = usuario
-        recargar()
     }
 
-    // Para el formulario y el historial: el equipo (READ por su id)
-    fun obtenerEquipo(id: Long): Equipo? = repositorio.buscarEquipo(id)
+    // INSERT: Se ejecuta asíncronamente en una corrutina. Room actualizará la lista sola.
 
-    // INSERT: el protocolo nuevo que armó el formulario
     fun guardarProtocolo(protocolo: Protocolo) {
-        repositorio.guardarProtocolo(protocolo)
-        recargar()
+        viewModelScope.launch {
+            val entity = ProtocoloEntity(
+                idProtocolo = protocolo.id,
+                idEquipo = protocolo.equipoId,
+                idTecnico = protocolo.tecnicoId,
+                fechaHora = protocolo.fechaHora,
+                tipoPrueba = protocolo.tipoPrueba,
+                atBt = protocolo.atBt,
+                atTierra = protocolo.atTierra,
+                btTierra = protocolo.btTierra,
+                indicePolarizacion = protocolo.indicePolarizacion, // Corregido: sin guion bajo
+                resultado = protocolo.resultado.name,
+                observaciones = protocolo.observaciones,
+                estado = protocolo.estado.name,
+                foto = protocolo.foto
+            )
+            repository.insertarProtocolo(entity)
+        }
     }
 
-    // Para el detalle: el protocolo tocado en la lista (READ por su id, con JOIN)
-    fun obtenerProtocolo(id: Long): Protocolo? = repositorio.buscarProtocolo(id)
 
-    // Para el historial: todas las pruebas de UN equipo, de la más nueva a la más antigua
-    fun historialDe(equipoId: Long): List<Protocolo> = repositorio.historialDeEquipo(equipoId)
-
-    // UPDATE: el cliente da su conformidad y el estado pasa a FORMALIZADO.
-    // Después se recarga la lista para que el chip cambie de color.
+    // UPDATE: Cambia el estado a FORMALIZADO asíncronamente
     fun formalizar(id: Long) {
-        repositorio.formalizar(id)
-        recargar()
+        viewModelScope.launch {
+            repository.formalizarProtocolo(id)
+        }
     }
 
+    // Cierre de sesión reactivo
     fun cerrarSesion() {
-        repositorio.cerrarSesion()
         _usuarioActual.value = null
-        recargar()
     }
 
-    // Al destruirse el ViewModel se cierra la conexión con la BD
-    override fun onCleared() {
-        repositorio.cerrar()
-        super.onCleared()
+    // Lectura asíncrona de un único protocolo para la pantalla de detalle
+    fun obtenerProtocolo(id: Long, onResultado: (Protocolo?) -> Unit) {
+        viewModelScope.launch {
+            val entity = repository.buscarProtocoloPorId(id)
+            onResultado(entity?.toDomainModel())
+        }
+    }
+
+    // Historial reactivo para un equipo específico
+    fun historialDe(equipoId: Long): StateFlow<List<Protocolo>> {
+        return repository.listarProtocolosDeEquipo(equipoId)
+            .map { lista -> lista.map { it.toDomainModel() } }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList()
+            )
+    }
+
+    fun obtenerEquipo(id: Long): Equipo? {
+        return _equipos.value.find { it.id == id }
+    }
+
+    // =====================================================================
+    //  FUNCIONES DE EXTENSIÓN (Mapeo de capa de Datos a capa de Dominio)
+    // =====================================================================
+    private fun ProtocoloConDetalles.toDomainModel(): Protocolo {
+        return Protocolo(
+            id = this.protocolo.idProtocolo,
+            equipoId = this.protocolo.idEquipo,
+            tecnicoId = this.protocolo.idTecnico,
+            fechaHora = this.protocolo.fechaHora,
+            tipoPrueba = this.protocolo.tipoPrueba,
+            atBt = this.protocolo.atBt,
+            atTierra = this.protocolo.atTierra,
+            btTierra = this.protocolo.btTierra,
+            indicePolarizacion = this.protocolo.indicePolarizacion,
+            resultado = Resultado.valueOf(this.protocolo.resultado),
+            observaciones = this.protocolo.observaciones,
+            estado = EstadoProtocolo.valueOf(this.protocolo.estado),
+            foto = this.protocolo.foto,
+            codigoEquipo = this.codigoEquipo,
+            tipoEquipo = this.tipoEquipo,
+            instalacion = this.instalacion,
+            nombreTecnico = this.nombreTecnico
+        )
     }
 }

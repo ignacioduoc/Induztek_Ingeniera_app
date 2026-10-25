@@ -27,7 +27,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.induztek_ingeniera_app.R
 import com.example.induztek_ingeniera_app.model.LoginUiState
 import com.example.induztek_ingeniera_app.model.Usuario
@@ -53,18 +52,26 @@ import com.example.induztek_ingeniera_app.viewmodel.LoginViewModel
 @Composable
 fun LoginScreen(
     onLoginExitoso: (Usuario) -> Unit,
-    viewModel: LoginViewModel = viewModel()
+    viewModel: LoginViewModel
 ) {
-    // Lee el StateFlow del ViewModel. Cada vez que cambia, la pantalla se redibuja.
+    // 1. Lee el StateFlow de Room de forma reactiva
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    // 2. Efecto de lanzamiento: escucha reactivamente cuándo se valida el inicio de sesión
+    androidx.compose.runtime.LaunchedEffect(uiState.usuarioIngresado) {
+        uiState.usuarioIngresado?.let { usuario ->
+            onLoginExitoso(usuario)
+        }
+    }
+
+    // 3. El contenido visual se mantiene desacoplado y limpio
     LoginContent(
         uiState = uiState,
         onCorreoCambia = viewModel::onCorreoCambia,
         onContrasenaCambia = viewModel::onContrasenaCambia,
         onAlternarVisibilidad = viewModel::onAlternarVisibilidad,
-        // Si onIngresar() devuelve un usuario, se avisa hacia afuera
-        onIngresar = { viewModel.onIngresar()?.let { usuario -> onLoginExitoso(usuario) } }
+        // El botón gatilla la corrutina asíncrona dentro del ViewModel
+        onIngresar = { viewModel.onIngresar() }
     )
 }
 

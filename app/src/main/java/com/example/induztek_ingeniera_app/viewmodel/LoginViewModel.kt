@@ -1,27 +1,23 @@
 package com.example.induztek_ingeniera_app.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.induztek_ingeniera_app.data.ProtocoloRepository
 import com.example.induztek_ingeniera_app.model.LoginUiState
-import com.example.induztek_ingeniera_app.model.Usuario
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 // =====================================================================
-//  LoginViewModel.kt  —  LÓGICA DE LA PANTALLA DE INICIO DE SESIÓN
+//  LoginViewModel.kt  —  LÓGICA DE LA PANTALLA DE INICIO DE SESIÓN (Room & MVVM)
 //  ---------------------------------------------------------------------
-//  ViewModel -> AndroidViewModel: el Repository necesita un Context para
-//  abrir la BD y la sesión. AndroidViewModel recibe la Application;
-//  viewModel() lo sigue creando igual: no hace falta un Factory.
+//  ViewModel estándar: Recibe el repositorio inyectado desde la Factory
+//  en MainActivity. Las consultas se ejecutan de forma asíncrona.
 // =====================================================================
 
-class LoginViewModel(application: Application) : AndroidViewModel(application) {
-
-    // Única puerta a los datos (BD + sesión)
-    private val repositorio = ProtocoloRepository(application)
+class LoginViewModel(private val repository: ProtocoloRepository) : ViewModel() {
 
     // Privado y mutable: solo el ViewModel lo modifica
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -29,9 +25,6 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     // Público y de solo lectura: la pantalla lo observa
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
-    // Cada letra escrita llega aquí. Se borran los errores y el resultado anterior,
-    // porque el usuario está corrigiendo (como registroExitoso = false en el
-    // FormularioViewModel del profe).
     fun onCorreoCambia(valor: String) {
         _uiState.update {
             it.copy(correo = valor.trim(), errorCorreo = null, errorCredenciales = null, usuarioIngresado = null)
@@ -48,12 +41,11 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.update { it.copy(contrasenaVisible = !it.contrasenaVisible) }
     }
 
-    // Botón "Ingresar": 1) valida cada campo y 2) si están bien, pregunta a la BD.
-    // Devuelve el usuario si entró, o null si hubo errores.
-    fun onIngresar(): Usuario? {
+    // Botón "Ingresar": Valida campos y realiza la consulta asíncrona en Room
+    fun onIngresar() {
         val estado = _uiState.value
 
-        // 1) Validación por campo: cada campo tiene su propio mensaje de error
+        // 1) Validación por campo en la UI
         val errorCorreo = when {
             estado.correo.isBlank() -> "Ingresa tu correo"
             !estado.correo.contains("@") || !estado.correo.contains(".") -> "Ingresa un correo válido"
@@ -67,26 +59,38 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
         if (errorCorreo != null || errorContrasena != null) {
             _uiState.update { it.copy(errorCorreo = errorCorreo, errorContrasena = errorContrasena) }
-            return null
+            return
         }
 
-        // 2) Los campos están bien escritos: se busca al usuario en la BD
-        //    (a través del Repository, que además guarda la sesión).
-        val usuario = repositorio.iniciarSesion(estado.correo, estado.contrasena)
+        // 2) Lanzamiento de Corrutina asíncrona para consultar la base de datos de Room sin congelar la pantalla
+        viewModelScope.launch {
+            val usuarioRoom = repository.iniciarSesion(estado.correo, estado.contrasena)
 
-        _uiState.update {
-            it.copy(
-                errorCredenciales = if (usuario == null) "Correo o contraseña incorrectos" else null,
-                usuarioIngresado = usuario
-            )
+            if (usuarioRoom != null) {
+                // Mapeo opcional al modelo de dominio Usuario si es requerido por tus pantallas,
+                // de lo contrario, se guarda directamente la entidad.
+                _uiState.update {
+                    it.copy(
+                        errorCredenciales = null,
+                        // Aquí puedes pasar el objeto mapeado si tu UIState maneja la entidad o el modelo
+                        usuarioIngresado = com.example.induztek_ingeniera_app.model.Usuario(
+                            id = usuarioRoom.idUsuario,
+                            nombre = usuarioRoom.nombre,
+                            correo = usuarioRoom.correo,
+                            empresa = usuarioRoom.empresa,
+                            rolId = usuarioRoom.idRol,
+                            rolNombre = if (usuarioRoom.idRol == 1L) "Técnico" else "Cliente"
+                        )
+                    )
+                }
+            } else {
+                _uiState.update {
+                    it.copy(errorCredenciales = "Correo o contraseña incorrectos")
+                }
+            }
         }
-        return usuario
     }
 
-
-    // Al destruirse el ViewModel se cierra la conexión con la BD
-    override fun onCleared() {
-        repositorio.cerrar()
-        super.onCleared()
-    }
+    // Nota: El método onCleared() ya no necesita cerrar la conexión explícitamente ya que
+    // AppDatabase (Room) maneja el pool de conexiones de manera automática y eficiente.
 }

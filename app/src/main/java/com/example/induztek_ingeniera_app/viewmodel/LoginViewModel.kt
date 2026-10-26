@@ -61,14 +61,7 @@ class LoginViewModel(private val repository: ProtocoloRepository) : ViewModel() 
                 _uiState.update {
                     it.copy(
                         errorCredenciales = null,
-                        usuarioIngresado = com.example.induztek_ingeniera_app.model.Usuario(
-                            id = usuarioRoom.idUsuario,
-                            nombre = usuarioRoom.nombre,
-                            correo = usuarioRoom.correo,
-                            empresa = usuarioRoom.empresa,
-                            rolId = usuarioRoom.idRol,
-                            rolNombre = if (usuarioRoom.idRol == 1L) "Técnico" else "Cliente"
-                        )
+                        usuarioIngresado = usuarioRoom // Asignación directa del objeto de dominio Usuario
                     )
                 }
             } else {

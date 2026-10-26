@@ -22,5 +22,6 @@ data class UsuarioEntity(
     val correo: String,
     val contrasena: String,
     val empresa: String,
-    @ColumnInfo(name = "id_rol") val idRol: Long
+    @ColumnInfo(name = "id_rol") val idRol: Long,
+    @ColumnInfo(name = "foto_perfil", typeAffinity = ColumnInfo.BLOB) val fotoPerfil: ByteArray? = null
 )

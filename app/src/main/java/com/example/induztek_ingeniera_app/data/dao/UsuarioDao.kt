@@ -22,4 +22,8 @@ interface UsuarioDao {
 
     @Query("SELECT COUNT(*) FROM usuarios")
     suspend fun obtenerCantidadUsuarios(): Int
+
+    // ACTUALIZACIÓN DE PERFIL: Permite modificar nombre, correo y foto del usuario en Room
+    @Query("UPDATE usuarios SET nombre = :nombre, correo = :correo, foto_perfil = :fotoPerfil WHERE id_usuario = :idUsuario")
+    suspend fun actualizarPerfil(idUsuario: Long, nombre: String, correo: String, fotoPerfil: ByteArray?)
 }

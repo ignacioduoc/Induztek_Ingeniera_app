@@ -1,13 +1,23 @@
 package com.example.induztek_ingeniera_app.ui.screens
 
+import android.graphics.BitmapFactory
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -21,11 +31,17 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.example.induztek_ingeniera_app.R
 import com.example.induztek_ingeniera_app.model.EstadoProtocolo
 import com.example.induztek_ingeniera_app.model.Protocolo
@@ -43,15 +59,7 @@ import kotlinx.coroutines.launch
 // =====================================================================
 //  InicioClienteScreen.kt  —  PANTALLA 4: INICIO DEL CLIENTE
 //  ---------------------------------------------------------------------
-//  Barra superior con el menú ☰, el saludo y la LISTA DE SUS PROTOCOLOS
-//  (los de sus equipos, del más nuevo al más antiguo).
-//  La lista se arma igual que en la UsuariosScreen del profe:
-//     LazyColumn -> lista que solo dibuja las filas que se ven en pantalla
-//     items(...) -> una fila (Card + ListItem) por cada protocolo
-//  Cada fila muestra dos chips de color: el resultado y el estado.
-//  Tocar la tarjeta = abrir el detalle de ese protocolo.
-//  Recibe los datos y los eventos por parámetro (no conoce el ViewModel),
-//  por eso se puede ver con @Preview.
+//  Barra superior con el menú ☰, el saludo y la LISTA DE SUS PROTOCOLOS.
 // =====================================================================
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,10 +67,15 @@ import kotlinx.coroutines.launch
 fun InicioClienteScreen(
     usuario: Usuario?,
     protocolos: List<Protocolo>,
+    onEditarPerfil: () -> Unit = {},
     onCerrarSesion: () -> Unit,
     onVerProtocolo: (Long) -> Unit
 ) {
-    // Estado del menú lateral (abierto / cerrado) y el "scope" para abrirlo
+    // Decodificación reactiva de la foto guardada en SQLite (BLOB)
+    val bitmapFoto = remember(usuario?.fotoPerfil) {
+        usuario?.fotoPerfil?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
+    }
+
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -93,28 +106,75 @@ fun InicioClienteScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                // Encabezado: saludo, rol y empresa, y qué hacer en esta pantalla
-                Column(
-                    modifier = Modifier.padding(Dimens.espacioPantalla),
-                    verticalArrangement = Arrangement.spacedBy(Dimens.espacioMini)
+                // Encabezado interactivo: Avatar + Saludo + Botón Editar Perfil
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(Dimens.espacioPantalla)
+                        .clickable { onEditarPerfil() }
                 ) {
-                    // usuario?.nombre ?: "" -> si usuario es null (justo al cerrar sesión) queda vacío
-                    Text(
-                        text = stringResource(R.string.saludo, usuario?.nombre ?: ""),
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                    Text(
-                        text = stringResource(R.string.rol_empresa, usuario?.rolNombre ?: "", usuario?.empresa ?: ""),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Text(
-                        text = stringResource(R.string.indicacion_protocolos),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Row(
+                        modifier = Modifier.padding(Dimens.espacioMedio),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.espacioMedio)
+                    ) {
+                        // Avatar circular con foto o inicial
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primaryContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (bitmapFoto != null) {
+                                Image(
+                                    bitmap = bitmapFoto.asImageBitmap(),
+                                    contentDescription = "Foto de Perfil",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            } else {
+                                Text(
+                                    text = usuario?.nombre?.take(1)?.uppercase() ?: "C",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
+
+                        // Textos de usuario y empresa
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(Dimens.espacioMini)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.saludo, usuario?.nombre ?: ""),
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Text(
+                                text = stringResource(R.string.rol_empresa, usuario?.rolNombre ?: "", usuario?.empresa ?: ""),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+
+                        // Botón explícito para la edición de perfil
+                        IconButton(onClick = onEditarPerfil) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Editar Perfil",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
                 }
 
-                // Si la lista viene vacía se avisa (igual que en la lista del profe)
+                Text(
+                    text = stringResource(R.string.indicacion_protocolos),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = Dimens.espacioPantalla)
+                )
+
                 if (protocolos.isEmpty()) {
                     Text(
                         text = stringResource(R.string.lista_vacia_protocolos),
@@ -128,17 +188,14 @@ fun InicioClienteScreen(
                     contentPadding = PaddingValues(Dimens.espacioMedio),
                     verticalArrangement = Arrangement.spacedBy(Dimens.espacioChico)
                 ) {
-                    // key = id: Compose reconoce cada fila aunque la lista cambie
                     items(protocolos, key = { it.id }) { protocolo ->
                         Card(onClick = { onVerProtocolo(protocolo.id) }) {
                             ListItem(
                                 overlineContent = { Text(formatearFecha(protocolo.fechaHora)) },
-                                // codigoEquipo y tipoEquipo llegan por el JOIN con la tabla equipos
                                 headlineContent = { Text("${protocolo.codigoEquipo} · ${protocolo.tipoEquipo}") },
                                 supportingContent = {
                                     Column(verticalArrangement = Arrangement.spacedBy(Dimens.espacioChico)) {
                                         Text(protocolo.instalacion)
-                                        // Chips: resultado (verde / ámbar / rojo) y estado (azul / verde)
                                         Row(horizontalArrangement = Arrangement.spacedBy(Dimens.espacioChico)) {
                                             EtiquetaEstado(texto = protocolo.resultado.etiqueta, color = colorDe(protocolo.resultado))
                                             EtiquetaEstado(texto = protocolo.estado.etiqueta, color = colorDe(protocolo.estado))
@@ -154,8 +211,6 @@ fun InicioClienteScreen(
     }
 }
 
-// Datos de ejemplo para la vista previa: uno recién registrado en terreno
-// y dos de la BD (ya formalizados)
 private val protocolosPreview = listOf(
     Protocolo(
         equipoId = 1, tecnicoId = 1, fechaHora = 1792503000000, tipoPrueba = "Aislamiento 5 kV DC",
@@ -163,22 +218,6 @@ private val protocolosPreview = listOf(
         resultado = Resultado.CON_OBSERVACION,
         observaciones = "Índice de polarización bajo 2,0: repetir la prueba en 3 meses.",
         estado = EstadoProtocolo.REGISTRADO_EN_TERRENO, id = 5,
-        codigoEquipo = "TR-0142", tipoEquipo = "Transformador 500 kVA",
-        instalacion = "Planta Lampa · S/E-02", nombreTecnico = "Matías Rojas"
-    ),
-    Protocolo(
-        equipoId = 2, tecnicoId = 1, fechaHora = 1776367200000, tipoPrueba = "Aislamiento 5 kV DC",
-        atBt = 11.2, atTierra = 8.7, btTierra = 7.9, indicePolarizacion = 2.6,
-        resultado = Resultado.APROBADO, observaciones = "",
-        estado = EstadoProtocolo.FORMALIZADO, id = 4,
-        codigoEquipo = "TR-0098", tipoEquipo = "Transformador 300 kVA",
-        instalacion = "Planta Lampa · S/E-01", nombreTecnico = "Matías Rojas"
-    ),
-    Protocolo(
-        equipoId = 1, tecnicoId = 1, fechaHora = 1776174300000, tipoPrueba = "Aislamiento 5 kV DC",
-        atBt = 13.1, atTierra = 9.4, btTierra = 7.8, indicePolarizacion = 2.4,
-        resultado = Resultado.APROBADO, observaciones = "",
-        estado = EstadoProtocolo.FORMALIZADO, id = 3,
         codigoEquipo = "TR-0142", tipoEquipo = "Transformador 500 kVA",
         instalacion = "Planta Lampa · S/E-02", nombreTecnico = "Matías Rojas"
     )
@@ -197,6 +236,7 @@ private fun InicioClientePreview() {
                 rolNombre = "Cliente"
             ),
             protocolos = protocolosPreview,
+            onEditarPerfil = {},
             onCerrarSesion = {},
             onVerProtocolo = {}
         )

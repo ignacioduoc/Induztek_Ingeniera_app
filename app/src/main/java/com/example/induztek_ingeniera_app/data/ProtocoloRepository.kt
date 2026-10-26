@@ -7,11 +7,14 @@ import com.example.induztek_ingeniera_app.data.entities.EquipoEntity
 import com.example.induztek_ingeniera_app.data.entities.ProtocoloConDetalles
 import com.example.induztek_ingeniera_app.data.entities.ProtocoloEntity
 import com.example.induztek_ingeniera_app.data.entities.UsuarioEntity
+import com.example.induztek_ingeniera_app.model.Rol
+import com.example.induztek_ingeniera_app.model.Usuario
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 
 /**
  * REPOSITORIO
+ *
  * Es la única fuente de datos de la app. Hoy los datos vienen de Room / SQLite;
  * más adelante podrían venir de un servicio REST sin que el ViewModel ni la vista tengan que cambiar.
  */
@@ -21,12 +24,21 @@ class ProtocoloRepository(
     private val equipoDao: EquipoDao // Inyección de EquipoDao
 ) {
     // Autenticación de sesiones de usuario (Consulta directa suspend)
-    suspend fun iniciarSesion(correo: String, contrasena: String): UsuarioEntity? {
-        return usuarioDao.iniciarSesion(correo, contrasena)
+    suspend fun iniciarSesion(correo: String, contrasena: String): Usuario? {
+        val entity = usuarioDao.iniciarSesion(correo, contrasena)
+        return entity?.toDomainModel()
     }
 
-    suspend fun buscarUsuarioPorId(id: Long): UsuarioEntity? {
-        return usuarioDao.buscarUsuarioPorId(id).firstOrNull()
+    suspend fun buscarUsuarioPorId(id: Long): Usuario? {
+        val entity = usuarioDao.buscarUsuarioPorId(id).firstOrNull()
+        return entity?.toDomainModel()
+    }
+
+    // --- MÓDULO PERFIL DE USUARIO ---
+
+    // Actualiza el nombre, correo y foto de perfil en la base de datos
+    suspend fun actualizarPerfilUsuario(idUsuario: Long, nombre: String, correo: String, fotoPerfil: ByteArray?) {
+        usuarioDao.actualizarPerfil(idUsuario, nombre, correo, fotoPerfil)
     }
 
     // --- MÓDULO EQUIPOS ---
@@ -73,5 +85,23 @@ class ProtocoloRepository(
 
     suspend fun buscarProtocoloPorId(id: Long): ProtocoloConDetalles? {
         return protocoloDao.buscarProtocoloPorId(id).firstOrNull()
+    }
+
+    // --- FUNCIONES DE EXTENSIÓN (Mapeo de Entidad a Modelo de Dominio) ---
+    private fun UsuarioEntity.toDomainModel(): Usuario {
+        val rolNombre = when (this.idRol) {
+            Rol.ID_TECNICO -> "Técnico"
+            Rol.ID_CLIENTE -> "Cliente"
+            else -> "Usuario"
+        }
+        return Usuario(
+            id = this.idUsuario,
+            nombre = this.nombre,
+            correo = this.correo,
+            empresa = this.empresa,
+            rolId = this.idRol,
+            rolNombre = rolNombre,
+            fotoPerfil = this.fotoPerfil
+        )
     }
 }

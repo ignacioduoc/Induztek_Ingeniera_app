@@ -1,8 +1,12 @@
 package com.example.induztek_ingeniera_app.ui.screens
 
+import android.graphics.BitmapFactory
 import android.widget.Toast
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -11,8 +15,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -38,6 +46,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -58,16 +69,21 @@ import kotlinx.coroutines.launch
 fun InicioTecnicoScreen(
     usuario: Usuario?,
     equipos: List<Equipo>,
+    onEditarPerfil: () -> Unit = {},
     onCerrarSesion: () -> Unit,
     onNuevaPrueba: (Long) -> Unit = {},
     onVerHistorial: (Long) -> Unit = {},
     onVerMapa: (lat: Double, lng: Double, codigo: String, instalacion: String) -> Unit = { _, _, _, _ -> },
-    // Firma explícita declarada para sincronizar con AppNavegacion y ProtocolosViewModel
     onGuardarUbicacion: (idEquipo: Long, direccion: String, lat: Double, lng: Double) -> Unit = { _, _, _, _ -> }
 ) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+
+    // Decodificación reactiva de la foto guardada en SQLite (BLOB)
+    val bitmapFoto = remember(usuario?.fotoPerfil) {
+        usuario?.fotoPerfil?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
+    }
 
     // Estados para controlar el diálogo de edición de dirección
     var equipoAEditar by remember { mutableStateOf<Equipo?>(null) }
@@ -161,24 +177,74 @@ fun InicioTecnicoScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                Column(
-                    modifier = Modifier.padding(Dimens.espacioPantalla),
-                    verticalArrangement = Arrangement.spacedBy(Dimens.espacioMini)
+                // Encabezado interactivo: Avatar + Saludo + Botón Editar Perfil
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(Dimens.espacioPantalla)
+                        .clickable { onEditarPerfil() }
                 ) {
-                    Text(
-                        text = stringResource(R.string.saludo, usuario?.nombre ?: ""),
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                    Text(
-                        text = stringResource(R.string.rol_empresa, usuario?.rolNombre ?: "", usuario?.empresa ?: ""),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Text(
-                        text = stringResource(R.string.indicacion_equipos),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Row(
+                        modifier = Modifier.padding(Dimens.espacioMedio),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.espacioMedio)
+                    ) {
+                        // Avatar circular con foto o inicial
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primaryContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (bitmapFoto != null) {
+                                Image(
+                                    bitmap = bitmapFoto.asImageBitmap(),
+                                    contentDescription = "Foto de Perfil",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            } else {
+                                Text(
+                                    text = usuario?.nombre?.take(1)?.uppercase() ?: "T",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
+
+                        // Textos de información del usuario
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(Dimens.espacioMini)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.saludo, usuario?.nombre ?: ""),
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Text(
+                                text = stringResource(R.string.rol_empresa, usuario?.rolNombre ?: "", usuario?.empresa ?: ""),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+
+                        // Botón explícito para la edición de perfil
+                        IconButton(onClick = onEditarPerfil) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Editar Perfil",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
                 }
+
+                Text(
+                    text = stringResource(R.string.indicacion_equipos),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = Dimens.espacioPantalla)
+                )
 
                 if (equipos.isEmpty()) {
                     Text(
@@ -201,7 +267,6 @@ fun InicioTecnicoScreen(
                                 supportingContent = {
                                     Column {
                                         Text(equipo.instalacion)
-                                        // Dirección clickeable para abrir el diálogo de edición/actualización
                                         Text(
                                             text = if (equipo.direccion.isNotBlank()) "📍 ${equipo.direccion}" else "✏️ Agregar dirección",
                                             style = MaterialTheme.typography.labelSmall,
@@ -217,7 +282,6 @@ fun InicioTecnicoScreen(
                                 },
                                 trailingContent = {
                                     Row {
-                                        // Botón para ver la ubicación en el Mapa GPS
                                         IconButton(onClick = {
                                             if (equipo.latitud != 0.0 && equipo.longitud != 0.0) {
                                                 onVerMapa(equipo.latitud, equipo.longitud, equipo.codigo, equipo.instalacion)
@@ -232,7 +296,6 @@ fun InicioTecnicoScreen(
                                             )
                                         }
 
-                                        // Botón para ver el historial
                                         IconButton(onClick = { onVerHistorial(equipo.id) }) {
                                             Icon(
                                                 painter = painterResource(R.drawable.ic_bar_chart),
@@ -272,6 +335,7 @@ private fun InicioTecnicoPreview() {
                 rolNombre = "Técnico"
             ),
             equipos = equiposPreview,
+            onEditarPerfil = {},
             onCerrarSesion = {}
         )
     }

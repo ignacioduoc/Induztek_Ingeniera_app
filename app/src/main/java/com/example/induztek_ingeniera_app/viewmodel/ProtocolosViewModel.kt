@@ -45,7 +45,7 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
                 2L -> repository.obtenerEquiposPorCliente(usuario.id).map { lista ->
                     lista.map { it.toDomainModel() }
                 }
-                else -> flowOf(emptyList())
+                else -> flowOf<List<Equipo>>(emptyList())
             }
         }.stateIn(
             scope = viewModelScope,
@@ -62,7 +62,7 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
                     listaEntities.map { it.toDomainModel() }
                 }
             } else {
-                flowOf(emptyList())
+                flowOf<List<Protocolo>>(emptyList())
             }
         }.stateIn(
             scope = viewModelScope,
@@ -73,6 +73,19 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
     // Se llama desde AppNavegacion al iniciar sesión con éxito
     fun registrarIngreso(usuario: Usuario) {
         _usuarioActual.value = usuario
+    }
+
+    // UPDATE PERFIL: Modifica los datos del usuario actual y actualiza el estado reactivo
+    fun actualizarPerfil(nombre: String, correo: String, fotoPerfil: ByteArray?) {
+        val usuario = _usuarioActual.value ?: return
+        viewModelScope.launch {
+            repository.actualizarPerfilUsuario(usuario.id, nombre, correo, fotoPerfil)
+            _usuarioActual.value = usuario.copy(
+                nombre = nombre,
+                correo = correo,
+                fotoPerfil = fotoPerfil
+            )
+        }
     }
 
     // UPDATE UBICACIÓN: Actualiza en la base de datos de Room

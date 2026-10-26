@@ -16,16 +16,10 @@ import com.example.induztek_ingeniera_app.viewmodel.ProtocolosViewModel
 
 // =====================================================================
 //  MainActivity.kt  —  PUNTO DE ENTRADA DE LA APP
-//  ---------------------------------------------------------------------
-//      setContent {
-//          Tema {              <- colores / tipografía / formas
-//              AppNavegacion() <- el NavHost decide qué pantalla mostrar
-//          }
-//      }
 // =====================================================================
 class MainActivity : ComponentActivity() {
-    override fun onCreate(bundle: Bundle?) {
-        super.onCreate(bundle)
+    override fun onCreate(savedInstanceState: Bundle?) { // <-- Corregido de 'bundle' a 'savedInstanceState'
+        super.onCreate(savedInstanceState)
 
         // 1. Inicializar Room mediante nuestro patrón Singleton seguro
         val database = AppDatabase.getDatabase(this)

@@ -23,6 +23,7 @@ import com.example.induztek_ingeniera_app.ui.screens.InicioTecnicoScreen
 import com.example.induztek_ingeniera_app.ui.screens.LoginScreen
 import com.example.induztek_ingeniera_app.ui.screens.MapaTecnicoScreen
 import com.example.induztek_ingeniera_app.ui.screens.NuevoProtocoloScreen
+import com.example.induztek_ingeniera_app.ui.screens.PerfilScreen
 import com.example.induztek_ingeniera_app.viewmodel.LoginViewModel
 import com.example.induztek_ingeniera_app.viewmodel.NuevoProtocoloViewModel
 import com.example.induztek_ingeniera_app.viewmodel.ProtocolosViewModel
@@ -59,6 +60,7 @@ fun AppNavegacion(
             InicioTecnicoScreen(
                 usuario = usuarioActual,
                 equipos = equipos,
+                onEditarPerfil = { navController.navigate("perfil") }, // <-- Conectado
                 onNuevaPrueba = { idEquipo -> navController.navigate("nuevo_protocolo/$idEquipo") },
                 onVerHistorial = { idEquipo -> navController.navigate("historial/$idEquipo") },
                 onVerMapa = { lat, lng, codigo, instalacion ->
@@ -103,6 +105,7 @@ fun AppNavegacion(
             InicioClienteScreen(
                 usuario = usuarioActual,
                 protocolos = protocolos,
+                onEditarPerfil = { navController.navigate("perfil") },
                 onCerrarSesion = {
                     protocolosViewModel.cerrarSesion()
                     loginViewModel.cerrarSesion()
@@ -186,6 +189,16 @@ fun AppNavegacion(
                     onVolver = { navController.navigateUp() }
                 )
             }
+        }
+
+        composable("perfil") {
+            PerfilScreen(
+                usuario = usuarioActual,
+                onGuardar = { nombre, correo, fotoPerfil ->
+                    protocolosViewModel.actualizarPerfil(nombre, correo, fotoPerfil)
+                },
+                onVolver = { navController.navigateUp() }
+            )
         }
     }
 }

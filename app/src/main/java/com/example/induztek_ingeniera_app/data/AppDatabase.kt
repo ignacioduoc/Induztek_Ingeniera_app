@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [RolEntity::class, UsuarioEntity::class, EquipoEntity::class, ProtocoloEntity::class],
-    version = 16, // Subimos a la versión 16 para regenerar la estructura limpia
+    version = 17, // Subimos a la versión 17 para incorporar foto_perfil en UsuarioEntity
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -36,7 +36,7 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "induztek_database_v16"
+                    "induztek_database_v17"
                 )
                     .addCallback(object : RoomDatabase.Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
@@ -68,10 +68,10 @@ abstract class AppDatabase : RoomDatabase() {
                                 // 1. Roles
                                 db.execSQL("INSERT OR REPLACE INTO roles (id_rol, nombre_rol) VALUES (1, 'Técnico'), (2, 'Cliente');")
 
-                                // 2. Usuarios
-                                db.execSQL("INSERT OR REPLACE INTO usuarios (id_usuario, nombre, correo, contrasena, empresa, id_rol) VALUES (1, 'Matías Rojas', 'tecnico@gmail.cl', '123456', 'Induztek Ingeniería SpA', 1);")
-                                db.execSQL("INSERT OR REPLACE INTO usuarios (id_usuario, nombre, correo, contrasena, empresa, id_rol) VALUES (2, 'Pedro Salas', 'cliente@gmail.cl', '123456', 'Industrias Aurora S.A.', 2);")
-                                db.execSQL("INSERT OR REPLACE INTO usuarios (id_usuario, nombre, correo, contrasena, empresa, id_rol) VALUES (3, 'Daniela Vera', 'cliente2@gmail.cl', '123456', 'Envases del Sur S.A.', 2);")
+                                // 2. Usuarios (Incluye 'foto_perfil' como NULL)
+                                db.execSQL("INSERT OR REPLACE INTO usuarios (id_usuario, nombre, correo, contrasena, empresa, id_rol, foto_perfil) VALUES (1, 'Matías Rojas', 'tecnico@gmail.cl', '123456', 'Induztek Ingeniería SpA', 1, NULL);")
+                                db.execSQL("INSERT OR REPLACE INTO usuarios (id_usuario, nombre, correo, contrasena, empresa, id_rol, foto_perfil) VALUES (2, 'Pedro Salas', 'cliente@gmail.cl', '123456', 'Industrias Aurora S.A.', 2, NULL);")
+                                db.execSQL("INSERT OR REPLACE INTO usuarios (id_usuario, nombre, correo, contrasena, empresa, id_rol, foto_perfil) VALUES (3, 'Daniela Vera', 'cliente2@gmail.cl', '123456', 'Envases del Sur S.A.', 2, NULL);")
 
                                 // 3. Equipos
                                 db.execSQL("INSERT OR REPLACE INTO equipos (id_equipo, codigo, tipo, instalacion, direccion, latitud, longitud, id_cliente) VALUES (1, 'TR-0142', 'Transformador 500 kVA', 'Planta Lampa · S/E-02', 'Camino Los Maitenes 1200, Lampa', -33.2845, -70.8752, 2);")

@@ -9,16 +9,14 @@ package com.example.induztek_ingeniera_app.model
 // =====================================================================
 
 data class Equipo(
-    // Código que identifica al equipo en la planta: "TR-0142"
     val codigo: String,
-    // Tipo de equipo: "Transformador 500 kVA"
     val tipo: String,
-    // Instalación o ubicación del cliente: "Planta Lampa · S/E-02"
     val instalacion: String,
-    // Clave foránea -> el usuario cliente dueño del equipo.
-    val clienteId: Long,
-    // Clave primaria de la fila. 0 = "aún no guardado en la BD".
+    val clienteId: Long = 0,
     val id: Long = 0,
-    // Empresa del cliente. NO es columna de "equipos": llega gracias al JOIN.
-    val empresaCliente: String = ""
+    val empresaCliente: String = "",
+    // Agregar estos tres campos:
+    val direccion: String = "",
+    val latitud: Double = 0.0,
+    val longitud: Double = 0.0
 )

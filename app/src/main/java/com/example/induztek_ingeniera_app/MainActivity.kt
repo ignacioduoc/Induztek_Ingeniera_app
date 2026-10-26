@@ -30,10 +30,11 @@ class MainActivity : ComponentActivity() {
         // 1. Inicializar Room mediante nuestro patrón Singleton seguro
         val database = AppDatabase.getDatabase(this)
 
-        // 2. Instanciar el Repositorio inyectando los DAOs requeridos
+        // 2. Instanciar el Repositorio inyectando todos los DAOs requeridos
         val repository = ProtocoloRepository(
             usuarioDao = database.usuarioDao(),
-            protocoloDao = database.protocoloDao()
+            protocoloDao = database.protocoloDao(),
+            equipoDao = database.equipoDao() // Inyección para manejar ubicaciones y direcciones de equipos
         )
 
         // 3. Crear la Fábrica (ViewModelProvider.Factory) para inyectar el repositorio en tus ViewModels de MVVM

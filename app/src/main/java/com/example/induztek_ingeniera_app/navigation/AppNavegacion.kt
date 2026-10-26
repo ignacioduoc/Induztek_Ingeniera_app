@@ -1,5 +1,6 @@
 package com.example.induztek_ingeniera_app.navigation
 
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -20,6 +21,7 @@ import com.example.induztek_ingeniera_app.ui.screens.HistorialScreen
 import com.example.induztek_ingeniera_app.ui.screens.InicioClienteScreen
 import com.example.induztek_ingeniera_app.ui.screens.InicioTecnicoScreen
 import com.example.induztek_ingeniera_app.ui.screens.LoginScreen
+import com.example.induztek_ingeniera_app.ui.screens.MapaTecnicoScreen
 import com.example.induztek_ingeniera_app.ui.screens.NuevoProtocoloScreen
 import com.example.induztek_ingeniera_app.viewmodel.LoginViewModel
 import com.example.induztek_ingeniera_app.viewmodel.NuevoProtocoloViewModel
@@ -33,7 +35,6 @@ fun AppNavegacion(
 ) {
     val navController = rememberNavController()
 
-    // Sincronización nativa de estados reactivos con la UI
     val usuarioActual by protocolosViewModel.usuarioActual.collectAsStateWithLifecycle()
     val equipos by protocolosViewModel.equipos.collectAsStateWithLifecycle()
     val protocolos by protocolosViewModel.protocolos.collectAsStateWithLifecycle()
@@ -60,10 +61,21 @@ fun AppNavegacion(
                 equipos = equipos,
                 onNuevaPrueba = { idEquipo -> navController.navigate("nuevo_protocolo/$idEquipo") },
                 onVerHistorial = { idEquipo -> navController.navigate("historial/$idEquipo") },
+                onVerMapa = { lat, lng, codigo, instalacion ->
+                    // Codificar parámetros para evitar rupturas por '/' y espacios
+                    val codigoEnc = Uri.encode(codigo)
+                    val instalacionEnc = Uri.encode(instalacion)
+                    navController.navigate("mapa/$codigoEnc/$instalacionEnc/$lat/$lng")
+                },
+                onGuardarUbicacion = { idEquipo, direccion, lat, lng ->
+                    protocolosViewModel.actualizarUbicacionEquipo(idEquipo, direccion, lat, lng)
+                },
                 onCerrarSesion = {
                     protocolosViewModel.cerrarSesion()
+                    loginViewModel.cerrarSesion()
                     navController.navigate("login") {
-                        popUpTo("inicio_tecnico") { inclusive = true }
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
                     }
                 }
             )
@@ -93,11 +105,42 @@ fun AppNavegacion(
                 protocolos = protocolos,
                 onCerrarSesion = {
                     protocolosViewModel.cerrarSesion()
+                    loginViewModel.cerrarSesion()
                     navController.navigate("login") {
-                        popUpTo("inicio_cliente") { inclusive = true }
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
                     }
                 },
                 onVerProtocolo = { idProtocolo -> navController.navigate("detalle_protocolo/$idProtocolo") }
+            )
+        }
+
+        // Definición de ruta con StringType para prevenir errores de ciberseguridad/parseo en los parámetros
+        composable(
+            route = "mapa/{codigo}/{instalacion}/{lat}/{lng}",
+            arguments = listOf(
+                navArgument("codigo") { type = NavType.StringType },
+                navArgument("instalacion") { type = NavType.StringType },
+                navArgument("lat") { type = NavType.StringType },
+                navArgument("lng") { type = NavType.StringType }
+            )
+        ) { entrada ->
+            val codigoRaw = entrada.arguments?.getString("codigo") ?: ""
+            val instalacionRaw = entrada.arguments?.getString("instalacion") ?: ""
+            val latRaw = entrada.arguments?.getString("lat") ?: "0.0"
+            val lngRaw = entrada.arguments?.getString("lng") ?: "0.0"
+
+            val codigo = Uri.decode(codigoRaw)
+            val instalacion = Uri.decode(instalacionRaw)
+            val lat = latRaw.toDoubleOrNull() ?: 0.0
+            val lng = lngRaw.toDoubleOrNull() ?: 0.0
+
+            MapaTecnicoScreen(
+                codigoEquipo = codigo,
+                instalacion = instalacion,
+                latitud = lat,
+                longitud = lng,
+                onVolver = { navController.navigateUp() }
             )
         }
 
@@ -107,7 +150,6 @@ fun AppNavegacion(
         ) { entrada ->
             val idProtocolo = entrada.arguments?.getLong("idProtocolo") ?: 0L
 
-            // Recuperación asíncrona segura de una única orden de trabajo en Room
             var protocoloState by remember(idProtocolo) { mutableStateOf<com.example.induztek_ingeniera_app.model.Protocolo?>(null) }
             LaunchedEffect(idProtocolo) {
                 protocolosViewModel.obtenerProtocolo(idProtocolo) { resultado ->
@@ -135,7 +177,6 @@ fun AppNavegacion(
             val idEquipo = entrada.arguments?.getLong("idEquipo") ?: 0L
             val equipo = remember(idEquipo) { protocolosViewModel.obtenerEquipo(idEquipo) }
 
-            // Recolección reactiva asíncrona del flujo histórico de Room
             val historialState by protocolosViewModel.historialDe(idEquipo).collectAsState()
 
             if (equipo != null) {

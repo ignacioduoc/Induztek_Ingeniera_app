@@ -18,6 +18,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,12 +42,6 @@ import com.example.induztek_ingeniera_app.viewmodel.LoginViewModel
 
 // =====================================================================
 //  LoginScreen.kt  —  PANTALLA 1: INICIO DE SESIÓN (técnico y cliente)
-//  ---------------------------------------------------------------------
-//  Dos funciones, igual que en las pantallas del profe:
-//   - LoginScreen  = se conecta con el ViewModel: lee el estado y le avisa
-//                    lo que hace el usuario.
-//   - LoginContent = solo dibuja con lo que recibe. Como no usa el
-//                    ViewModel, se puede ver con @Preview sin ejecutar la app.
 // =====================================================================
 
 @Composable
@@ -57,20 +52,20 @@ fun LoginScreen(
     // 1. Lee el StateFlow de Room de forma reactiva
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // 2. Efecto de lanzamiento: escucha reactivamente cuándo se valida el inicio de sesión
-    androidx.compose.runtime.LaunchedEffect(uiState.usuarioIngresado) {
-        uiState.usuarioIngresado?.let { usuario ->
+    // 2. Escucha reactiva cuando Room encuentra un usuario válido
+    LaunchedEffect(uiState.usuarioIngresado) {
+        val usuario = uiState.usuarioIngresado
+        if (usuario != null) {
             onLoginExitoso(usuario)
         }
     }
 
-    // 3. El contenido visual se mantiene desacoplado y limpio
+    // 3. Contenido desacoplado para vista previa y diseño
     LoginContent(
         uiState = uiState,
         onCorreoCambia = viewModel::onCorreoCambia,
         onContrasenaCambia = viewModel::onContrasenaCambia,
         onAlternarVisibilidad = viewModel::onAlternarVisibilidad,
-        // El botón gatilla la corrutina asíncrona dentro del ViewModel
         onIngresar = { viewModel.onIngresar() }
     )
 }
@@ -122,7 +117,7 @@ fun LoginContent(
                 error = uiState.errorContrasena
             )
 
-            // Error de la BD: los campos están bien escritos, pero no existe ese usuario
+            // Mensaje de credenciales no encontradas en la BD
             uiState.errorCredenciales?.let { mensaje ->
                 Text(
                     text = mensaje,
@@ -137,8 +132,6 @@ fun LoginContent(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // TEMPORAL (Paso 8): prueba de que el login funciona.
-            // En el Paso 9 se reemplaza por el cambio de pantalla.
             if (uiState.usuarioIngresado != null) {
                 MensajeBienvenida(nombre = uiState.usuarioIngresado.nombre)
             }
@@ -152,7 +145,6 @@ fun LoginContent(
     }
 }
 
-// TEMPORAL (Paso 8): tarjeta verde, igual que el MensajeExito del Formulario del profe
 @Composable
 private fun MensajeBienvenida(nombre: String) {
     Card(

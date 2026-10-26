@@ -1,7 +1,9 @@
 package com.example.induztek_ingeniera_app.data
 
+import com.example.induztek_ingeniera_app.data.dao.EquipoDao
 import com.example.induztek_ingeniera_app.data.dao.ProtocoloDao
 import com.example.induztek_ingeniera_app.data.dao.UsuarioDao
+import com.example.induztek_ingeniera_app.data.entities.EquipoEntity
 import com.example.induztek_ingeniera_app.data.entities.ProtocoloConDetalles
 import com.example.induztek_ingeniera_app.data.entities.ProtocoloEntity
 import com.example.induztek_ingeniera_app.data.entities.UsuarioEntity
@@ -10,24 +12,48 @@ import kotlinx.coroutines.flow.firstOrNull
 
 /**
  * REPOSITORIO
- * Es la única fuente de datos de la app. Hoy los protocolos vienen de SQLite
- * y la sesión de Room / SharedPreferences; más adelante podrían venir de un
- * microservicio sin que el ViewModel ni la vista tengan que cambiar.
+ * Es la única fuente de datos de la app. Hoy los datos vienen de Room / SQLite;
+ * más adelante podrían venir de un servicio REST sin que el ViewModel ni la vista tengan que cambiar.
  */
 class ProtocoloRepository(
     private val usuarioDao: UsuarioDao,
-    private val protocoloDao: ProtocoloDao
+    private val protocoloDao: ProtocoloDao,
+    private val equipoDao: EquipoDao // Inyección de EquipoDao
 ) {
-    // Autenticación de sesiones de usuario
+    // Autenticación de sesiones de usuario (Consulta directa suspend)
     suspend fun iniciarSesion(correo: String, contrasena: String): UsuarioEntity? {
-        return usuarioDao.iniciarSesion(correo, contrasena).firstOrNull()
+        return usuarioDao.iniciarSesion(correo, contrasena)
     }
 
     suspend fun buscarUsuarioPorId(id: Long): UsuarioEntity? {
         return usuarioDao.buscarUsuarioPorId(id).firstOrNull()
     }
 
-    // Escritura de Órdenes de Trabajo (Soporta flujos asíncronos nativos suspend)
+    // --- MÓDULO EQUIPOS ---
+
+    // Obtener todos los equipos para el perfil del Técnico
+    fun obtenerTodosLosEquipos(): Flow<List<EquipoEntity>> {
+        return equipoDao.obtenerTodos()
+    }
+
+    // Obtener los equipos pertenecientes a un cliente específico
+    fun obtenerEquiposPorCliente(idCliente: Long): Flow<List<EquipoEntity>> {
+        return equipoDao.obtenerEquiposPorCliente(idCliente)
+    }
+
+    // Buscar un equipo por su ID
+    fun buscarEquipoPorId(idEquipo: Long): Flow<EquipoEntity?> {
+        return equipoDao.buscarEquipoPorId(idEquipo)
+    }
+
+    // Actualización de ubicación y coordenadas de equipos
+    suspend fun actualizarUbicacionEquipo(idEquipo: Long, direccion: String, latitud: Double, longitud: Double) {
+        equipoDao.actualizarUbicacion(idEquipo, direccion, latitud, longitud)
+    }
+
+    // --- MÓDULO PROTOCOLOS ---
+
+    // Escritura de Órdenes de Trabajo
     suspend fun insertarProtocolo(protocolo: ProtocoloEntity): Long {
         return protocoloDao.insertarProtocolo(protocolo)
     }

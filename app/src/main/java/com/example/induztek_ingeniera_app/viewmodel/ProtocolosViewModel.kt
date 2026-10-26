@@ -3,6 +3,7 @@ package com.example.induztek_ingeniera_app.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.induztek_ingeniera_app.data.ProtocoloRepository
+import com.example.induztek_ingeniera_app.data.entities.EquipoEntity
 import com.example.induztek_ingeniera_app.data.entities.ProtocoloConDetalles
 import com.example.induztek_ingeniera_app.data.entities.ProtocoloEntity
 import com.example.induztek_ingeniera_app.model.Equipo
@@ -23,9 +24,6 @@ import kotlinx.coroutines.launch
 
 // =====================================================================
 //  ProtocolosViewModel.kt  —  EL VIEWMODEL COMPARTIDO (Room Reactivo)
-//  ---------------------------------------------------------------------
-//  Hereda de ViewModel() estándar y recibe el repositorio inyectado.
-//  Usa flujos reactivos de Room para actualizar la UI automáticamente.
 // =====================================================================
 
 class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewModel() {
@@ -34,12 +32,28 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
     private val _usuarioActual = MutableStateFlow<Usuario?>(null)
     val usuarioActual: StateFlow<Usuario?> = _usuarioActual.asStateFlow()
 
-    // Equipos disponibles
-    private val _equipos = MutableStateFlow<List<Equipo>>(emptyList())
-    val equipos: StateFlow<List<Equipo>> = _equipos.asStateFlow()
+    // CONSULTA REACTIVA DE EQUIPOS:
+    // Si entra un Técnico (1L) -> Trae todos los equipos.
+    // Si entra un Cliente (2L) -> Trae únicamente sus equipos.
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val equipos: StateFlow<List<Equipo>> = _usuarioActual
+        .flatMapLatest { usuario ->
+            when (usuario?.rolId) {
+                1L -> repository.obtenerTodosLosEquipos().map { lista ->
+                    lista.map { it.toDomainModel() }
+                }
+                2L -> repository.obtenerEquiposPorCliente(usuario.id).map { lista ->
+                    lista.map { it.toDomainModel() }
+                }
+                else -> flowOf(emptyList())
+            }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
-    // CONSULTA REACTIVA: Cada vez que cambie el usuario actual, este bloque
-    // se suscribe automáticamente al Flow de Room del Cliente correspondiente.
+    // CONSULTA REACTIVA DE PROTOCOLOS
     @OptIn(ExperimentalCoroutinesApi::class)
     val protocolos: StateFlow<List<Protocolo>> = _usuarioActual
         .flatMapLatest { usuario ->
@@ -61,8 +75,14 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
         _usuarioActual.value = usuario
     }
 
-    // INSERT: Se ejecuta asíncronamente en una corrutina. Room actualizará la lista sola.
+    // UPDATE UBICACIÓN: Actualiza en la base de datos de Room
+    fun actualizarUbicacionEquipo(idEquipo: Long, direccion: String, latitud: Double, longitud: Double) {
+        viewModelScope.launch {
+            repository.actualizarUbicacionEquipo(idEquipo, direccion, latitud, longitud)
+        }
+    }
 
+    // INSERT: Se ejecuta asíncronamente en una corrutina.
     fun guardarProtocolo(protocolo: Protocolo) {
         viewModelScope.launch {
             val entity = ProtocoloEntity(
@@ -74,7 +94,7 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
                 atBt = protocolo.atBt,
                 atTierra = protocolo.atTierra,
                 btTierra = protocolo.btTierra,
-                indicePolarizacion = protocolo.indicePolarizacion, // Corregido: sin guion bajo
+                indicePolarizacion = protocolo.indicePolarizacion,
                 resultado = protocolo.resultado.name,
                 observaciones = protocolo.observaciones,
                 estado = protocolo.estado.name,
@@ -83,7 +103,6 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
             repository.insertarProtocolo(entity)
         }
     }
-
 
     // UPDATE: Cambia el estado a FORMALIZADO asíncronamente
     fun formalizar(id: Long) {
@@ -117,12 +136,25 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
     }
 
     fun obtenerEquipo(id: Long): Equipo? {
-        return _equipos.value.find { it.id == id }
+        return equipos.value.find { it.id == id }
     }
 
     // =====================================================================
     //  FUNCIONES DE EXTENSIÓN (Mapeo de capa de Datos a capa de Dominio)
     // =====================================================================
+    private fun EquipoEntity.toDomainModel(): Equipo {
+        return Equipo(
+            id = this.id_equipo,
+            codigo = this.codigo,
+            tipo = this.tipo,
+            instalacion = this.instalacion,
+            direccion = this.direccion,
+            latitud = this.latitud,
+            longitud = this.longitud,
+            clienteId = this.id_cliente
+        )
+    }
+
     private fun ProtocoloConDetalles.toDomainModel(): Protocolo {
         return Protocolo(
             id = this.protocolo.idProtocolo,

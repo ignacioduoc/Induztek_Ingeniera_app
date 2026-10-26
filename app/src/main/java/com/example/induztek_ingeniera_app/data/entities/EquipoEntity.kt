@@ -1,6 +1,5 @@
 package com.example.induztek_ingeniera_app.data.entities
 
-import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
@@ -17,9 +16,12 @@ import androidx.room.PrimaryKey
 )
 data class EquipoEntity(
     @PrimaryKey(autoGenerate = true)
-    @ColumnInfo(name = "id_equipo") val idEquipo: Long = 0,
+    val id_equipo: Long = 0,
     val codigo: String,
     val tipo: String,
     val instalacion: String,
-    @ColumnInfo(name = "id_cliente") val idCliente: Long
+    val direccion: String = "",
+    val latitud: Double = 0.0,
+    val longitud: Double = 0.0,
+    val id_cliente: Long
 )

@@ -72,4 +72,10 @@ dependencies {
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
+
+    // Mapa 100% gratuito basado en OpenStreetMap
+    implementation("org.osmdroid:osmdroid-android:6.1.18")
+
+    // Íconos extendidos de Material Design para Compose
+    implementation("androidx.compose.material:material-icons-extended")
 }

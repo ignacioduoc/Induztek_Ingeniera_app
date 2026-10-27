@@ -6,15 +6,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// =====================================================================
-//  Type.kt  —  TIPOGRAFÍA (equivale a font-family / font-size en CSS)
-//  ---------------------------------------------------------------------
-//  Material 3 define "roles" de texto: titleLarge, bodyMedium, labelLarge...
-//  Aquí solo sobrescribimos los que usamos; el resto queda por defecto.
-//  Los botones usan automáticamente el rol "labelLarge".
-//  Unidad "sp": como "dp" pero respeta el tamaño de letra del usuario.
-// =====================================================================
-
 val Tipografia = Typography(
     titleLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
@@ -34,7 +25,7 @@ val Tipografia = Typography(
         fontSize = 15.sp,
         lineHeight = 21.sp
     ),
-    labelLarge = TextStyle(             // <- texto de TODOS los botones
+    labelLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.SemiBold,
         fontSize = 15.sp,

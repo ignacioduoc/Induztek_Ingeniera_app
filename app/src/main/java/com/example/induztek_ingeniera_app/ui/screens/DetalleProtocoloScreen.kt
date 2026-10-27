@@ -47,17 +47,7 @@ import com.example.induztek_ingeniera_app.ui.formatearMedicion
 import com.example.induztek_ingeniera_app.ui.theme.Dimens
 import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
 
-// =====================================================================
-//  DetalleProtocoloScreen.kt  —  PANTALLA 5: DETALLE DEL PROTOCOLO (cliente)
-//  ---------------------------------------------------------------------
-//  Muestra el protocolo completo leído de la BD (con JOIN): equipo, prueba,
-//  técnico, mediciones, resultado, estado y la foto de evidencia.
-//  Botón "Ver historial del equipo" = compara con las pruebas anteriores.
-//  Botón "Formalizar protocolo" = UPDATE del estado. Antes pide confirmación
-//  con un AlertDialog (igual que "Eliminar" en la lista del profe), porque
-//  no se puede deshacer. Si ya está formalizado, el botón queda bloqueado.
-//  No tiene ViewModel propio: recibe el protocolo y avisa con lambdas.
-// =====================================================================
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,7 +57,7 @@ fun DetalleProtocoloScreen(
     onVerHistorial: () -> Unit,
     onVolver: () -> Unit
 ) {
-    // ¿Se muestra el diálogo "¿Formalizar el protocolo?"? Es estado de la pantalla.
+
     var mostrarDialogo by remember { mutableStateOf(false) }
 
     if (mostrarDialogo) {
@@ -89,8 +79,7 @@ fun DetalleProtocoloScreen(
         )
     }
 
-    // Bytes de la BD -> Bitmap -> ImageBitmap (igual que en el formulario).
-    // null = el técnico no tomó foto.
+
     val foto = remember(protocolo.foto) {
         protocolo.foto?.let { bytes -> ConvertidorImagen.aBitmap(bytes)?.asImageBitmap() }
     }
@@ -165,7 +154,7 @@ fun DetalleProtocoloScreen(
                 }
             }
 
-            // 5) Foto de evidencia que tomó el técnico (el mismo componente del formulario)
+            // 5) Foto de evidencia que tomó el técnico
             TarjetaSeccion(titulo = stringResource(R.string.seccion_foto)) {
                 if (foto != null) {
                     FotoEvidencia(foto = foto, descripcion = stringResource(R.string.cd_foto_evidencia))
@@ -174,15 +163,14 @@ fun DetalleProtocoloScreen(
                 }
             }
 
-            // Comparar con las pruebas anteriores del mismo equipo (lo pide el caso)
+            // Comparar con las pruebas anteriores del mismo equipo
             BotonSecundario(
                 texto = stringResource(R.string.btn_historial),
                 onClick = onVerHistorial,
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Solo se puede formalizar si está "Registrado en terreno";
-            // si ya está formalizado, el botón queda bloqueado (gris).
+
             BotonPrincipal(
                 texto = stringResource(R.string.btn_formalizar),
                 onClick = { mostrarDialogo = true },

@@ -11,33 +11,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-// =====================================================================
-//  NuevoProtocoloViewModel.kt  —  LÓGICA DEL FORMULARIO DEL PROTOCOLO
-//  ---------------------------------------------------------------------
-//  Igual que el FormularioViewModel del profe: guarda lo que se escribe,
-//  valida cada campo y, si todo está bien, ARMA el Protocolo y lo devuelve.
-//  No toca la BD: la pantalla le entrega el Protocolo al ViewModel
-//  compartido, que lo guarda (como el profe hace con registrar(usuario)).
-//
-//  ARREGLO (Paso 16): vuelve a NO recibir el Repository (nunca lo usaba).
-//  Así viewModel() lo puede crear solo, sin la Factory. Cuando pedía el
-//  Repository, la pantalla no lograba crearlo y la app se cerraba al abrir
-//  "Nuevo protocolo" ("Cannot create an instance of class NuevoProtocoloViewModel").
-// =====================================================================
 
 class NuevoProtocoloViewModel : ViewModel() {
 
-    // Privado y mutable: solo el ViewModel lo modifica
     private val _uiState = MutableStateFlow(ProtocoloUiState())
 
-    // Público y de solo lectura: la pantalla lo observa
     val uiState: StateFlow<ProtocoloUiState> = _uiState.asStateFlow()
 
     fun onTipoPruebaSeleccionado(tipo: String) {
         _uiState.update { it.copy(tipoPrueba = tipo) }
     }
 
-    // MEDICIÓN: una función por medición. Cada letra borra el error de ese campo.
     fun onAtBtCambia(valor: String) {
         _uiState.update { it.copy(atBt = valor, errorAtBt = null) }
     }
@@ -62,14 +46,12 @@ class NuevoProtocoloViewModel : ViewModel() {
         _uiState.update { it.copy(observaciones = valor, errorObservaciones = null) }
     }
 
-    // La cámara entrega un Bitmap (pesado). Se guarda como JPEG achicado (ByteArray),
-    // igual que el avatar en el UsuariosViewModel del profe (cambiarAvatarDesdeCamara).
+
     fun onFotoTomada(foto: Bitmap) {
         _uiState.update { it.copy(foto = ConvertidorImagen.aBytes(foto)) }
     }
 
-    // Botón "Guardar protocolo": valida cada campo. Si todo está bien, arma el
-    // Protocolo con los ids que recibe y lo devuelve; si hay errores, devuelve null.
+
     fun onGuardar(equipoId: Long, tecnicoId: Long): Protocolo? {
         val estado = _uiState.value
 
@@ -113,8 +95,7 @@ class NuevoProtocoloViewModel : ViewModel() {
         )
     }
 
-    // Regla para TODAS las mediciones: obligatoria, número y mayor que 0.
-    // Acepta coma o punto: "12,4" y "12.4" sirven.
+
     private fun validarMedicion(texto: String): String? {
         val numero = texto.replace(',', '.').toDoubleOrNull()
         return when {
@@ -125,6 +106,6 @@ class NuevoProtocoloViewModel : ViewModel() {
         }
     }
 
-    // "12,4" -> 12.4. Solo se llama después de validar, así que siempre es un número.
+
     private fun aNumero(texto: String): Double = texto.replace(',', '.').toDouble()
 }

@@ -34,7 +34,6 @@ interface ProtocoloDao {
     """)
     fun listarProtocolosDeEquipo(equipoId: Long): Flow<List<ProtocoloConDetalles>>
 
-    // FIX 1: Cambiado a Flow para evitar el choque de tipos en el generador de KSP con JOIN manuales
     @Query("""
         SELECT p.*, e.codigo, e.tipo, e.instalacion, t.nombre AS nombre_tecnico 
         FROM protocolos p 
@@ -44,12 +43,7 @@ interface ProtocoloDao {
     """)
     fun buscarProtocoloPorId(id: Long): Flow<ProtocoloConDetalles?>
 
-    // ARREGLO (Paso 16): vuelve a ser "suspend".
-    // Room NO deja usar la BD en el hilo principal (el que dibuja la pantalla).
-    // Sin "suspend", el botón Formalizar cerraba la app con el error
-    // "Cannot access database on the main thread". Con "suspend", Room hace
-    // el UPDATE en segundo plano, igual que actualizarUbicacion() de EquipoDao.
-    // Devuelve cuántas filas cambió (1 = OK). ¡Sin el WHERE se formalizarían TODOS!
+
     @Query("UPDATE protocolos SET estado = 'FORMALIZADO' WHERE id_protocolo = :id")
     suspend fun formalizarProtocolo(id: Long): Int
 }

@@ -16,21 +16,6 @@ import com.example.induztek_ingeniera_app.ui.styles.EstilosTarjeta
 import com.example.induztek_ingeniera_app.ui.theme.Dimens
 import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
 
-// =====================================================================
-//  TarjetaSeccion.kt  —  CONTENEDOR CARD CON TÍTULO + "SLOT"
-//  ---------------------------------------------------------------------
-//  Card = contenedor Material con fondo, esquinas redondeadas y sombra
-//         (en la web: un <div class="tarjeta">).
-//
-//  Este componente recibe su contenido como PARÁMETRO:
-//      contenido: @Composable ColumnScope.() -> Unit
-//  Eso se llama "slot": quien lo usa decide qué va adentro:
-//      TarjetaSeccion(titulo = "Datos") {
-//          CampoTexto(...)
-//          CampoTexto(...)
-//      }
-//  "ColumnScope" significa que lo de adentro se ordena en una Column.
-// =====================================================================
 
 @Composable
 fun TarjetaSeccion(
@@ -53,7 +38,7 @@ fun TarjetaSeccion(
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary
             )
-            contenido()   // <- aquí se dibuja lo que venga entre llaves
+            contenido()
         }
     }
 }

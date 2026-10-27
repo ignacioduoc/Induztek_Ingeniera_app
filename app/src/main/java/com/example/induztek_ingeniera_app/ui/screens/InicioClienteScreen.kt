@@ -56,11 +56,6 @@ import com.example.induztek_ingeniera_app.ui.theme.Dimens
 import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
 import kotlinx.coroutines.launch
 
-// =====================================================================
-//  InicioClienteScreen.kt  —  PANTALLA 4: INICIO DEL CLIENTE
-//  ---------------------------------------------------------------------
-//  Barra superior con el menú ☰, el saludo y la LISTA DE SUS PROTOCOLOS.
-// =====================================================================
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,7 +66,7 @@ fun InicioClienteScreen(
     onCerrarSesion: () -> Unit,
     onVerProtocolo: (Long) -> Unit
 ) {
-    // Decodificación reactiva de la foto guardada en SQLite (BLOB)
+
     val bitmapFoto = remember(usuario?.fotoPerfil) {
         usuario?.fotoPerfil?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
     }
@@ -106,7 +101,7 @@ fun InicioClienteScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                // Encabezado interactivo: Avatar + Saludo + Botón Editar Perfil
+
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -118,7 +113,7 @@ fun InicioClienteScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(Dimens.espacioMedio)
                     ) {
-                        // Avatar circular con foto o inicial
+
                         Box(
                             modifier = Modifier
                                 .size(48.dp)
@@ -142,7 +137,7 @@ fun InicioClienteScreen(
                             }
                         }
 
-                        // Textos de usuario y empresa
+
                         Column(
                             modifier = Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(Dimens.espacioMini)
@@ -157,7 +152,7 @@ fun InicioClienteScreen(
                             )
                         }
 
-                        // Botón explícito para la edición de perfil
+
                         IconButton(onClick = onEditarPerfil) {
                             Icon(
                                 imageVector = Icons.Default.Edit,

@@ -22,9 +22,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-// =====================================================================
-//  ProtocolosViewModel.kt  —  EL VIEWMODEL COMPARTIDO (Room Reactivo)
-// =====================================================================
 
 class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewModel() {
 
@@ -32,9 +29,7 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
     private val _usuarioActual = MutableStateFlow<Usuario?>(null)
     val usuarioActual: StateFlow<Usuario?> = _usuarioActual.asStateFlow()
 
-    // CONSULTA REACTIVA DE EQUIPOS:
-    // Si entra un Técnico (1L) -> Trae todos los equipos.
-    // Si entra un Cliente (2L) -> Trae únicamente sus equipos.
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val equipos: StateFlow<List<Equipo>> = _usuarioActual
         .flatMapLatest { usuario ->
@@ -53,7 +48,6 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
             initialValue = emptyList()
         )
 
-    // CONSULTA REACTIVA DE PROTOCOLOS
     @OptIn(ExperimentalCoroutinesApi::class)
     val protocolos: StateFlow<List<Protocolo>> = _usuarioActual
         .flatMapLatest { usuario ->
@@ -70,12 +64,12 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
             initialValue = emptyList()
         )
 
-    // Se llama desde AppNavegacion al iniciar sesión con éxito
+
     fun registrarIngreso(usuario: Usuario) {
         _usuarioActual.value = usuario
     }
 
-    // UPDATE PERFIL: Modifica los datos del usuario actual y actualiza el estado reactivo
+
     fun actualizarPerfil(nombre: String, correo: String, fotoPerfil: ByteArray?) {
         val usuario = _usuarioActual.value ?: return
         viewModelScope.launch {
@@ -88,14 +82,14 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
         }
     }
 
-    // UPDATE UBICACIÓN: Actualiza en la base de datos de Room
+
     fun actualizarUbicacionEquipo(idEquipo: Long, direccion: String, latitud: Double, longitud: Double) {
         viewModelScope.launch {
             repository.actualizarUbicacionEquipo(idEquipo, direccion, latitud, longitud)
         }
     }
 
-    // INSERT: Se ejecuta asíncronamente en una corrutina.
+
     fun guardarProtocolo(protocolo: Protocolo) {
         viewModelScope.launch {
             val entity = ProtocoloEntity(
@@ -117,19 +111,19 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
         }
     }
 
-    // UPDATE: Cambia el estado a FORMALIZADO asíncronamente
+
     fun formalizar(id: Long) {
         viewModelScope.launch {
             repository.formalizarProtocolo(id)
         }
     }
 
-    // Cierre de sesión reactivo
+
     fun cerrarSesion() {
         _usuarioActual.value = null
     }
 
-    // Lectura asíncrona de un único protocolo para la pantalla de detalle
+
     fun obtenerProtocolo(id: Long, onResultado: (Protocolo?) -> Unit) {
         viewModelScope.launch {
             val entity = repository.buscarProtocoloPorId(id)
@@ -137,7 +131,7 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
         }
     }
 
-    // Historial reactivo para un equipo específico
+
     fun historialDe(equipoId: Long): StateFlow<List<Protocolo>> {
         return repository.listarProtocolosDeEquipo(equipoId)
             .map { lista -> lista.map { it.toDomainModel() } }
@@ -152,9 +146,7 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
         return equipos.value.find { it.id == id }
     }
 
-    // =====================================================================
-    //  FUNCIONES DE EXTENSIÓN (Mapeo de capa de Datos a capa de Dominio)
-    // =====================================================================
+
     private fun EquipoEntity.toDomainModel(): Equipo {
         return Equipo(
             id = this.id_equipo,

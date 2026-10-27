@@ -9,15 +9,6 @@ import androidx.compose.ui.graphics.Shape
 import com.example.induztek_ingeniera_app.ui.theme.Dimens
 import com.example.induztek_ingeniera_app.ui.theme.GrisDeshabilitado
 
-// =====================================================================
-//  EstilosCampo.kt  —  "HOJA DE ESTILOS" DE LOS CAMPOS DEL FORMULARIO
-//  ---------------------------------------------------------------------
-//  Equivale en CSS a:
-//     input            { border-radius: 12px; border-color: gris; }
-//     input:focus      { border-color: verde; }
-//     input.error      { border-color: rojo; }
-//  En Compose cada "estado" (enfocado, sin foco, con error) tiene su color.
-// =====================================================================
 
 object EstilosCampo {
 

@@ -20,21 +20,7 @@ import com.example.induztek_ingeniera_app.ui.styles.EstilosCampo
 import com.example.induztek_ingeniera_app.ui.theme.Dimens
 import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
 
-// =====================================================================
-//  CampoTexto.kt  —  CAMPO DE TEXTO REUTILIZABLE (el <input> de HTML)
-//  ---------------------------------------------------------------------
-//  IMPORTANTE: en Compose un campo NO guarda su propio texto.
-//   - "valor" es lo que se muestra (viene del estado del ViewModel).
-//   - "onValorCambia" avisa cada vez que el usuario escribe una letra.
-//  Si no actualizamos el estado en onValorCambia, el campo NO cambia.
-//  Esto se llama "estado elevado" (state hoisting).
-// =====================================================================
 
-/**
- * @param icono      ícono de la izquierda (R.drawable.xxx), o null si no lleva.
- * @param error      mensaje de error bajo el campo; null = sin error.
- * @param tipoTeclado Text, Email, Number, Phone... (cambia el teclado del celular)
- */
 @Composable
 fun CampoTexto(
     valor: String,
@@ -51,8 +37,6 @@ fun CampoTexto(
         onValueChange = onValorCambia,
         modifier = modifier.fillMaxWidth(),
         label = { Text(etiqueta) },                       // texto flotante (como <label>)
-        // CAMBIO (Ícono opcional): si hay ícono se pasa la función que lo dibuja;
-        // si no hay (null), el campo no deja un espacio vacío a la izquierda.
         leadingIcon = if (icono != null) {
             {                                             // ícono a la izquierda
                 Icon(
@@ -64,18 +48,17 @@ fun CampoTexto(
         } else {
             null
         },
-        // NUEVO (Ícono de error): lo pide la pauta. Solo aparece cuando hay error
-        // y Material lo pinta rojo solo, porque el campo está en estado de error.
+
         trailingIcon = {                                  // ícono a la DERECHA
             if (error != null) {
                 Icon(
                     painter = painterResource(R.drawable.ic_error),
-                    contentDescription = null,            // el mensaje de abajo ya explica el error
+                    contentDescription = null,
                     modifier = Modifier.size(Dimens.tamanoIcono)
                 )
             }
         },
-        isError = error != null,                          // borde rojo si hay error
+        isError = error != null,
         supportingText = { if (error != null) Text(error) }, // texto de ayuda bajo el campo
         singleLine = true,                                // una sola línea
         keyboardOptions = KeyboardOptions(

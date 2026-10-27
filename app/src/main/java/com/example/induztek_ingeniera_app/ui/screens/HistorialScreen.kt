@@ -49,23 +49,7 @@ import com.example.induztek_ingeniera_app.ui.styles.EstilosCampo
 import com.example.induztek_ingeniera_app.ui.theme.Dimens
 import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
 
-// =====================================================================
-//  HistorialScreen.kt  —  PANTALLA 6: HISTORIAL DEL EQUIPO
-//  ---------------------------------------------------------------------
-//  Lo pide el caso: "historial de pruebas anteriores del mismo equipo
-//  para fines de comparación". Tiene 3 partes:
-//     1) Equipo
-//     2) Gráfico de barras ANIMADO (el GraficoBarras del profe) con la
-//        medición elegida en una lista desplegable
-//     3) La lista de todas las pruebas del equipo, con sus chips
-//  LazyColumn:  item { } = un elemento suelto (las tarjetas de arriba)
-//               items(lista) { } = uno por cada prueba
-//  No tiene ViewModel propio: recibe el equipo y su historial por parámetro.
-// =====================================================================
 
-// MEDICIÓN: las 4 mediciones que se pueden graficar.
-// "nombre" es el id del texto en strings.xml (R.string.campo_at_bt...): se muestra
-// con stringResource(medicion.nombre), los mismos nombres del formulario.
 private enum class Medicion(val nombre: Int) {
     AT_BT(R.string.campo_at_bt),
     AT_TIERRA(R.string.campo_at_tierra),
@@ -73,7 +57,7 @@ private enum class Medicion(val nombre: Int) {
     INDICE_POLARIZACION(R.string.campo_indice_pol)
 }
 
-// MEDICIÓN: el valor de la medición elegida dentro de un protocolo
+
 private fun valorDe(protocolo: Protocolo, medicion: Medicion): Double = when (medicion) {
     Medicion.AT_BT -> protocolo.atBt
     Medicion.AT_TIERRA -> protocolo.atTierra
@@ -88,17 +72,16 @@ fun HistorialScreen(
     historial: List<Protocolo>,
     onVolver: () -> Unit
 ) {
-    // Estado de la pantalla: qué medición se grafica y si la lista está abierta
+
     var medicion by remember { mutableStateOf(Medicion.AT_BT) }
     var expandido by remember { mutableStateOf(false) }
 
-    // El historial llega del más nuevo al más antiguo. Para el gráfico se toman
-    // las 6 más nuevas y se dan vuelta: la más antigua queda a la izquierda.
+
     val ultimas = historial.take(6).reversed()
     val datos = ultimas.map { protocolo ->
         DatoGrafico(etiqueta = formatearFechaCorta(protocolo.fechaHora), valor = valorDe(protocolo, medicion))
     }
-    // Color de cada barra = su resultado (los mismos colores de los chips)
+
     val colores = ultimas.map { protocolo -> colorDe(protocolo.resultado) }
 
     Scaffold(
@@ -129,7 +112,7 @@ fun HistorialScreen(
             contentPadding = PaddingValues(Dimens.espacioPantalla),
             verticalArrangement = Arrangement.spacedBy(Dimens.espacioMedio)
         ) {
-            // 1) Equipo
+
             item {
                 TarjetaSeccion(titulo = stringResource(R.string.seccion_equipo)) {
                     Text(text = "${equipo.codigo} · ${equipo.tipo}", style = MaterialTheme.typography.bodyMedium)
@@ -138,14 +121,14 @@ fun HistorialScreen(
                 }
             }
 
-            // 2) Gráfico de comparación
+
             item {
                 TarjetaSeccion(titulo = stringResource(R.string.seccion_grafico)) {
-                    // Sin pruebas no hay nada que graficar (igual que "sin_datos" del profe)
+
                     if (historial.isEmpty()) {
                         Text(text = stringResource(R.string.sin_pruebas), style = MaterialTheme.typography.bodyMedium)
                     } else {
-                        // Lista desplegable para elegir la medición (igual que "Tipo de prueba")
+
                         ExposedDropdownMenuBox(
                             expanded = expandido,
                             onExpandedChange = { expandido = it }
@@ -178,7 +161,7 @@ fun HistorialScreen(
                             }
                         }
 
-                        // Las barras crecen desde 0 hasta su valor (animación del profe)
+
                         GraficoBarras(datos = datos, colores = colores)
 
                         Text(
@@ -190,7 +173,7 @@ fun HistorialScreen(
                 }
             }
 
-            // 3) Todas las pruebas del equipo, de la más nueva a la más antigua
+
             if (historial.isNotEmpty()) {
                 item {
                     Text(
@@ -222,8 +205,6 @@ fun HistorialScreen(
     }
 }
 
-// Datos de ejemplo para la vista previa: TR-0142 con sus 3 pruebas de la BD
-// y una nueva con observación (de la más nueva a la más antigua, como en la BD)
 private val equipoPreview = Equipo(
     "TR-0142", "Transformador 500 kVA", "Planta Lampa · S/E-02",
     clienteId = 2, id = 1, empresaCliente = "Industrias Aurora S.A."
@@ -262,8 +243,7 @@ private val historialPreview = listOf(
     )
 )
 
-// Ojo: en la vista previa normal las barras salen en 0 porque la animación no corre.
-// Para verlas crecer: botón "Start Interactive Mode" de la vista previa, o ejecutar la app.
+
 @Preview(showBackground = true, heightDp = 1200)
 @Composable
 private fun HistorialPreview() {

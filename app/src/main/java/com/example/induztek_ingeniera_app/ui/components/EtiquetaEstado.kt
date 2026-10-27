@@ -21,17 +21,6 @@ import com.example.induztek_ingeniera_app.ui.theme.Exito
 import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
 import com.example.induztek_ingeniera_app.ui.theme.Secundario
 
-// =====================================================================
-//  EtiquetaEstado.kt  —  "Chip" de color para el resultado y el estado.
-//  ---------------------------------------------------------------------
-//  Adaptado de EtiquetaInteres del profe: la misma píldora, pero
-//   - el COLOR llega por parámetro (cada resultado / estado tiene el suyo)
-//   - es más compacta (letra labelMedium y menos relleno) para que quepan
-//     DOS chips en una fila de la lista.
-//  Surface = el contenedor más simple de Material: pinta un fondo con
-//  forma y color, y pone su contenido encima.
-//  En CSS: <span class="chip"> con background, border-radius:50px y padding.
-// =====================================================================
 
 @Composable
 fun EtiquetaEstado(
@@ -53,9 +42,7 @@ fun EtiquetaEstado(
     }
 }
 
-// Color de cada RESULTADO (ver los comentarios de Color.kt).
-// Dos funciones con el mismo nombre y distinto tipo de parámetro = SOBRECARGA:
-// Kotlin elige la correcta según lo que reciba.
+
 @Composable
 fun colorDe(resultado: Resultado): Color = when (resultado) {
     Resultado.APROBADO -> Exito                                // verde
@@ -63,7 +50,7 @@ fun colorDe(resultado: Resultado): Color = when (resultado) {
     Resultado.RECHAZADO -> MaterialTheme.colorScheme.error     // rojo (del tema)
 }
 
-// Color de cada ESTADO del protocolo
+
 @Composable
 fun colorDe(estado: EstadoProtocolo): Color = when (estado) {
     EstadoProtocolo.REGISTRADO_EN_TERRENO -> Secundario        // azul

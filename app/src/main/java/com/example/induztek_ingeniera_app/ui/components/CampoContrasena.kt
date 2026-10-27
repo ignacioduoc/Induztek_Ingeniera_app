@@ -22,14 +22,6 @@ import com.example.induztek_ingeniera_app.ui.styles.EstilosCampo
 import com.example.induztek_ingeniera_app.ui.theme.Dimens
 import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
 
-// =====================================================================
-//  CampoContrasena.kt  —  Campo con puntos (••••) y botón "ojo".
-//  ---------------------------------------------------------------------
-//  visualTransformation cambia CÓMO se muestra el texto, no lo que vale:
-//   - PasswordVisualTransformation() -> ••••••
-//   - VisualTransformation.None      -> texto normal
-//  Si la contraseña se ve o no es ESTADO: lo decide el ViewModel.
-// =====================================================================
 
 @Composable
 fun CampoContrasena(

@@ -26,14 +26,6 @@ import com.example.induztek_ingeniera_app.ui.theme.Dimens
 import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
 import kotlinx.coroutines.launch
 
-// =====================================================================
-//  MenuSesion.kt  —  MENÚ LATERAL (☰) CON "CERRAR SESIÓN"
-//  ---------------------------------------------------------------------
-//  Es el menú lateral y el diálogo de confirmación del FormularioScreen
-//  del profe, convertido en componente para usarlo en las dos pantallas
-//  de inicio (técnico y cliente) sin repetir código.
-//  "contenido" es un slot: la pantalla que queda detrás del menú.
-// =====================================================================
 
 @Composable
 fun MenuSesion(
@@ -43,7 +35,7 @@ fun MenuSesion(
 ) {
     val scope = rememberCoroutineScope()
 
-    // ¿Se muestra el diálogo "¿Cerrar sesión?"? Es estado de la pantalla, no del ViewModel.
+
     var mostrarDialogo by remember { mutableStateOf(false) }
 
     if (mostrarDialogo) {

@@ -9,10 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Shape
 import com.example.induztek_ingeniera_app.ui.theme.Dimens
 
-// =====================================================================
-//  EstilosTarjeta.kt  —  Estilo común para todas las Card de la app.
-//  En CSS:  .tarjeta { background: white; border-radius: 20px; box-shadow: ... }
-// =====================================================================
 
 object EstilosTarjeta {
 

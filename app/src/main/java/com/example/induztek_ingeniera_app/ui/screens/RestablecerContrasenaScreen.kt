@@ -40,23 +40,13 @@ import com.example.induztek_ingeniera_app.ui.theme.ExitoFondo
 import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
 import com.example.induztek_ingeniera_app.viewmodel.RestablecerContrasenaViewModel
 
-// =====================================================================
-//  RestablecerContrasenaScreen.kt  —  PANTALLA 7: RESTABLECER CONTRASEÑA
-//  ---------------------------------------------------------------------
-//  Se llega desde el login con "¿Olvidaste tu contraseña?".
-//  Dos funciones, igual que LoginScreen y las pantallas del profe:
-//   - RestablecerContrasenaScreen  = se conecta con el ViewModel: lee el
-//                                    estado y le avisa lo que hace el usuario.
-//   - RestablecerContrasenaContent = solo dibuja con lo que recibe. Como no
-//                                    usa el ViewModel, se puede ver con @Preview.
-// =====================================================================
 
 @Composable
 fun RestablecerContrasenaScreen(
     onVolver: () -> Unit,
     viewModel: RestablecerContrasenaViewModel
 ) {
-    // Lee el StateFlow del ViewModel. Cada vez que cambia, la pantalla se redibuja.
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     RestablecerContrasenaContent(
@@ -82,7 +72,7 @@ fun RestablecerContrasenaContent(
     onVolver: () -> Unit
 ) {
     Scaffold(
-        // Barra superior con flecha para volver al login (igual que en Nuevo protocolo)
+
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.titulo_restablecer)) },
@@ -125,8 +115,7 @@ fun RestablecerContrasenaContent(
                 tipoTeclado = KeyboardType.Email
             )
 
-            // Los dos campos usan el MISMO estado "contrasenaVisible":
-            // al tocar cualquiera de los dos ojos se muestran (u ocultan) ambas.
+
             CampoContrasena(
                 valor = uiState.nueva,
                 onValorCambia = onNuevaCambia,
@@ -151,7 +140,7 @@ fun RestablecerContrasenaContent(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Solo aparece cuando la BD ya guardó la contraseña nueva
+
             if (uiState.cambioExitoso) {
                 MensajeContrasenaCambiada()
                 BotonSecundario(
@@ -164,7 +153,7 @@ fun RestablecerContrasenaContent(
     }
 }
 
-// Tarjeta verde de confirmación, igual que el MensajeExito del formulario del profe
+
 @Composable
 private fun MensajeContrasenaCambiada() {
     Card(

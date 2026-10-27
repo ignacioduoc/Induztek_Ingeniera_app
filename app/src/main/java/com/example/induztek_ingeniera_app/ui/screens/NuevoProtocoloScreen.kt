@@ -74,16 +74,6 @@ import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
 import com.example.induztek_ingeniera_app.viewmodel.NuevoProtocoloViewModel
 import kotlinx.coroutines.launch
 
-// =====================================================================
-//  NuevoProtocoloScreen.kt  —  PANTALLA 3: NUEVO PROTOCOLO (técnico)
-//  ---------------------------------------------------------------------
-//  El formulario que el técnico llena en terreno, dividido en tarjetas:
-//     Equipo (datos de la BD) · Prueba · Mediciones · Resultado · Foto
-//  Igual que el formulario del profe:
-//   - NuevoProtocoloScreen  = se conecta con su ViewModel y con la cámara.
-//   - NuevoProtocoloContent = solo dibuja (se puede ver con @Preview).
-//  La foto usa los 4 pasos de los permisos del profe (ver Permisos.kt).
-// =====================================================================
 
 @Composable
 fun NuevoProtocoloScreen(
@@ -95,18 +85,16 @@ fun NuevoProtocoloScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // Context = acceso a los servicios de Android (permisos, Ajustes...)
+
     val context = LocalContext.current
 
-    // Snackbar para avisar cuando el técnico rechaza el permiso.
-    // stringResource solo funciona en un @Composable: los textos se preparan aquí.
+
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val textoCamaraDenegada = stringResource(R.string.permiso_camara_denegado)
     val textoAjustes = stringResource(R.string.btn_ajustes)
 
-    // PASO 4 (rechazo) -> avisar y ofrecer abrir Ajustes.
-    // Si el técnico rechazó 2 veces, Android ya no muestra el diálogo: solo queda Ajustes.
+
     fun avisarPermisoDenegado(mensaje: String) {
         scope.launch {
             val resultado = snackbarHostState.showSnackbar(
@@ -118,18 +106,14 @@ fun NuevoProtocoloScreen(
         }
     }
 
-    // "launcher" = lanzador de OTRA app que nos devuelve un resultado.
-    // TakePicturePreview abre la app de cámara y entrega un Bitmap (o null si canceló).
-    // Como la app DECLARA el permiso CAMERA, Android exige que esté CONCEDIDO
-    // antes de abrir la cámara (si no, lanza SecurityException).
+
     val lanzadorCamara = rememberLauncherForActivityResult(
         ActivityResultContracts.TakePicturePreview()
     ) { foto: Bitmap? ->
         if (foto != null) viewModel.onFotoTomada(foto)
     }
 
-    // Se llama SOLO con el permiso ya concedido.
-    // try/catch: si el equipo no tiene app de cámara, la app no se cae.
+
     fun abrirCamara() {
         try {
             lanzadorCamara.launch(null)
@@ -137,17 +121,15 @@ fun NuevoProtocoloScreen(
         }
     }
 
-    // PASO 3 -> PEDIR. RequestPermission muestra el diálogo del sistema
-    // "¿Permitir que Induztek Protocolos tome fotos y grabe videos?" y entrega true o false.
+
     val pedirPermisoCamara = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { concedido: Boolean ->
-        // PASO 4 -> REACCIONAR a la respuesta del técnico
+
         if (concedido) abrirCamara() else avisarPermisoDenegado(textoCamaraDenegada)
     }
 
-    // Bytes del estado -> Bitmap -> ImageBitmap (el tipo que usa Compose).
-    // remember(uiState.foto): se convierte solo cuando la foto CAMBIA, no en cada dibujo.
+
     val foto = remember(uiState.foto) {
         uiState.foto?.let { bytes -> ConvertidorImagen.aBitmap(bytes)?.asImageBitmap() }
     }
@@ -162,14 +144,11 @@ fun NuevoProtocoloScreen(
         onIndicePolarizacionCambia = viewModel::onIndicePolarizacionCambia,     // MEDICIÓN
         onResultadoSeleccionado = viewModel::onResultadoSeleccionado,
         onObservacionesCambia = viewModel::onObservacionesCambia,
-        // Si el formulario está bien, el Protocolo armado se entrega hacia afuera
         onGuardar = { viewModel.onGuardar(equipo.id, tecnicoId)?.let { protocolo -> onGuardar(protocolo) } },
         onVolver = onVolver,
         foto = foto,
         snackbarHostState = snackbarHostState,
         onTomarFoto = {
-            // PASO 2 -> VERIFICAR. ¿Ya tengo permiso? Uso la cámara.
-            // ¿No? Lo pido (PASO 3) y la respuesta llega a pedirPermisoCamara (PASO 4).
             if (Permisos.tiene(context, Permisos.CAMARA)) abrirCamara()
             else pedirPermisoCamara.launch(Permisos.CAMARA)
         }
@@ -190,7 +169,7 @@ fun NuevoProtocoloContent(
     onObservacionesCambia: (String) -> Unit,
     onGuardar: () -> Unit,
     onVolver: () -> Unit,
-    foto: ImageBitmap? = null,             // "= ..." -> los @Preview no cambian
+    foto: ImageBitmap? = null,
     onTomarFoto: () -> Unit = {},
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
@@ -213,7 +192,7 @@ fun NuevoProtocoloContent(
                 )
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },   // aquí aparece el aviso del permiso
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
@@ -224,7 +203,7 @@ fun NuevoProtocoloContent(
                 .padding(Dimens.espacioPantalla),
             verticalArrangement = Arrangement.spacedBy(Dimens.espacioMedio)
         ) {
-            // 1) Equipo: datos que vienen de la BD (no se escriben)
+
             TarjetaSeccion(titulo = stringResource(R.string.seccion_equipo)) {
                 Text(text = "${equipo.codigo} · ${equipo.tipo}", style = MaterialTheme.typography.bodyMedium)
                 Text(text = equipo.empresaCliente, style = MaterialTheme.typography.bodyMedium)
@@ -235,7 +214,7 @@ fun NuevoProtocoloContent(
                 )
             }
 
-            // 2) Prueba: lista desplegable, igual que "Ciudad" en el formulario del profe
+
             TarjetaSeccion(titulo = stringResource(R.string.seccion_prueba)) {
                 // ¿La lista está abierta? Es estado de la pantalla, no del ViewModel.
                 var expandido by remember { mutableStateOf(false) }
@@ -273,7 +252,7 @@ fun NuevoProtocoloContent(
                 }
             }
 
-            // 3) MEDICIÓN: un campo por medición, con teclado de números con decimales
+
             TarjetaSeccion(titulo = stringResource(R.string.seccion_mediciones)) {
                 CampoTexto(
                     valor = uiState.atBt,
@@ -309,7 +288,7 @@ fun NuevoProtocoloContent(
                 )
             }
 
-            // 4) Resultado (RadioButton) y observaciones
+
             TarjetaSeccion(titulo = stringResource(R.string.seccion_resultado)) {
                 GrupoRadio(
                     opciones = Resultado.entries,
@@ -326,7 +305,7 @@ fun NuevoProtocoloContent(
                 )
             }
 
-            // 5) Foto de evidencia (cámara). Es opcional.
+
             TarjetaSeccion(titulo = stringResource(R.string.seccion_foto)) {
                 if (foto != null) {
                     // Esquinas redondeadas + tamaño ajustado (ver FotoEvidencia.kt)
@@ -343,7 +322,7 @@ fun NuevoProtocoloContent(
                 )
             }
 
-            // Una vez guardado, el botón se bloquea para no guardar dos veces
+
             BotonPrincipal(
                 texto = stringResource(R.string.btn_guardar_protocolo),
                 onClick = onGuardar,
@@ -361,14 +340,13 @@ fun NuevoProtocoloContent(
     }
 }
 
-// Botón con contorno, ícono y texto (el BotonConIcono del PerfilScreen del profe).
-// Privado: solo se usa aquí.
+
 @Composable
 private fun BotonConIcono(
     icono: Int,
     texto: String,
     onClick: () -> Unit,
-    habilitado: Boolean = true      // CAMBIO (Bloquear al guardar): igual que en BotonPrincipal
+    habilitado: Boolean = true
 ) {
     OutlinedButton(onClick = onClick, enabled = habilitado) {
         Icon(painterResource(icono), contentDescription = null, modifier = Modifier.size(Dimens.tamanoIcono))
@@ -377,7 +355,7 @@ private fun BotonConIcono(
     }
 }
 
-// Tarjeta verde de confirmación, igual que el MensajeExito del formulario del profe
+
 @Composable
 private fun MensajeGuardado() {
     Card(
@@ -403,7 +381,7 @@ private fun MensajeGuardado() {
     }
 }
 
-// Equipo de ejemplo para las vistas previas (el mismo de la BD)
+
 private val equipoPreview = Equipo(
     "TR-0142", "Transformador 500 kVA", "Planta Lampa · S/E-02",
     clienteId = 2, id = 1, empresaCliente = "Industrias Aurora S.A."

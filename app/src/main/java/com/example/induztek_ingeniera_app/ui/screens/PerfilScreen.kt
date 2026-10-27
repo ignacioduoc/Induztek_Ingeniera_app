@@ -60,9 +60,7 @@ import com.example.induztek_ingeniera_app.model.Usuario
 import java.io.ByteArrayOutputStream
 import java.io.File
 
-/**
- * Función de seguridad para redimensionar y comprimir Bitmaps antes de guardar en SQLite (BLOB).
- */
+
 private fun comprimirYRedimensionarBitmap(bitmapOriginal: Bitmap, maxDim: Int = 512): ByteArray {
     val width = bitmapOriginal.width
     val height = bitmapOriginal.height
@@ -142,7 +140,7 @@ fun PerfilScreen(
         }
     }
 
-    // Launcher para solicitar el permiso de Cámara en Runtime
+
     val launcherPermisoCamara = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { concedido ->
@@ -159,7 +157,7 @@ fun PerfilScreen(
         }
     }
 
-    // Launcher para seleccionar foto desde la Galería
+
     val launcherGaleria = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -181,7 +179,7 @@ fun PerfilScreen(
         }
     }
 
-    // Diálogo emergente
+
     if (mostrarDialogoOrigen) {
         AlertDialog(
             onDismissRequest = { mostrarDialogoOrigen = false },

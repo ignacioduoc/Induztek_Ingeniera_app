@@ -1,23 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    res/values/strings.xml: TEXTOS de la app.
-    Buena práctica: no escribir textos "en duro" en el código.
-    En Compose se leen con stringResource(R.string.nombre).
-    Ventaja: traducir la app = crear values-en/strings.xml con los mismos nombres.
--->
+
 <resources>
     <string name="app_name">Induztek Protocolos</string>
 
-    <!-- Pantalla 1: Inicio de sesión -->
-    <string name="titulo_login">Protocolos en Terreno</string>
+
+    <string name="titulo_login">Protocolos Induztek</string>
     <string name="subtitulo_login">Ingresa con tu cuenta</string>
     <string name="campo_correo">Correo electrónico</string>
     <string name="campo_contrasena">Contraseña</string>
     <string name="btn_ingresar">Ingresar</string>
-    <string name="nota_login">La app reconoce si eres técnico o cliente según tu cuenta y te muestra tus pantallas.</string>
+    <string name="nota_login">La App es para poder registrar o ver los protocolos que se realizaron en las visitas en terreno.</string>
     <string name="btn_olvide_contrasena">¿Olvidaste tu contraseña?</string>
 
-    <!-- Pantallas de inicio (técnico y cliente): saludo y menú para cerrar sesión -->
+
     <string name="saludo">Hola, %1$s</string>
     <string name="rol_empresa">%1$s · %2$s</string>
     <string name="menu_cerrar_sesion">Cerrar sesión</string>
@@ -25,19 +20,19 @@
     <string name="dialogo_mensaje">Tendrás que ingresar de nuevo con tu correo y contraseña.</string>
     <string name="dialogo_cancelar">Cancelar</string>
 
-    <!-- Pantalla 2: Inicio del técnico -->
+
     <string name="titulo_inicio_tecnico">Equipos</string>
     <string name="indicacion_equipos">Toca un equipo para registrar una nueva prueba.</string>
     <string name="lista_vacia_equipos">No hay equipos registrados</string>
 
-    <!-- Pantalla 3: Nuevo protocolo (formulario del técnico) -->
+
     <string name="titulo_nuevo_protocolo">Nuevo protocolo</string>
     <string name="seccion_equipo">Equipo</string>
     <string name="fecha_hora">Fecha y hora: %1$s</string>
     <string name="seccion_prueba">Prueba</string>
     <string name="campo_tipo_prueba">Tipo de prueba</string>
     <string name="seccion_mediciones">Mediciones</string>
-    <!-- MEDICIÓN: nombre de cada medición (se ve en el formulario, el detalle y el historial) -->
+
     <string name="campo_at_bt">AT – BT (GΩ)</string>
     <string name="campo_at_tierra">AT – Tierra (GΩ)</string>
     <string name="campo_bt_tierra">BT – Tierra (GΩ)</string>
@@ -47,22 +42,22 @@
     <string name="btn_guardar_protocolo">Guardar protocolo</string>
     <string name="protocolo_guardado">Protocolo guardado: el cliente ya puede verlo.</string>
 
-    <!-- Pantalla 3: Foto de evidencia (cámara) -->
+
     <string name="seccion_foto">Foto de evidencia</string>
     <string name="texto_sin_foto">Opcional: toma una foto del equipo o de su placa para que el cliente la vea.</string>
     <string name="btn_tomar_foto">Tomar foto</string>
     <string name="btn_otra_foto">Tomar otra foto</string>
 
-    <!-- Permisos: aviso cuando el técnico rechaza el permiso de cámara -->
+
     <string name="permiso_camara_denegado">Sin permiso de cámara no se puede tomar la foto</string>
     <string name="btn_ajustes">Ajustes</string>
 
-    <!-- Pantalla 4: Inicio del cliente (Mis protocolos) -->
+
     <string name="titulo_inicio_cliente">Mis protocolos</string>
     <string name="indicacion_protocolos">Toca un protocolo para ver el detalle y formalizarlo.</string>
     <string name="lista_vacia_protocolos">Todavía no hay protocolos de tus equipos</string>
 
-    <!-- Pantalla 5: Detalle del protocolo (cliente) -->
+
     <string name="titulo_detalle">Detalle del protocolo</string>
     <string name="tecnico_nombre">Técnico: %1$s</string>
     <string name="observaciones_detalle">Observaciones: %1$s</string>
@@ -72,7 +67,7 @@
     <string name="dialogo_formalizar_titulo">¿Formalizar el protocolo?</string>
     <string name="dialogo_formalizar_mensaje">Das tu conformidad con la prueba del equipo %1$s. Esto no se puede deshacer.</string>
 
-    <!-- Pantalla 6: Historial del equipo (gráfico de comparación) -->
+
     <string name="titulo_historial">Historial del equipo</string>
     <string name="seccion_grafico">Comparación de pruebas</string>
     <string name="campo_medicion">Medición</string>
@@ -80,7 +75,7 @@
     <string name="seccion_pruebas">Pruebas registradas</string>
     <string name="sin_pruebas">Este equipo todavía no tiene pruebas registradas.</string>
 
-    <!-- Pantalla 7: Restablecer contraseña (se abre desde el login) -->
+
     <string name="titulo_restablecer">Restablecer contraseña</string>
     <string name="indicacion_restablecer">Escribe el correo de tu cuenta y elige una contraseña nueva de al menos 6 caracteres.</string>
     <string name="campo_nueva_contrasena">Nueva contraseña</string>
@@ -89,7 +84,7 @@
     <string name="contrasena_cambiada">Listo: tu contraseña se cambió. Ya puedes iniciar sesión con ella.</string>
     <string name="btn_volver_login">Volver al inicio de sesión</string>
 
-    <!-- Descripciones para accesibilidad (TalkBack) -->
+
     <string name="cd_mostrar_contrasena">Mostrar contraseña</string>
     <string name="cd_ocultar_contrasena">Ocultar contraseña</string>
     <string name="cd_volver">Volver</string>

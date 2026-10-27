@@ -80,17 +80,17 @@ fun InicioTecnicoScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
-    // Decodificación reactiva de la foto guardada en SQLite (BLOB)
+
     val bitmapFoto = remember(usuario?.fotoPerfil) {
         usuario?.fotoPerfil?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
     }
 
-    // Estados para controlar el diálogo de edición de dirección
+
     var equipoAEditar by remember { mutableStateOf<Equipo?>(null) }
     var textoDireccionTemp by remember { mutableStateOf("") }
     var estaBuscando by remember { mutableStateOf(false) }
 
-    // Diálogo emergente para ingresar/editar dirección
+
     equipoAEditar?.let { equipo ->
         AlertDialog(
             onDismissRequest = {
@@ -213,7 +213,7 @@ fun InicioTecnicoScreen(
                             }
                         }
 
-                        // Textos de información del usuario
+
                         Column(
                             modifier = Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(Dimens.espacioMini)
@@ -228,7 +228,7 @@ fun InicioTecnicoScreen(
                             )
                         }
 
-                        // Botón explícito para la edición de perfil
+
                         IconButton(onClick = onEditarPerfil) {
                             Icon(
                                 imageVector = Icons.Default.Edit,
@@ -314,7 +314,7 @@ fun InicioTecnicoScreen(
     }
 }
 
-// Datos de ejemplo para la vista previa
+
 private val equiposPreview = listOf(
     Equipo("TR-0098", "Transformador 300 kVA", "Planta Lampa · S/E-01", clienteId = 2, id = 2, empresaCliente = "Industrias Aurora S.A.", direccion = "Camino Los Maitenes 1200, Lampa", latitud = -33.2845, longitud = -70.8752),
     Equipo("TR-0142", "Transformador 500 kVA", "Planta Lampa · S/E-02", clienteId = 2, id = 1, empresaCliente = "Industrias Aurora S.A.", direccion = "Camino Los Maitenes 1200, Lampa", latitud = -33.2845, longitud = -70.8752),

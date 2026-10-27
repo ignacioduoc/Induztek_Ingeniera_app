@@ -11,10 +11,6 @@ import com.example.induztek_ingeniera_app.ui.styles.EstilosBoton
 import com.example.induztek_ingeniera_app.ui.styles.estiloAltoBoton
 import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
 
-// =====================================================================
-//  BotonSecundario.kt  —  Acción de menor importancia (Limpiar, Cancelar).
-//  Parte de OutlinedButton (solo borde) y aplica NUESTROS estilos.
-// =====================================================================
 
 @Composable
 fun BotonSecundario(

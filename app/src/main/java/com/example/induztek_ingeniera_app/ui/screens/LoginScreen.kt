@@ -41,15 +41,6 @@ import com.example.induztek_ingeniera_app.ui.theme.ExitoFondo
 import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
 import com.example.induztek_ingeniera_app.viewmodel.LoginViewModel
 
-// =====================================================================
-//  LoginScreen.kt  —  PANTALLA 1: INICIO DE SESIÓN (técnico y cliente)
-//  ---------------------------------------------------------------------
-//  Dos funciones, igual que en las pantallas del profe:
-//   - LoginScreen  = se conecta con el ViewModel: lee el estado y le avisa
-//                    lo que hace el usuario.
-//   - LoginContent = solo dibuja con lo que recibe. Como no usa el
-//                    ViewModel, se puede ver con @Preview sin ejecutar la app.
-// =====================================================================
 
 @Composable
 fun LoginScreen(
@@ -57,11 +48,10 @@ fun LoginScreen(
     onOlvideContrasena: () -> Unit,          // NUEVO: abre "Restablecer contraseña"
     viewModel: LoginViewModel
 ) {
-    // 1. Lee el StateFlow del ViewModel. Cada vez que cambia, la pantalla se redibuja.
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // 2. Cuando Room encuentra al usuario, usuarioIngresado deja de ser null
-    //    y se avisa hacia afuera (AppNavegacion cambia de pantalla).
+
     LaunchedEffect(uiState.usuarioIngresado) {
         val usuario = uiState.usuarioIngresado
         if (usuario != null) {
@@ -143,14 +133,12 @@ fun LoginContent(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // NUEVO (Restablecer contraseña): botón de solo texto, sin fondo ni borde.
-            // Es el mismo TextButton que usa el AlertDialog del profe para "Cancelar":
-            // se usa para acciones secundarias que no deben competir con "Ingresar".
+
             TextButton(onClick = onOlvideContrasena) {
                 Text(stringResource(R.string.btn_olvide_contrasena))
             }
 
-            // Se ve un instante, justo antes de cambiar a la pantalla de inicio
+
             if (uiState.usuarioIngresado != null) {
                 MensajeBienvenida(nombre = uiState.usuarioIngresado.nombre)
             }
@@ -164,7 +152,7 @@ fun LoginContent(
     }
 }
 
-// Tarjeta verde, igual que el MensajeExito del Formulario del profe
+
 @Composable
 private fun MensajeBienvenida(nombre: String) {
     Card(

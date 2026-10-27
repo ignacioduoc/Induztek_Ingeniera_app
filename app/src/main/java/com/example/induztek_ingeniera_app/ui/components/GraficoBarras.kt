@@ -22,15 +22,7 @@ import androidx.compose.ui.unit.sp
 import com.example.induztek_ingeniera_app.model.DatoGrafico
 import com.example.induztek_ingeniera_app.ui.formatearMedicion
 
-/**
- * Gráfico de barras dibujado a mano con Canvas (el GraficoBarras del profe).
- * Idea clave: la barra más alta ocupa todo el alto disponible
- * y las demás se escalan con una regla de tres (valor / máximo).
- *
- * ANIMACIÓN: "progreso" va de 0 a 1 en 800 ms y cada barra se dibuja con
- * su alto x progreso: por eso las barras CRECEN desde el eje.
- * Se repite cada vez que cambian los datos (al elegir otra medición).
- */
+
 @Composable
 fun GraficoBarras(
     datos: List<DatoGrafico>,
@@ -41,7 +33,6 @@ fun GraficoBarras(
     val colorTexto = MaterialTheme.colorScheme.onSurface
     val colorEje = MaterialTheme.colorScheme.outline
 
-    // Animación: va de 0 a 1 cada vez que cambian los datos
     val progreso = remember(datos) { Animatable(0f) }
     LaunchedEffect(datos) {
         progreso.animateTo(1f, animationSpec = tween(durationMillis = 800))
@@ -58,9 +49,6 @@ fun GraficoBarras(
         val margenInferior = 24.dp.toPx()   // espacio para la fecha bajo el eje
         val altoDisponible = size.height - margenSuperior - margenInferior
         val baseY = size.height - margenInferior
-
-        // CAMBIO (Decimales): el máximo es Double. Nunca es 0 (las mediciones se
-        // validan > 0), pero coerceAtLeast evita dividir por 0 por si acaso.
         val valorMaximo = datos.maxOf { it.valor }.coerceAtLeast(0.1)
         val anchoColumna = size.width / datos.size
         val anchoBarra = anchoColumna * 0.6f
@@ -74,7 +62,6 @@ fun GraficoBarras(
         )
 
         datos.forEachIndexed { indice, dato ->
-            // CAMBIO (Decimales): la división se hace con Double y se pasa a Float para dibujar
             val altoBarra = altoDisponible * (dato.valor / valorMaximo).toFloat() * progreso.value
             val inicioColumna = indice * anchoColumna
             val x = inicioColumna + (anchoColumna - anchoBarra) / 2
@@ -88,7 +75,7 @@ fun GraficoBarras(
                 cornerRadius = CornerRadius(6.dp.toPx())
             )
 
-            // Valor sobre la barra
+
             val textoValor = medidorTexto.measure(
                 text = formatearMedicion(dato.valor),      // CAMBIO (Decimales): 13.6 -> "13,6"
                 style = TextStyle(fontSize = 12.sp, color = colorTexto)
@@ -101,7 +88,6 @@ fun GraficoBarras(
                 )
             )
 
-            // Etiqueta bajo el eje (la fecha de la prueba)
             val textoEtiqueta = medidorTexto.measure(
                 text = dato.etiqueta,
                 style = TextStyle(fontSize = 12.sp, color = colorTexto)

@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [RolEntity::class, UsuarioEntity::class, EquipoEntity::class, ProtocoloEntity::class],
-    version = 17, // Subimos a la versión 17 para incorporar foto_perfil en UsuarioEntity
+    version = 17,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

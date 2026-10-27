@@ -53,7 +53,7 @@ fun TarjetaEquipo(
                 }
             }
 
-            // Botón para ver las coordenadas del equipo usando recursos locales de R.drawable
+
             IconButton(
                 onClick = {
                     onVerMapaClick(equipo.latitud, equipo.longitud, equipo.codigo, equipo.instalacion)

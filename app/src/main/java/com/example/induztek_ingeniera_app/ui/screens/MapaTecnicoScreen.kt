@@ -51,7 +51,7 @@ fun MapaTecnicoScreen(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // Agregamos las claves a remember para recrear el mapa cuando cambie de equipo o coordenadas
+
     val mapView = remember(codigoEquipo, latitud, longitud) {
         Configuration.getInstance().load(context, context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
         Configuration.getInstance().userAgentValue = context.packageName
@@ -75,7 +75,7 @@ fun MapaTecnicoScreen(
         }
     }
 
-    // Vinculación del ciclo de vida con OSMDroid
+
     DisposableEffect(lifecycleOwner, mapView) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {

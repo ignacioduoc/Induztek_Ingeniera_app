@@ -3,7 +3,6 @@ package com.example.induztek_ingeniera_app.viewmodel
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import com.example.induztek_ingeniera_app.data.ConvertidorImagen
-import com.example.induztek_ingeniera_app.data.ProtocoloRepository
 import com.example.induztek_ingeniera_app.model.Protocolo
 import com.example.induztek_ingeniera_app.model.ProtocoloUiState
 import com.example.induztek_ingeniera_app.model.Resultado
@@ -15,11 +14,18 @@ import kotlinx.coroutines.flow.update
 // =====================================================================
 //  NuevoProtocoloViewModel.kt  —  LÓGICA DEL FORMULARIO DEL PROTOCOLO
 //  ---------------------------------------------------------------------
-//  Adaptado para recibir el repositorio inyectado desde la Factory de MainActivity.
-//  Mantiene el desacoplamiento: valida estados y arma el Protocolo de dominio.
+//  Igual que el FormularioViewModel del profe: guarda lo que se escribe,
+//  valida cada campo y, si todo está bien, ARMA el Protocolo y lo devuelve.
+//  No toca la BD: la pantalla le entrega el Protocolo al ViewModel
+//  compartido, que lo guarda (como el profe hace con registrar(usuario)).
+//
+//  ARREGLO (Paso 16): vuelve a NO recibir el Repository (nunca lo usaba).
+//  Así viewModel() lo puede crear solo, sin la Factory. Cuando pedía el
+//  Repository, la pantalla no lograba crearlo y la app se cerraba al abrir
+//  "Nuevo protocolo" ("Cannot create an instance of class NuevoProtocoloViewModel").
 // =====================================================================
 
-class NuevoProtocoloViewModel(private val repository: ProtocoloRepository) : ViewModel() {
+class NuevoProtocoloViewModel : ViewModel() {
 
     // Privado y mutable: solo el ViewModel lo modifica
     private val _uiState = MutableStateFlow(ProtocoloUiState())
@@ -56,7 +62,8 @@ class NuevoProtocoloViewModel(private val repository: ProtocoloRepository) : Vie
         _uiState.update { it.copy(observaciones = valor, errorObservaciones = null) }
     }
 
-    // La cámara entrega un Bitmap. Se guarda como JPEG achicado (ByteArray)
+    // La cámara entrega un Bitmap (pesado). Se guarda como JPEG achicado (ByteArray),
+    // igual que el avatar en el UsuariosViewModel del profe (cambiarAvatarDesdeCamara).
     fun onFotoTomada(foto: Bitmap) {
         _uiState.update { it.copy(foto = ConvertidorImagen.aBytes(foto)) }
     }
@@ -70,7 +77,6 @@ class NuevoProtocoloViewModel(private val repository: ProtocoloRepository) : Vie
         val errorAtTierra = validarMedicion(estado.atTierra)                    // MEDICIÓN
         val errorBtTierra = validarMedicion(estado.btTierra)                    // MEDICIÓN
         val errorIndice = validarMedicion(estado.indicePolarizacion)            // MEDICIÓN
-
         // Si el resultado NO es "Aprobado", hay que explicar por qué
         val errorObservaciones =
             if (estado.resultado != Resultado.APROBADO && estado.observaciones.isBlank())

@@ -44,7 +44,12 @@ interface ProtocoloDao {
     """)
     fun buscarProtocoloPorId(id: Long): Flow<ProtocoloConDetalles?>
 
-    // FIX 2: Removido 'suspend' ya que en Room las consultas UPDATE/DELETE no-reactivas deben ser llamadas dentro de transacciones o corrutinas desde el Repository/ViewModel
+    // ARREGLO (Paso 16): vuelve a ser "suspend".
+    // Room NO deja usar la BD en el hilo principal (el que dibuja la pantalla).
+    // Sin "suspend", el botón Formalizar cerraba la app con el error
+    // "Cannot access database on the main thread". Con "suspend", Room hace
+    // el UPDATE en segundo plano, igual que actualizarUbicacion() de EquipoDao.
+    // Devuelve cuántas filas cambió (1 = OK). ¡Sin el WHERE se formalizarían TODOS!
     @Query("UPDATE protocolos SET estado = 'FORMALIZADO' WHERE id_protocolo = :id")
-    fun formalizarProtocolo(id: Long): Int
+    suspend fun formalizarProtocolo(id: Long): Int
 }

@@ -34,6 +34,13 @@ class ProtocoloRepository(
         return entity?.toDomainModel()
     }
 
+    // NUEVO (Restablecer contraseña): el DAO devuelve cuántas filas cambió el UPDATE.
+    // true  -> cambió 1 fila: existía una cuenta con ese correo y ya tiene la clave nueva.
+    // false -> cambió 0 filas: no hay ninguna cuenta con ese correo.
+    suspend fun cambiarContrasena(correo: String, nueva: String): Boolean {
+        return usuarioDao.actualizarContrasena(correo, nueva) > 0
+    }
+
     // --- MÓDULO PERFIL DE USUARIO ---
 
     // Actualiza el nombre, correo y foto de perfil en la base de datos

@@ -17,6 +17,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,17 +43,25 @@ import com.example.induztek_ingeniera_app.viewmodel.LoginViewModel
 
 // =====================================================================
 //  LoginScreen.kt  —  PANTALLA 1: INICIO DE SESIÓN (técnico y cliente)
+//  ---------------------------------------------------------------------
+//  Dos funciones, igual que en las pantallas del profe:
+//   - LoginScreen  = se conecta con el ViewModel: lee el estado y le avisa
+//                    lo que hace el usuario.
+//   - LoginContent = solo dibuja con lo que recibe. Como no usa el
+//                    ViewModel, se puede ver con @Preview sin ejecutar la app.
 // =====================================================================
 
 @Composable
 fun LoginScreen(
     onLoginExitoso: (Usuario) -> Unit,
+    onOlvideContrasena: () -> Unit,          // NUEVO: abre "Restablecer contraseña"
     viewModel: LoginViewModel
 ) {
-    // 1. Lee el StateFlow de Room de forma reactiva
+    // 1. Lee el StateFlow del ViewModel. Cada vez que cambia, la pantalla se redibuja.
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // 2. Escucha reactiva cuando Room encuentra un usuario válido
+    // 2. Cuando Room encuentra al usuario, usuarioIngresado deja de ser null
+    //    y se avisa hacia afuera (AppNavegacion cambia de pantalla).
     LaunchedEffect(uiState.usuarioIngresado) {
         val usuario = uiState.usuarioIngresado
         if (usuario != null) {
@@ -60,13 +69,14 @@ fun LoginScreen(
         }
     }
 
-    // 3. Contenido desacoplado para vista previa y diseño
+    // 3. El contenido solo dibuja (sirve para las vistas previas)
     LoginContent(
         uiState = uiState,
         onCorreoCambia = viewModel::onCorreoCambia,
         onContrasenaCambia = viewModel::onContrasenaCambia,
         onAlternarVisibilidad = viewModel::onAlternarVisibilidad,
-        onIngresar = { viewModel.onIngresar() }
+        onIngresar = { viewModel.onIngresar() },
+        onOlvideContrasena = onOlvideContrasena
     )
 }
 
@@ -76,7 +86,8 @@ fun LoginContent(
     onCorreoCambia: (String) -> Unit,
     onContrasenaCambia: (String) -> Unit,
     onAlternarVisibilidad: () -> Unit,
-    onIngresar: () -> Unit
+    onIngresar: () -> Unit,
+    onOlvideContrasena: () -> Unit
 ) {
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { innerPadding ->
         Column(
@@ -117,7 +128,7 @@ fun LoginContent(
                 error = uiState.errorContrasena
             )
 
-            // Mensaje de credenciales no encontradas en la BD
+            // Error de la BD: los campos están bien escritos, pero no existe ese usuario
             uiState.errorCredenciales?.let { mensaje ->
                 Text(
                     text = mensaje,
@@ -132,6 +143,14 @@ fun LoginContent(
                 modifier = Modifier.fillMaxWidth()
             )
 
+            // NUEVO (Restablecer contraseña): botón de solo texto, sin fondo ni borde.
+            // Es el mismo TextButton que usa el AlertDialog del profe para "Cancelar":
+            // se usa para acciones secundarias que no deben competir con "Ingresar".
+            TextButton(onClick = onOlvideContrasena) {
+                Text(stringResource(R.string.btn_olvide_contrasena))
+            }
+
+            // Se ve un instante, justo antes de cambiar a la pantalla de inicio
             if (uiState.usuarioIngresado != null) {
                 MensajeBienvenida(nombre = uiState.usuarioIngresado.nombre)
             }
@@ -145,6 +164,7 @@ fun LoginContent(
     }
 }
 
+// Tarjeta verde, igual que el MensajeExito del Formulario del profe
 @Composable
 private fun MensajeBienvenida(nombre: String) {
     Card(
@@ -177,7 +197,7 @@ private fun LoginVacioPreview() {
         LoginContent(
             uiState = LoginUiState(),
             onCorreoCambia = {}, onContrasenaCambia = {},
-            onAlternarVisibilidad = {}, onIngresar = {}
+            onAlternarVisibilidad = {}, onIngresar = {}, onOlvideContrasena = {}
         )
     }
 }
@@ -193,7 +213,7 @@ private fun LoginConErroresPreview() {
                 errorContrasena = "Ingresa tu contraseña"
             ),
             onCorreoCambia = {}, onContrasenaCambia = {},
-            onAlternarVisibilidad = {}, onIngresar = {}
+            onAlternarVisibilidad = {}, onIngresar = {}, onOlvideContrasena = {}
         )
     }
 }

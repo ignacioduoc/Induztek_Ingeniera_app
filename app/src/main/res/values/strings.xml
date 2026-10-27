@@ -15,6 +15,7 @@
     <string name="campo_contrasena">Contraseña</string>
     <string name="btn_ingresar">Ingresar</string>
     <string name="nota_login">La app reconoce si eres técnico o cliente según tu cuenta y te muestra tus pantallas.</string>
+    <string name="btn_olvide_contrasena">¿Olvidaste tu contraseña?</string>
 
     <!-- Pantallas de inicio (técnico y cliente): saludo y menú para cerrar sesión -->
     <string name="saludo">Hola, %1$s</string>
@@ -78,6 +79,15 @@
     <string name="leyenda_grafico">Últimas 6 pruebas, de la más antigua (izquierda) a la más nueva (derecha). El color de cada barra es su resultado.</string>
     <string name="seccion_pruebas">Pruebas registradas</string>
     <string name="sin_pruebas">Este equipo todavía no tiene pruebas registradas.</string>
+
+    <!-- Pantalla 7: Restablecer contraseña (se abre desde el login) -->
+    <string name="titulo_restablecer">Restablecer contraseña</string>
+    <string name="indicacion_restablecer">Escribe el correo de tu cuenta y elige una contraseña nueva de al menos 6 caracteres.</string>
+    <string name="campo_nueva_contrasena">Nueva contraseña</string>
+    <string name="campo_confirmar_contrasena">Repite la nueva contraseña</string>
+    <string name="btn_cambiar_contrasena">Cambiar contraseña</string>
+    <string name="contrasena_cambiada">Listo: tu contraseña se cambió. Ya puedes iniciar sesión con ella.</string>
+    <string name="btn_volver_login">Volver al inicio de sesión</string>
 
     <!-- Descripciones para accesibilidad (TalkBack) -->
     <string name="cd_mostrar_contrasena">Mostrar contraseña</string>

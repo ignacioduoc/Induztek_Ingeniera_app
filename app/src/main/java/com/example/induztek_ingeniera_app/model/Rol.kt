@@ -7,5 +7,6 @@ data class Rol(
     companion object {
         const val ID_TECNICO = 1L
         const val ID_CLIENTE = 2L
+        const val ID_ADMINISTRADOR = 3L
     }
 }

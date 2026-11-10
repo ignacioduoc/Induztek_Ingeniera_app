@@ -11,5 +11,9 @@ data class Equipo(
 
     val direccion: String = "",
     val latitud: Double = 0.0,
-    val longitud: Double = 0.0
+    val longitud: Double = 0.0,
+
+    val idEmpresa: Long = 0,
+    val direccionEmpresa: String = "",
+    val nombreCliente: String = ""
 )

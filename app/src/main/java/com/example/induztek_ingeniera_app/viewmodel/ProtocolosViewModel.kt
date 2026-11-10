@@ -3,7 +3,7 @@ package com.example.induztek_ingeniera_app.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.induztek_ingeniera_app.data.ProtocoloRepository
-import com.example.induztek_ingeniera_app.data.entities.EquipoEntity
+import com.example.induztek_ingeniera_app.data.entities.EquipoConDetalles
 import com.example.induztek_ingeniera_app.data.entities.ProtocoloConDetalles
 import com.example.induztek_ingeniera_app.data.entities.ProtocoloEntity
 import com.example.induztek_ingeniera_app.model.Equipo
@@ -147,16 +147,20 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
     }
 
 
-    private fun EquipoEntity.toDomainModel(): Equipo {
+    private fun EquipoConDetalles.toDomainModel(): Equipo {
         return Equipo(
-            id = this.id_equipo,
-            codigo = this.codigo,
-            tipo = this.tipo,
-            instalacion = this.instalacion,
-            direccion = this.direccion,
-            latitud = this.latitud,
-            longitud = this.longitud,
-            clienteId = this.id_cliente
+            id = this.equipo.id_equipo,
+            codigo = this.equipo.codigo,
+            tipo = this.equipo.tipo,
+            instalacion = this.equipo.instalacion,
+            direccion = this.equipo.direccion,
+            latitud = this.equipo.latitud,
+            longitud = this.equipo.longitud,
+            clienteId = this.equipo.id_cliente,
+            idEmpresa = this.equipo.id_empresa ?: 0L,
+            empresaCliente = this.nombreEmpresa,
+            direccionEmpresa = this.direccionEmpresa,
+            nombreCliente = this.nombreCliente
         )
     }
 

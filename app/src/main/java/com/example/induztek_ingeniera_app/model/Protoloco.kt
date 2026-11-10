@@ -34,5 +34,6 @@ data class Protocolo(
     val codigoEquipo: String = "",
     val tipoEquipo: String = "",
     val instalacion: String = "",
+    val direccionEquipo: String = "",
     val nombreTecnico: String = ""
 )

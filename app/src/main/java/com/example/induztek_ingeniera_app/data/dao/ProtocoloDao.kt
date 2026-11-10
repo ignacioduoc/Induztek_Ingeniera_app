@@ -15,7 +15,7 @@ interface ProtocoloDao {
     suspend fun insertarProtocolo(protocolo: ProtocoloEntity): Long
 
     @Query("""
-        SELECT p.*, e.codigo, e.tipo, e.instalacion, TRIM(t.nombre || ' ' || t.apellido) AS nombre_tecnico 
+        SELECT p.*, e.codigo, e.tipo, e.instalacion, e.direccion AS direccion_equipo, TRIM(t.nombre || ' ' || t.apellido) AS nombre_tecnico 
         FROM protocolos p 
         INNER JOIN equipos e ON p.id_equipo = e.id_equipo 
         INNER JOIN usuarios t ON p.id_tecnico = t.id_usuario
@@ -25,7 +25,7 @@ interface ProtocoloDao {
     fun listarProtocolosDeCliente(clienteId: Long): Flow<List<ProtocoloConDetalles>>
 
     @Query("""
-        SELECT p.*, e.codigo, e.tipo, e.instalacion, TRIM(t.nombre || ' ' || t.apellido) AS nombre_tecnico 
+        SELECT p.*, e.codigo, e.tipo, e.instalacion, e.direccion AS direccion_equipo, TRIM(t.nombre || ' ' || t.apellido) AS nombre_tecnico 
         FROM protocolos p 
         INNER JOIN equipos e ON p.id_equipo = e.id_equipo 
         INNER JOIN usuarios t ON p.id_tecnico = t.id_usuario
@@ -35,7 +35,7 @@ interface ProtocoloDao {
     fun listarProtocolosDeEquipo(equipoId: Long): Flow<List<ProtocoloConDetalles>>
 
     @Query("""
-        SELECT p.*, e.codigo, e.tipo, e.instalacion, TRIM(t.nombre || ' ' || t.apellido) AS nombre_tecnico 
+        SELECT p.*, e.codigo, e.tipo, e.instalacion, e.direccion AS direccion_equipo, TRIM(t.nombre || ' ' || t.apellido) AS nombre_tecnico 
         FROM protocolos p 
         INNER JOIN equipos e ON p.id_equipo = e.id_equipo 
         INNER JOIN usuarios t ON p.id_tecnico = t.id_usuario

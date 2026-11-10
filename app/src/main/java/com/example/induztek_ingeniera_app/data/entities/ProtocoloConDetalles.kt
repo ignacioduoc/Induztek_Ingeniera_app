@@ -9,5 +9,6 @@ data class ProtocoloConDetalles(
     @ColumnInfo(name = "codigo") val codigoEquipo: String,
     @ColumnInfo(name = "tipo") val tipoEquipo: String,
     @ColumnInfo(name = "instalacion") val instalacion: String,
+    @ColumnInfo(name = "direccion_equipo") val direccionEquipo: String,
     @ColumnInfo(name = "nombre_tecnico") val nombreTecnico: String
 )

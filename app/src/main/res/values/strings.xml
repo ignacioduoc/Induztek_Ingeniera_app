@@ -123,6 +123,8 @@
     <string name="etiqueta_empresa_tarjeta">Empresa</string>
     <string name="etiqueta_direccion_tarjeta">Dirección</string>
     <string name="agregar_direccion">Agregar dirección</string>
+    <string name="etiqueta_tecnico_tarjeta">Revisado por</string>
+    <string name="sin_direccion_registrada">Sin dirección registrada</string>
     <string name="etiqueta_cliente_equipo">Cliente dueño del equipo</string>
     <string name="etiqueta_direccion_equipo">Dirección del equipo (la de la empresa)</string>
     <string name="empresa_sin_direccion">Esta empresa no tiene dirección registrada</string>

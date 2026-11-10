@@ -17,13 +17,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -40,6 +43,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.induztek_ingeniera_app.R
@@ -49,6 +53,7 @@ import com.example.induztek_ingeniera_app.model.Resultado
 import com.example.induztek_ingeniera_app.model.Rol
 import com.example.induztek_ingeniera_app.model.Usuario
 import com.example.induztek_ingeniera_app.ui.components.EtiquetaEstado
+import com.example.induztek_ingeniera_app.ui.components.FilaDato
 import com.example.induztek_ingeniera_app.ui.components.MenuSesion
 import com.example.induztek_ingeniera_app.ui.components.colorDe
 import com.example.induztek_ingeniera_app.ui.formatearFecha
@@ -184,20 +189,55 @@ fun InicioClienteScreen(
                     verticalArrangement = Arrangement.spacedBy(Dimens.espacioChico)
                 ) {
                     items(protocolos, key = { it.id }) { protocolo ->
-                        Card(onClick = { onVerProtocolo(protocolo.id) }) {
-                            ListItem(
-                                overlineContent = { Text(formatearFecha(protocolo.fechaHora)) },
-                                headlineContent = { Text("${protocolo.codigoEquipo} · ${protocolo.tipoEquipo}") },
-                                supportingContent = {
-                                    Column(verticalArrangement = Arrangement.spacedBy(Dimens.espacioChico)) {
-                                        Text(protocolo.instalacion)
-                                        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.espacioChico)) {
-                                            EtiquetaEstado(texto = protocolo.resultado.etiqueta, color = colorDe(protocolo.resultado))
-                                            EtiquetaEstado(texto = protocolo.estado.etiqueta, color = colorDe(protocolo.estado))
-                                        }
-                                    }
+                        Card(
+                            onClick = { onVerProtocolo(protocolo.id) },
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(Dimens.espacioMedio),
+                                verticalArrangement = Arrangement.spacedBy(Dimens.espacioChico)
+                            ) {
+                                // Encabezado: fecha, equipo e instalación
+                                Text(
+                                    text = formatearFecha(protocolo.fechaHora),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = "${protocolo.codigoEquipo} · ${protocolo.tipoEquipo}",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    text = protocolo.instalacion,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+
+                                // Resultado y estado del protocolo
+                                Row(horizontalArrangement = Arrangement.spacedBy(Dimens.espacioChico)) {
+                                    EtiquetaEstado(texto = protocolo.resultado.etiqueta, color = colorDe(protocolo.resultado))
+                                    EtiquetaEstado(texto = protocolo.estado.etiqueta, color = colorDe(protocolo.estado))
                                 }
-                            )
+
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                                // Quién hizo la prueba y dónde está el equipo
+                                if (protocolo.nombreTecnico.isNotBlank()) {
+                                    FilaDato(
+                                        icono = Icons.Default.Build,
+                                        etiqueta = stringResource(R.string.etiqueta_tecnico_tarjeta),
+                                        valor = protocolo.nombreTecnico
+                                    )
+                                }
+                                FilaDato(
+                                    icono = Icons.Default.LocationOn,
+                                    etiqueta = stringResource(R.string.etiqueta_direccion_tarjeta),
+                                    valor = if (protocolo.direccionEquipo.isNotBlank()) protocolo.direccionEquipo
+                                    else stringResource(R.string.sin_direccion_registrada)
+                                )
+                            }
                         }
                     }
                 }
@@ -214,7 +254,8 @@ private val protocolosPreview = listOf(
         observaciones = "Índice de polarización bajo 2,0: repetir la prueba en 3 meses.",
         estado = EstadoProtocolo.REGISTRADO_EN_TERRENO, id = 5,
         codigoEquipo = "TR-0142", tipoEquipo = "Transformador 500 kVA",
-        instalacion = "Planta Lampa · S/E-02", nombreTecnico = "Matías Rojas"
+        instalacion = "Planta Lampa · S/E-02", direccionEquipo = "Camino Los Maitenes 1200, Lampa",
+        nombreTecnico = "Matías Rojas"
     )
 )
 

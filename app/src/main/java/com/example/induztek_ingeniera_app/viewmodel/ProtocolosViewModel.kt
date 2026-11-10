@@ -246,6 +246,7 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
             codigoEquipo = this.codigoEquipo,
             tipoEquipo = this.tipoEquipo,
             instalacion = this.instalacion,
+            direccionEquipo = this.direccionEquipo,
             nombreTecnico = this.nombreTecnico
         )
     }

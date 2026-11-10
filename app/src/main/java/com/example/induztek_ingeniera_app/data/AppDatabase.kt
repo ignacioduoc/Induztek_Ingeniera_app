@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
         EquipoEntity::class,
         ProtocoloEntity::class
     ],
-    version = 18,
+    version = 19,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -84,10 +84,10 @@ abstract class AppDatabase : RoomDatabase() {
                                 db.execSQL("INSERT OR IGNORE INTO empresas (id_empresa, nombre, direccion, logo) VALUES (3, 'Envases del Sur S.A.', 'Ruta 5 Sur Km 1020, Puerto Montt', NULL);")
 
                                 // 3. Usuarios (la respuesta de seguridad va en minúsculas y sin espacios sobrantes)
-                                db.execSQL("INSERT OR IGNORE INTO usuarios (id_usuario, nombre, apellido, correo, contrasena, id_empresa, id_rol, rut, telefono, pregunta_seguridad, respuesta_seguridad, foto_perfil) VALUES (1, 'Matías', 'Rojas', 'tecnico@gmail.cl', '123456', 1, 1, '16482913-8', '+56911112222', '¿Cuál es el nombre de tu primera mascota?', 'firulais', NULL);")
-                                db.execSQL("INSERT OR IGNORE INTO usuarios (id_usuario, nombre, apellido, correo, contrasena, id_empresa, id_rol, rut, telefono, pregunta_seguridad, respuesta_seguridad, foto_perfil) VALUES (2, 'Pedro', 'Salas', 'cliente@gmail.cl', '123456', 2, 2, '14756201-2', '+56933334444', '¿En qué ciudad naciste?', 'santiago', NULL);")
-                                db.execSQL("INSERT OR IGNORE INTO usuarios (id_usuario, nombre, apellido, correo, contrasena, id_empresa, id_rol, rut, telefono, pregunta_seguridad, respuesta_seguridad, foto_perfil) VALUES (3, 'Daniela', 'Vera', 'cliente2@gmail.cl', '123456', 3, 2, '17093845-3', '+56955556666', '¿En qué ciudad naciste?', 'puerto montt', NULL);")
-                                db.execSQL("INSERT OR IGNORE INTO usuarios (id_usuario, nombre, apellido, correo, contrasena, id_empresa, id_rol, rut, telefono, pregunta_seguridad, respuesta_seguridad, foto_perfil) VALUES (4, 'Admin', 'Induztek', 'admin@gmail.cl', '123456', 1, 3, '13570246-3', '+56977778888', '¿Cuál es el nombre de tu primer colegio?', 'colegio central', NULL);")
+                                db.execSQL("INSERT OR IGNORE INTO usuarios (id_usuario, nombre, apellido, correo, contrasena, id_empresa, id_rol, rut, telefono, pregunta_seguridad, respuesta_seguridad, foto_perfil) VALUES (1, 'Matías', 'Rojas', 'tecnico@gmail.com', '123456', 1, 1, '16482913-8', '+56911112222', '¿Cuál es el nombre de tu primera mascota?', 'firulais', NULL);")
+                                db.execSQL("INSERT OR IGNORE INTO usuarios (id_usuario, nombre, apellido, correo, contrasena, id_empresa, id_rol, rut, telefono, pregunta_seguridad, respuesta_seguridad, foto_perfil) VALUES (2, 'Pedro', 'Salas', 'cliente@gmail.com', '123456', 2, 2, '14756201-2', '+56933334444', '¿En qué ciudad naciste?', 'santiago', NULL);")
+                                db.execSQL("INSERT OR IGNORE INTO usuarios (id_usuario, nombre, apellido, correo, contrasena, id_empresa, id_rol, rut, telefono, pregunta_seguridad, respuesta_seguridad, foto_perfil) VALUES (3, 'Daniela', 'Vera', 'cliente2@gmail.com', '123456', 3, 2, '17093845-3', '+56955556666', '¿En qué ciudad naciste?', 'puerto montt', NULL);")
+                                db.execSQL("INSERT OR IGNORE INTO usuarios (id_usuario, nombre, apellido, correo, contrasena, id_empresa, id_rol, rut, telefono, pregunta_seguridad, respuesta_seguridad, foto_perfil) VALUES (4, 'Admin', 'Induztek', 'admin@gmail.com', '123456', 1, 3, '13570246-3', '+56977778888', '¿Cuál es el nombre de tu primer colegio?', 'colegio central', NULL);")
 
                                 // 4. Equipos (cada uno con su empresa y su cliente dueño)
                                 db.execSQL("INSERT OR IGNORE INTO equipos (id_equipo, codigo, tipo, instalacion, direccion, latitud, longitud, id_cliente, id_empresa) VALUES (1, 'TR-0142', 'Transformador 500 kVA', 'Planta Lampa · S/E-02', 'Camino Los Maitenes 1200, Lampa', -33.2845, -70.8752, 2, 2);")

@@ -13,6 +13,8 @@ sealed class Ruta(val ruta: String) {
 
     data object Perfil : Ruta("perfil")
 
+    data object AgregarEquipo : Ruta("agregar_equipo")
+
     data object NuevoProtocolo : Ruta("nuevo_protocolo/{idEquipo}") {
         fun crear(idEquipo: Long) = "nuevo_protocolo/$idEquipo"
     }

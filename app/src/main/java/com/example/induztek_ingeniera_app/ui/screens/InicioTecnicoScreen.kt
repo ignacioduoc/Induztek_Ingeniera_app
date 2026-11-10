@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -27,6 +28,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -69,6 +71,7 @@ import kotlinx.coroutines.launch
 fun InicioTecnicoScreen(
     usuario: Usuario?,
     equipos: List<Equipo>,
+    onAgregarEquipo: () -> Unit = {},
     onEditarPerfil: () -> Unit = {},
     onCerrarSesion: () -> Unit,
     onNuevaPrueba: (Long) -> Unit = {},
@@ -170,6 +173,13 @@ fun InicioTecnicoScreen(
                     )
                 )
             },
+            floatingActionButton = {
+                ExtendedFloatingActionButton(
+                    onClick = onAgregarEquipo,
+                    icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                    text = { Text(stringResource(R.string.btn_agregar_equipo)) }
+                )
+            },
             containerColor = MaterialTheme.colorScheme.background
         ) { innerPadding ->
             Column(
@@ -256,7 +266,7 @@ fun InicioTecnicoScreen(
 
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(Dimens.espacioMedio),
+                    contentPadding = PaddingValues(start = Dimens.espacioMedio, top = Dimens.espacioMedio, end = Dimens.espacioMedio, bottom = 88.dp),
                     verticalArrangement = Arrangement.spacedBy(Dimens.espacioChico)
                 ) {
                     items(equipos, key = { it.id }) { equipo ->
@@ -267,6 +277,13 @@ fun InicioTecnicoScreen(
                                 supportingContent = {
                                     Column {
                                         Text(equipo.instalacion)
+                                        // NUEVO: a quién pertenece el equipo
+                                        if (equipo.nombreCliente.isNotBlank()) {
+                                            Text(
+                                                text = "👤 Cliente: ${equipo.nombreCliente}",
+                                                style = MaterialTheme.typography.bodySmall
+                                            )
+                                        }
                                         Text(
                                             text = if (equipo.direccion.isNotBlank()) "📍 ${equipo.direccion}" else "✏️ Agregar dirección",
                                             style = MaterialTheme.typography.labelSmall,
@@ -316,10 +333,10 @@ fun InicioTecnicoScreen(
 
 
 private val equiposPreview = listOf(
-    Equipo("TR-0098", "Transformador 300 kVA", "Planta Lampa · S/E-01", clienteId = 2, id = 2, empresaCliente = "Industrias Aurora S.A.", direccion = "Camino Los Maitenes 1200, Lampa", latitud = -33.2845, longitud = -70.8752),
-    Equipo("TR-0142", "Transformador 500 kVA", "Planta Lampa · S/E-02", clienteId = 2, id = 1, empresaCliente = "Industrias Aurora S.A.", direccion = "Camino Los Maitenes 1200, Lampa", latitud = -33.2845, longitud = -70.8752),
-    Equipo("TR-0215", "Transformador 1000 kVA", "Planta Quilicura · S/E-03", clienteId = 2, id = 3, empresaCliente = "Industrias Aurora S.A.", direccion = "Av. Américo Vespucio 1500, Quilicura", latitud = -33.3611, longitud = -70.7305),
-    Equipo("TR-0330", "Transformador 750 kVA", "Planta Puerto Montt · S/E-01", clienteId = 3, id = 4, empresaCliente = "Envases del Sur S.A.", direccion = "Ruta 5 Sur Km 1020, Puerto Montt", latitud = -41.4693, longitud = -72.9424)
+    Equipo("TR-0098", "Transformador 300 kVA", "Planta Lampa · S/E-01", clienteId = 2, id = 2, empresaCliente = "Industrias Aurora S.A.", direccion = "Camino Los Maitenes 1200, Lampa", latitud = -33.2845, longitud = -70.8752, nombreCliente = "Pedro Salas"),
+    Equipo("TR-0142", "Transformador 500 kVA", "Planta Lampa · S/E-02", clienteId = 2, id = 1, empresaCliente = "Industrias Aurora S.A.", direccion = "Camino Los Maitenes 1200, Lampa", latitud = -33.2845, longitud = -70.8752, nombreCliente = "Pedro Salas"),
+    Equipo("TR-0215", "Transformador 1000 kVA", "Planta Quilicura · S/E-03", clienteId = 2, id = 3, empresaCliente = "Industrias Aurora S.A.", direccion = "Av. Américo Vespucio 1500, Quilicura", latitud = -33.3611, longitud = -70.7305, nombreCliente = "Pedro Salas"),
+    Equipo("TR-0330", "Transformador 750 kVA", "Planta Puerto Montt · S/E-01", clienteId = 3, id = 4, empresaCliente = "Envases del Sur S.A.", direccion = "Ruta 5 Sur Km 1020, Puerto Montt", latitud = -41.4693, longitud = -72.9424, nombreCliente = "Daniela Vera")
 )
 
 @Preview(showBackground = true, showSystemUi = true)

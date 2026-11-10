@@ -16,6 +16,7 @@ import androidx.navigation.navArgument
 import com.example.induztek_ingeniera_app.model.Protocolo
 import com.example.induztek_ingeniera_app.model.Rol
 import com.example.induztek_ingeniera_app.model.Usuario
+import com.example.induztek_ingeniera_app.ui.screens.AgregarEquipoScreen
 import com.example.induztek_ingeniera_app.ui.screens.DetalleProtocoloScreen
 import com.example.induztek_ingeniera_app.ui.screens.HistorialScreen
 import com.example.induztek_ingeniera_app.ui.screens.InicioClienteScreen
@@ -39,6 +40,8 @@ fun AppNavegacion(
 
     val usuarioActual by protocolosViewModel.usuarioActual.collectAsStateWithLifecycle()
     val equipos by protocolosViewModel.equipos.collectAsStateWithLifecycle()
+    val empresas by protocolosViewModel.empresas.collectAsStateWithLifecycle()
+    val clientes by protocolosViewModel.clientes.collectAsStateWithLifecycle()
     val protocolos by protocolosViewModel.protocolos.collectAsStateWithLifecycle()
 
     val rutaInicial = remember { rutaDeInicio(usuarioActual) }
@@ -76,6 +79,7 @@ fun AppNavegacion(
             InicioTecnicoScreen(
                 usuario = usuarioActual,
                 equipos = equipos,
+                onAgregarEquipo = { navController.navigate(Ruta.AgregarEquipo.ruta) },
 
                 onEditarPerfil = { navController.navigate(Ruta.Perfil.ruta) },
 
@@ -97,6 +101,19 @@ fun AppNavegacion(
                         launchSingleTop = true
                     }
                 }
+            )
+        }
+
+
+        composable(Ruta.AgregarEquipo.ruta) {
+            AgregarEquipoScreen(
+                equipos = equipos,
+                empresas = empresas,
+                clientes = clientes,
+                onGuardar = { codigo, tipo, instalacion, idEmpresa, idCliente, direccion, lat, lng, onResultado ->
+                    protocolosViewModel.agregarEquipo(codigo, tipo, instalacion, idEmpresa, idCliente, direccion, lat, lng, onResultado)
+                },
+                onVolver = { navController.navigateUp() }
             )
         }
 

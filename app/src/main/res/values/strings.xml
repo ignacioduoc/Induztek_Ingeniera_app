@@ -92,4 +92,46 @@
     <string name="cd_menu">Abrir menú</string>
     <string name="cd_historial">Ver historial del equipo</string>
     <string name="cd_foto_evidencia">Foto de evidencia del equipo</string>
+
+    <!-- Tarea 4: el técnico agrega equipos -->
+    <string name="btn_agregar_equipo">Agregar equipo</string>
+    <string name="titulo_agregar_equipo">Nuevo equipo</string>
+    <string name="seccion_datos_equipo">Datos del equipo</string>
+    <string name="seccion_empresa_equipo">Empresa y cliente</string>
+    <string name="seccion_instalacion_equipo">Instalación</string>
+    <string name="indicacion_elegir_empresa_primero">Primero elige la empresa para ver sus instalaciones.</string>
+    <string name="indicacion_formato_equipo">Ejemplo de código: TR-0142 (2 a 4 letras, guion y 3 a 5 números)</string>
+    <string name="campo_codigo_equipo">Código</string>
+    <string name="campo_tipo_equipo">Tipo</string>
+    <string name="opcion_otro_tipo">Otro tipo de equipo…</string>
+    <string name="campo_potencia_transformador">Potencia en kVA (Ej: 500)</string>
+    <string name="campo_nombre_tipo">Nombre del tipo (Ej: Motor)</string>
+    <string name="campo_valor_tipo">Valor (Ej: 75)</string>
+    <string name="etiqueta_unidad_tipo">Unidad</string>
+    <string name="tipo_se_guardara">Se guardará como: %1$s</string>
+    <string name="error_elegir_tipo">Elige el tipo de equipo</string>
+    <string name="error_nombre_tipo_vacio">Ingresa el nombre del tipo</string>
+    <string name="error_nombre_tipo_formato">Usa solo letras (mínimo 3)</string>
+    <string name="error_valor_tipo">Ingresa un número de 1 a 99999</string>
+    <string name="campo_instalacion_equipo">Instalación</string>
+    <string name="campo_nombre_planta">Nombre de la planta (Ej: Lampa)</string>
+    <string name="campo_numero_se">N° de subestación S/E (Ej: 2)</string>
+    <string name="instalacion_se_guardara">Se guardará como: %1$s</string>
+    <string name="opcion_otra_instalacion">Otra instalación…</string>
+    <string name="etiqueta_empresa_equipo">Empresa donde está el equipo</string>
+    <string name="etiqueta_cliente_equipo">Cliente dueño del equipo</string>
+    <string name="etiqueta_direccion_equipo">Dirección del equipo (la de la empresa)</string>
+    <string name="empresa_sin_direccion">Esta empresa no tiene dirección registrada</string>
+    <string name="sin_empresas_con_clientes">Todavía no hay empresas con clientes registrados.</string>
+    <string name="error_codigo_vacio">Ingresa el código del equipo</string>
+    <string name="error_codigo_formato">Usa letras, guion y números (Ej: TR-0142)</string>
+    <string name="error_codigo_repetido">Ya existe un equipo con ese código</string>
+    <string name="error_elegir_instalacion">Elige la instalación</string>
+    <string name="error_planta_vacia">Ingresa el nombre de la planta</string>
+    <string name="error_planta_formato">Usa solo letras y números (mínimo 3)</string>
+    <string name="error_numero_se">Ingresa el número de S/E (1 a 99)</string>
+    <string name="error_elegir_empresa">Elige la empresa</string>
+    <string name="error_elegir_cliente">Elige el cliente dueño</string>
+    <string name="btn_guardar_equipo">Guardar equipo</string>
+    <string name="equipo_agregado">Equipo agregado correctamente</string>
 </resources>

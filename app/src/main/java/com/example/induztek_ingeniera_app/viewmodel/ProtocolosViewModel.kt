@@ -3,13 +3,17 @@ package com.example.induztek_ingeniera_app.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.induztek_ingeniera_app.data.ProtocoloRepository
+import com.example.induztek_ingeniera_app.data.entities.EmpresaEntity
 import com.example.induztek_ingeniera_app.data.entities.EquipoConDetalles
+import com.example.induztek_ingeniera_app.data.entities.EquipoEntity
 import com.example.induztek_ingeniera_app.data.entities.ProtocoloConDetalles
 import com.example.induztek_ingeniera_app.data.entities.ProtocoloEntity
+import com.example.induztek_ingeniera_app.data.entities.UsuarioEntity
 import com.example.induztek_ingeniera_app.model.Equipo
 import com.example.induztek_ingeniera_app.model.EstadoProtocolo
 import com.example.induztek_ingeniera_app.model.Protocolo
 import com.example.induztek_ingeniera_app.model.Resultado
+import com.example.induztek_ingeniera_app.model.Rol
 import com.example.induztek_ingeniera_app.model.Usuario
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -65,6 +69,32 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
         )
 
 
+    // Tarea 4: datos para el formulario "Agregar equipo".
+    // Empiezan a cargar después del login (como "equipos"), cuando los datos de ejemplo ya existen.
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val empresas: StateFlow<List<EmpresaEntity>> = _usuarioActual
+        .flatMapLatest { usuario ->
+            if (usuario == null) flowOf<List<EmpresaEntity>>(emptyList())
+            else repository.obtenerEmpresas()
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+    // Solo los usuarios con rol Cliente (los posibles dueños de un equipo)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val clientes: StateFlow<List<UsuarioEntity>> = _usuarioActual
+        .flatMapLatest { usuario ->
+            if (usuario == null) flowOf<List<UsuarioEntity>>(emptyList())
+            else repository.listarUsuarios().map { lista -> lista.filter { it.idRol == Rol.ID_CLIENTE } }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+
     fun registrarIngreso(usuario: Usuario) {
         _usuarioActual.value = usuario
     }
@@ -79,6 +109,40 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
                 correo = correo,
                 fotoPerfil = fotoPerfil
             )
+        }
+    }
+
+
+    // Tarea 4: el técnico agrega un equipo. onResultado(false) = el código ya existía.
+    fun agregarEquipo(
+        codigo: String,
+        tipo: String,
+        instalacion: String,
+        idEmpresa: Long,
+        idCliente: Long,
+        direccion: String,
+        latitud: Double,
+        longitud: Double,
+        onResultado: (Boolean) -> Unit
+    ) {
+        viewModelScope.launch {
+            if (repository.existeCodigoEquipo(codigo)) {
+                onResultado(false)
+                return@launch
+            }
+            val nuevoId = repository.crearEquipo(
+                EquipoEntity(
+                    codigo = codigo.trim(),
+                    tipo = tipo.trim(),
+                    instalacion = instalacion.trim(),
+                    direccion = direccion,
+                    latitud = latitud,
+                    longitud = longitud,
+                    id_cliente = idCliente,
+                    id_empresa = idEmpresa
+                )
+            )
+            onResultado(nuevoId != -1L)
         }
     }
 

@@ -100,7 +100,7 @@
     <string name="seccion_empresa_equipo">Empresa y cliente</string>
     <string name="seccion_instalacion_equipo">Instalación</string>
     <string name="indicacion_elegir_empresa_primero">Primero elige la empresa para ver sus instalaciones.</string>
-    <string name="indicacion_formato_equipo">Ejemplo de código: TR-0142 (2 a 4 letras, guion y 3 a 5 números)</string>
+    <string name="indicacion_formato_equipo">El código empieza con TR- (se pone solo). Escribe solo el número, de 3 a 5 dígitos. Ejemplo: 0142 queda TR-0142</string>
     <string name="campo_codigo_equipo">Código</string>
     <string name="campo_tipo_equipo">Tipo</string>
     <string name="opcion_otro_tipo">Otro tipo de equipo…</string>
@@ -119,12 +119,16 @@
     <string name="instalacion_se_guardara">Se guardará como: %1$s</string>
     <string name="opcion_otra_instalacion">Otra instalación…</string>
     <string name="etiqueta_empresa_equipo">Empresa donde está el equipo</string>
+    <string name="etiqueta_cliente_tarjeta">Cliente</string>
+    <string name="etiqueta_empresa_tarjeta">Empresa</string>
+    <string name="etiqueta_direccion_tarjeta">Dirección</string>
+    <string name="agregar_direccion">Agregar dirección</string>
     <string name="etiqueta_cliente_equipo">Cliente dueño del equipo</string>
     <string name="etiqueta_direccion_equipo">Dirección del equipo (la de la empresa)</string>
     <string name="empresa_sin_direccion">Esta empresa no tiene dirección registrada</string>
     <string name="sin_empresas_con_clientes">Todavía no hay empresas con clientes registrados.</string>
     <string name="error_codigo_vacio">Ingresa el código del equipo</string>
-    <string name="error_codigo_formato">Usa letras, guion y números (Ej: TR-0142)</string>
+    <string name="error_codigo_formato">Escribe solo números, de 3 a 5 dígitos (Ej: 0142)</string>
     <string name="error_codigo_repetido">Ya existe un equipo con ese código</string>
     <string name="error_elegir_instalacion">Elige la instalación</string>
     <string name="error_planta_vacia">Ingresa el nombre de la planta</string>

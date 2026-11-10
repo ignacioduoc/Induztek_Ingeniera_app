@@ -21,17 +21,21 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -49,11 +53,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.induztek_ingeniera_app.R
@@ -270,59 +277,80 @@ fun InicioTecnicoScreen(
                     verticalArrangement = Arrangement.spacedBy(Dimens.espacioChico)
                 ) {
                     items(equipos, key = { it.id }) { equipo ->
-                        Card(onClick = { onNuevaPrueba(equipo.id) }) {
-                            ListItem(
-                                overlineContent = { Text(equipo.empresaCliente) },
-                                headlineContent = { Text("${equipo.codigo} · ${equipo.tipo}") },
-                                supportingContent = {
-                                    Column {
-                                        Text(equipo.instalacion)
-                                        // NUEVO: a quién pertenece el equipo
-                                        if (equipo.nombreCliente.isNotBlank()) {
-                                            Text(
-                                                text = "👤 Cliente: ${equipo.nombreCliente}",
-                                                style = MaterialTheme.typography.bodySmall
-                                            )
-                                        }
+                        Card(
+                            onClick = { onNuevaPrueba(equipo.id) },
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(Dimens.espacioMedio),
+                                verticalArrangement = Arrangement.spacedBy(Dimens.espacioChico)
+                            ) {
+                                // Encabezado: equipo + instalación a la izquierda, acciones a la derecha
+                                Row(verticalAlignment = Alignment.Top) {
+                                    Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            text = if (equipo.direccion.isNotBlank()) "📍 ${equipo.direccion}" else "✏️ Agregar dirección",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.secondary,
-                                            modifier = Modifier
-                                                .padding(top = 4.dp)
-                                                .clickable {
-                                                    textoDireccionTemp = equipo.direccion
-                                                    equipoAEditar = equipo
-                                                }
+                                            text = "${equipo.codigo} · ${equipo.tipo}",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                        Text(
+                                            text = equipo.instalacion,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
-                                },
-                                trailingContent = {
-                                    Row {
-                                        IconButton(onClick = {
-                                            if (equipo.latitud != 0.0 && equipo.longitud != 0.0) {
-                                                onVerMapa(equipo.latitud, equipo.longitud, equipo.codigo, equipo.instalacion)
-                                            } else {
-                                                Toast.makeText(context, "Ingresa primero una dirección válida", Toast.LENGTH_SHORT).show()
-                                            }
-                                        }) {
-                                            Icon(
-                                                painter = painterResource(R.drawable.ic_menu),
-                                                contentDescription = "Ver Ubicación GPS",
-                                                tint = MaterialTheme.colorScheme.primary
-                                            )
+                                    IconButton(onClick = {
+                                        if (equipo.latitud != 0.0 && equipo.longitud != 0.0) {
+                                            onVerMapa(equipo.latitud, equipo.longitud, equipo.codigo, equipo.instalacion)
+                                        } else {
+                                            Toast.makeText(context, "Ingresa primero una dirección válida", Toast.LENGTH_SHORT).show()
                                         }
-
-                                        IconButton(onClick = { onVerHistorial(equipo.id) }) {
-                                            Icon(
-                                                painter = painterResource(R.drawable.ic_bar_chart),
-                                                contentDescription = stringResource(R.string.cd_historial),
-                                                tint = MaterialTheme.colorScheme.primary
-                                            )
-                                        }
+                                    }) {
+                                        Icon(
+                                            painter = painterResource(R.drawable.ic_menu),
+                                            contentDescription = "Ver Ubicación GPS",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                    IconButton(onClick = { onVerHistorial(equipo.id) }) {
+                                        Icon(
+                                            painter = painterResource(R.drawable.ic_bar_chart),
+                                            contentDescription = stringResource(R.string.cd_historial),
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
                                     }
                                 }
-                            )
+
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                                // Datos del equipo: Cliente y, justo debajo, su Empresa
+                                if (equipo.nombreCliente.isNotBlank()) {
+                                    FilaDato(
+                                        icono = Icons.Default.Person,
+                                        etiqueta = stringResource(R.string.etiqueta_cliente_tarjeta),
+                                        valor = equipo.nombreCliente
+                                    )
+                                }
+                                if (equipo.empresaCliente.isNotBlank()) {
+                                    FilaDato(
+                                        icono = Icons.Default.Business,
+                                        etiqueta = stringResource(R.string.etiqueta_empresa_tarjeta),
+                                        valor = equipo.empresaCliente
+                                    )
+                                }
+                                FilaDato(
+                                    icono = Icons.Default.LocationOn,
+                                    etiqueta = stringResource(R.string.etiqueta_direccion_tarjeta),
+                                    valor = if (equipo.direccion.isNotBlank()) equipo.direccion
+                                    else stringResource(R.string.agregar_direccion),
+                                    colorValor = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.clickable {
+                                        textoDireccionTemp = equipo.direccion
+                                        equipoAEditar = equipo
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -331,6 +359,41 @@ fun InicioTecnicoScreen(
     }
 }
 
+
+/** Una fila de la tarjeta: ícono + etiqueta pequeña arriba + valor abajo. */
+@Composable
+private fun FilaDato(
+    icono: ImageVector,
+    etiqueta: String,
+    valor: String,
+    modifier: Modifier = Modifier,
+    colorValor: Color = Color.Unspecified
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Dimens.espacioChico)
+    ) {
+        Icon(
+            imageVector = icono,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(20.dp)
+        )
+        Column {
+            Text(
+                text = etiqueta,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = valor,
+                style = MaterialTheme.typography.bodyMedium,
+                color = colorValor
+            )
+        }
+    }
+}
 
 private val equiposPreview = listOf(
     Equipo("TR-0098", "Transformador 300 kVA", "Planta Lampa · S/E-01", clienteId = 2, id = 2, empresaCliente = "Industrias Aurora S.A.", direccion = "Camino Los Maitenes 1200, Lampa", latitud = -33.2845, longitud = -70.8752, nombreCliente = "Pedro Salas"),

@@ -50,14 +50,16 @@ import com.example.induztek_ingeniera_app.ui.utils.buscarCoordenadasGratis
 
 
 // Formatos válidos para el código, la planta y el nombre del tipo
-private val formatoCodigo = Regex("^[A-Za-z]{2,4}-\\d{3,5}$")   // Ej: TR-0142
+// El código siempre empieza con "TR-" (se pone solo); el técnico escribe solo el número
+private const val PREFIJO_CODIGO = "TR-"
+private val formatoNumeroCodigo = Regex("^\\d{3,5}$")   // Ej: 0142 -> TR-0142
 private val formatoPlanta = Regex("^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 ]{3,40}$")   // Ej: Lampa, Puerto Montt
 private val formatoNombreTipo = Regex("^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]{3,30}$")   // Ej: Motor, Interruptor
 
 // Tipos que se ofrecen en la lista y unidades para los "otros" tipos
 private const val TIPO_TRANSFORMADOR = "Transformador"
 private const val TIPO_OTRO = "OTRO"
-private val unidadesTipo = listOf("kVA", "kW", "kV", "A", "HP")
+private val unidadesTipo = listOf("kVA", "kW", "kV", "A")
 
 // "puerto MONTT" -> "Puerto Montt" (cada palabra con solo la primera letra en mayúscula)
 private fun String.conMayusculaInicial(): String =
@@ -136,10 +138,13 @@ fun AgregarEquipoScreen(
         else -> ""
     }
 
+    // Código completo que se guarda: prefijo + número (ej: TR-0142)
+    val codigoCompleto = PREFIJO_CODIGO + codigo.trim()
+
     val errorCodigo = when {
         codigoRepetido -> stringResource(R.string.error_codigo_repetido)
         intentoGuardar && codigo.isBlank() -> stringResource(R.string.error_codigo_vacio)
-        intentoGuardar && !formatoCodigo.matches(codigo.trim()) -> stringResource(R.string.error_codigo_formato)
+        intentoGuardar && !formatoNumeroCodigo.matches(codigo.trim()) -> stringResource(R.string.error_codigo_formato)
         else -> null
     }
     val errorTipo = if (intentoGuardar && tipoElegido.isBlank()) stringResource(R.string.error_elegir_tipo) else null
@@ -165,14 +170,14 @@ fun AgregarEquipoScreen(
 
     fun guardarEquipo() {
         intentoGuardar = true
-        val todoOk = formatoCodigo.matches(codigo.trim()) && tipoFinal.isNotBlank() &&
+        val todoOk = formatoNumeroCodigo.matches(codigo.trim()) && tipoFinal.isNotBlank() &&
                 idEmpresa != 0L && idCliente != 0L && instalacionFinal.isNotBlank()
         if (!todoOk) return
 
         guardando = true
         val guardar: (Double, Double) -> Unit = { lat, lng ->
             onGuardar(
-                codigo.trim().uppercase(), tipoFinal, instalacionFinal,
+                codigoCompleto, tipoFinal, instalacionFinal,
                 idEmpresa, idCliente, direccionEmpresa, lat, lng
             ) { guardado ->
                 guardando = false
@@ -231,9 +236,12 @@ fun AgregarEquipoScreen(
                 )
                 CampoTexto(
                     valor = codigo,
-                    onValorCambia = { codigo = it; codigoRepetido = false },
+                    // Solo números y máximo 5; el "TR-" va fijo al inicio del campo
+                    onValorCambia = { codigo = it.filter { c -> c.isDigit() }.take(5); codigoRepetido = false },
                     etiqueta = stringResource(R.string.campo_codigo_equipo),
-                    error = errorCodigo
+                    error = errorCodigo,
+                    tipoTeclado = KeyboardType.Number,
+                    prefijo = PREFIJO_CODIGO
                 )
                 // Lista desplegable de tipos de equipo
                 ExposedDropdownMenuBox(

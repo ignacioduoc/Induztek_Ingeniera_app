@@ -30,7 +30,9 @@ fun CampoTexto(
     @DrawableRes icono: Int? = null,
     modifier: Modifier = Modifier,
     error: String? = null,
-    tipoTeclado: KeyboardType = KeyboardType.Text
+    tipoTeclado: KeyboardType = KeyboardType.Text,
+    // Texto fijo al inicio del campo (ej: "TR-"), que el usuario no puede borrar
+    prefijo: String? = null
 ) {
     OutlinedTextField(
         value = valor,
@@ -57,6 +59,11 @@ fun CampoTexto(
                     modifier = Modifier.size(Dimens.tamanoIcono)
                 )
             }
+        },
+        prefix = if (prefijo != null) {
+            { Text(prefijo) }
+        } else {
+            null
         },
         isError = error != null,
         supportingText = { if (error != null) Text(error) }, // texto de ayuda bajo el campo

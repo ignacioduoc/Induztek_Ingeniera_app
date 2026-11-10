@@ -11,6 +11,7 @@
     <string name="btn_ingresar">Ingresar</string>
     <string name="nota_login">La App es para poder registrar o ver los protocolos que se realizaron en las visitas en terreno.</string>
     <string name="btn_olvide_contrasena">¿Olvidaste tu contraseña?</string>
+    <string name="logo_descripcion">Logo Induztek Ingeniería SpA</string>
 
 
     <string name="saludo">Hola, %1$s</string>

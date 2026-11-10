@@ -1,5 +1,6 @@
 package com.example.induztek_ingeniera_app.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
@@ -28,6 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.induztek_ingeniera_app.R
 import com.example.induztek_ingeniera_app.model.LoginUiState
@@ -90,6 +93,12 @@ fun LoginContent(
             verticalArrangement = Arrangement.spacedBy(Dimens.espacioMedio)
         ) {
             Spacer(Modifier.height(Dimens.espacioGrande))
+
+            Image(
+                painter = painterResource(R.drawable.logo_induztek_completo),
+                contentDescription = stringResource(R.string.logo_descripcion),
+                modifier = Modifier.width(220.dp)
+            )
 
             Text(
                 text = stringResource(R.string.titulo_login),

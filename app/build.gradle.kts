@@ -5,6 +5,10 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+base {
+    archivesName.set("induztek-protocolos")
+}
+
 android {
     namespace = "com.example.induztek_ingeniera_app"
     compileSdk = 37

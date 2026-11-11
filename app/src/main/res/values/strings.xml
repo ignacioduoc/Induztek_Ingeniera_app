@@ -19,7 +19,12 @@
 
     <!-- Restablecer contraseña -->
     <string name="titulo_restablecer">Restablecer contraseña</string>
-    <string name="indicacion_restablecer">Escribe el correo de tu cuenta y elige una contraseña nueva de al menos 6 caracteres.</string>
+    <string name="indicacion_restablecer">Escribe el correo de tu cuenta para comenzar.</string>
+    <string name="indicacion_restablecer_respuesta">Responde tu pregunta de seguridad para comprobar que eres tú.</string>
+    <string name="indicacion_restablecer_nueva">Respuesta correcta. Elige tu contraseña nueva de al menos 6 caracteres.</string>
+    <string name="btn_continuar">Continuar</string>
+    <string name="btn_verificar_respuesta">Verificar respuesta</string>
+    <string name="btn_cambiar_correo">Usar otro correo</string>
     <string name="campo_nueva_contrasena">Nueva contraseña</string>
     <string name="campo_confirmar_contrasena">Repite la nueva contraseña</string>
     <string name="btn_cambiar_contrasena">Cambiar contraseña</string>
@@ -290,4 +295,10 @@
 
     <string name="sin_pruebas_titulo">Aún no hay pruebas registradas</string>
     <string name="sin_pruebas_ayuda">Cuando un técnico registre una prueba para este equipo, aquí verás la comparación de sus mediciones.</string>
+    <string name="ayuda_pregunta_seguridad">Al ingresar por primera vez (o después de reiniciar su contraseña), el usuario deberá cambiar esta contraseña temporal y elegir su propia pregunta de seguridad.</string>
+
+    <!-- Configura tu cuenta (primer ingreso) -->
+    <string name="titulo_configurar_cuenta">Configura tu cuenta</string>
+    <string name="indicacion_configurar_cuenta">Entraste con una contraseña temporal. Crea tu propia contraseña y elige una pregunta de seguridad: la usarás si algún día olvidas tu contraseña.</string>
+    <string name="btn_guardar_continuar">Guardar y continuar</string>
 </resources>

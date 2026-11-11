@@ -34,7 +34,6 @@ import com.example.induztek_ingeniera_app.ui.components.GrupoRadio
 import com.example.induztek_ingeniera_app.ui.components.ListaDesplegable
 import com.example.induztek_ingeniera_app.ui.components.TarjetaSeccion
 import com.example.induztek_ingeniera_app.ui.theme.Dimens
-import com.example.induztek_ingeniera_app.ui.utils.Validaciones
 import com.example.induztek_ingeniera_app.viewmodel.AdminUsuariosViewModel
 
 
@@ -168,24 +167,11 @@ fun AdminUsuarioFormScreen(
                     onAlternarVisible = viewModel::onAlternarVisibilidad,
                     error = f.errorContrasena
                 )
-            }
-
-            TarjetaSeccion(titulo = stringResource(R.string.seccion_seguridad)) {
-                ListaDesplegable(
-                    etiqueta = stringResource(R.string.campo_pregunta_seguridad),
-                    textoSeleccionado = f.pregunta,
-                    opciones = Validaciones.PREGUNTAS_SEGURIDAD,
-                    textoDe = { it },
-                    onElegir = viewModel::onPreguntaCambia,
-                    error = f.errorPregunta
-                )
-                CampoTexto(
-                    valor = f.respuesta,
-                    onValorCambia = viewModel::onRespuestaCambia,
-                    etiqueta = stringResource(
-                        if (f.esEdicion) R.string.campo_respuesta_opcional else R.string.campo_respuesta
-                    ),
-                    error = f.errorRespuesta
+                // La pregunta de seguridad la elige el propio usuario al ingresar
+                Text(
+                    text = stringResource(R.string.ayuda_pregunta_seguridad),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 

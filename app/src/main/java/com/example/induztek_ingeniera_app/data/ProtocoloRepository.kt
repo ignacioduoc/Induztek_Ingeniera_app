@@ -13,10 +13,36 @@ import com.example.induztek_ingeniera_app.model.Rol
 import com.example.induztek_ingeniera_app.model.Usuario
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
+import java.security.MessageDigest
+import java.security.SecureRandom
 
 // La respuesta de seguridad se guarda y se compara siempre así: sin espacios sobrantes y en minúsculas.
 // Úsala también al crear o editar un usuario, antes de guardar la respuesta.
 fun normalizarRespuestaSeguridad(texto: String): String = texto.trim().lowercase()
+
+// ---------- Hash de la respuesta de seguridad ----------
+// Se guarda como "sha256:<sal>:<hash>": la sal es al azar para cada respuesta, así dos usuarios
+// con la misma respuesta no dejan el mismo hash. Nunca se guarda la respuesta en texto plano.
+private const val PREFIJO_HASH = "sha256:"
+
+private fun sha256Hex(texto: String): String =
+    MessageDigest.getInstance("SHA-256").digest(texto.toByteArray(Charsets.UTF_8))
+        .joinToString("") { "%02x".format(it) }
+
+fun hashRespuestaSeguridad(respuesta: String): String {
+    val sal = ByteArray(8).also { SecureRandom().nextBytes(it) }.joinToString("") { "%02x".format(it) }
+    return "$PREFIJO_HASH$sal:${sha256Hex(sal + normalizarRespuestaSeguridad(respuesta))}"
+}
+
+// ¿Lo guardado ya es un hash? (si no, es una cuenta antigua con la respuesta en texto plano)
+private fun esHashRespuesta(guardada: String): Boolean =
+    guardada.startsWith(PREFIJO_HASH) && guardada.count { it == ':' } == 2
+
+private fun coincideConHash(guardada: String, respuesta: String): Boolean {
+    val partes = guardada.removePrefix(PREFIJO_HASH).split(":")
+    val calculado = sha256Hex(partes[0] + normalizarRespuestaSeguridad(respuesta))
+    return MessageDigest.isEqual(calculado.toByteArray(), partes[1].toByteArray())
+}
 
 class ProtocoloRepository(
     private val usuarioDao: UsuarioDao,
@@ -36,6 +62,11 @@ class ProtocoloRepository(
     // La entidad completa (con contraseña y respuesta de seguridad) para que el administrador pueda editarla
     suspend fun buscarUsuarioEntity(id: Long): UsuarioEntity? {
         return usuarioDao.buscarUsuarioPorId(id).firstOrNull()
+    }
+
+    // true si esa contraseña es justo la que ya tiene la cuenta (para no permitir "cambiarla" por la misma)
+    suspend fun esContrasenaActual(correo: String, contrasena: String): Boolean {
+        return usuarioDao.iniciarSesion(correo.trim(), contrasena) != null
     }
 
     suspend fun cambiarContrasena(correo: String, nueva: String): Boolean {
@@ -76,8 +107,22 @@ class ProtocoloRepository(
         return usuarioDao.obtenerPreguntaSeguridad(correo.trim())?.takeIf { it.isNotBlank() }
     }
 
+    // Una respuesta vacía o muy corta nunca es válida, y una cuenta sin pregunta tampoco se puede verificar.
+    // Las cuentas antiguas (respuesta en texto plano) se aceptan una vez y quedan guardadas ya con hash.
     suspend fun verificarRespuestaSeguridad(correo: String, respuesta: String): Boolean {
-        return usuarioDao.contarRespuestaSeguridad(correo.trim(), normalizarRespuestaSeguridad(respuesta)) > 0
+        val normalizada = normalizarRespuestaSeguridad(respuesta)
+        if (normalizada.length < 2) return false
+        if (obtenerPreguntaSeguridad(correo) == null) return false
+
+        val guardada = usuarioDao.obtenerRespuestaSeguridad(correo.trim()) ?: return false
+        if (guardada.isBlank()) return false
+
+        if (esHashRespuesta(guardada)) return coincideConHash(guardada, normalizada)
+
+        // Cuenta antigua: compara en texto plano y, si coincide, la convierte a hash
+        if (normalizarRespuestaSeguridad(guardada) != normalizada) return false
+        usuarioDao.actualizarRespuestaSeguridad(correo.trim(), hashRespuestaSeguridad(normalizada))
+        return true
     }
 
 
@@ -181,7 +226,8 @@ class ProtocoloRepository(
             rut = this.rut ?: "",
             telefono = this.telefono,
             idEmpresa = this.idEmpresa ?: 0L,
-            direccionEmpresa = empresaVinculada?.direccion ?: ""
+            direccionEmpresa = empresaVinculada?.direccion ?: "",
+            tienePreguntaSeguridad = this.preguntaSeguridad.isNotBlank()
         )
     }
 }

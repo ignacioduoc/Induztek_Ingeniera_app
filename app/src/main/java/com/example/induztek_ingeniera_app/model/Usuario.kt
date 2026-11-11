@@ -13,7 +13,9 @@ data class Usuario(
     val rut: String = "",
     val telefono: String = "",
     val idEmpresa: Long = 0,
-    val direccionEmpresa: String = ""
+    val direccionEmpresa: String = "",
+    // false = cuenta nueva o reiniciada: debe configurar su contraseña y su pregunta de seguridad al ingresar
+    val tienePreguntaSeguridad: Boolean = true
 ) {
     val nombreCompleto: String
         get() = "$nombre $apellido".trim()

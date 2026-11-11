@@ -51,6 +51,10 @@ interface UsuarioDao {
     @Query("SELECT pregunta_seguridad FROM usuarios WHERE LOWER(correo) = LOWER(:correo) LIMIT 1")
     suspend fun obtenerPreguntaSeguridad(correo: String): String?
 
-    @Query("SELECT COUNT(*) FROM usuarios WHERE LOWER(correo) = LOWER(:correo) AND respuesta_seguridad = :respuesta")
-    suspend fun contarRespuestaSeguridad(correo: String, respuesta: String): Int
+    // Lo guardado de la respuesta: un hash ("sha256:sal:hash") o, en cuentas antiguas, el texto plano
+    @Query("SELECT respuesta_seguridad FROM usuarios WHERE LOWER(correo) = LOWER(:correo) LIMIT 1")
+    suspend fun obtenerRespuestaSeguridad(correo: String): String?
+
+    @Query("UPDATE usuarios SET respuesta_seguridad = :respuesta WHERE LOWER(correo) = LOWER(:correo)")
+    suspend fun actualizarRespuestaSeguridad(correo: String, respuesta: String): Int
 }

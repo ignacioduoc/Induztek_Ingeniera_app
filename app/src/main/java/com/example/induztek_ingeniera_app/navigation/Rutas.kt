@@ -7,6 +7,7 @@ sealed class Ruta(val ruta: String) {
     data object Login : Ruta("login")                     // pantalla de inicio de sesión
 
     data object RestablecerContrasena : Ruta("restablecer_contrasena")
+    data object ConfigurarCuenta : Ruta("configurar_cuenta")   // primer ingreso: contraseña nueva y pregunta
 
     data object InicioTecnico : Ruta("inicio_tecnico")
     data object InicioCliente : Ruta("inicio_cliente")

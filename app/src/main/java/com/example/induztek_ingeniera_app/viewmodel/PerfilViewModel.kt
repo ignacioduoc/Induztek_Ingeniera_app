@@ -3,7 +3,7 @@ package com.example.induztek_ingeniera_app.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.induztek_ingeniera_app.data.ProtocoloRepository
-import com.example.induztek_ingeniera_app.data.normalizarRespuestaSeguridad
+import com.example.induztek_ingeniera_app.data.hashRespuestaSeguridad
 import com.example.induztek_ingeniera_app.model.FormularioPerfilState
 import com.example.induztek_ingeniera_app.ui.utils.Validaciones
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -52,6 +52,8 @@ class PerfilViewModel(private val repository: ProtocoloRepository) : ViewModel()
         _formulario.update { it.copy(contrasenaActual = v, errorContrasenaActual = null) }
     fun onContrasenaNuevaCambia(v: String) =
         _formulario.update { it.copy(contrasenaNueva = v, errorContrasenaNueva = null) }
+    fun onContrasenaConfirmarCambia(v: String) =
+        _formulario.update { it.copy(contrasenaConfirmar = v, errorContrasenaConfirmar = null) }
     fun onAlternarVisibilidad() = _formulario.update { it.copy(contrasenasVisibles = !it.contrasenasVisibles) }
 
     fun limpiarGuardado() = _formulario.update { it.copy(guardado = false) }
@@ -128,8 +130,9 @@ class PerfilViewModel(private val repository: ProtocoloRepository) : ViewModel()
                 apellido = f.apellido.trim(),
                 telefono = "+56" + f.telefono,
                 preguntaSeguridad = f.pregunta,
+                // La respuesta se guarda con hash (nunca en texto plano); si no escribió una nueva, queda la que había
                 respuestaSeguridad = if (f.respuesta.isBlank()) original.respuestaSeguridad
-                else normalizarRespuestaSeguridad(f.respuesta),
+                else hashRespuestaSeguridad(f.respuesta),
                 contrasena = if (quiereCambiarContrasena) f.contrasenaNueva else original.contrasena,
                 fotoPerfil = nuevaFoto ?: original.fotoPerfil
             )
@@ -142,6 +145,70 @@ class PerfilViewModel(private val repository: ProtocoloRepository) : ViewModel()
                     contrasenaActual = if (exito) "" else it.contrasenaActual,
                     contrasenaNueva = if (exito) "" else it.contrasenaNueva,
                     errorGeneral = if (exito) null else "No se pudo guardar tu perfil"
+                )
+            }
+        }
+    }
+
+    /**
+     * "Configura tu cuenta" (primer ingreso o cuenta reiniciada por el administrador).
+     * El usuario ya entró con la contraseña temporal, así que no se la pedimos otra vez:
+     * debe escribir una contraseña nueva (distinta de la temporal) y elegir su pregunta de seguridad.
+     */
+    fun onConfigurarCuenta() {
+        val f = _formulario.value
+
+        val errorNueva = when {
+            f.contrasenaNueva.isBlank() -> "Escribe la contraseña nueva"
+            f.contrasenaNueva.length < 6 -> "Mínimo 6 caracteres"
+            else -> null
+        }
+        val errorConfirmar = when {
+            errorNueva != null -> null
+            f.contrasenaConfirmar != f.contrasenaNueva -> "Las contraseñas no coinciden"
+            else -> null
+        }
+        val errorPregunta = if (f.pregunta.isBlank()) "Elige una pregunta de seguridad" else null
+        val errorRespuesta = if (f.respuesta.trim().length < 2) "Escribe al menos 2 caracteres" else null
+
+        if (listOf(errorNueva, errorConfirmar, errorPregunta, errorRespuesta).any { it != null }) {
+            _formulario.update {
+                it.copy(
+                    errorContrasenaNueva = errorNueva, errorContrasenaConfirmar = errorConfirmar,
+                    errorPregunta = errorPregunta, errorRespuesta = errorRespuesta
+                )
+            }
+            return
+        }
+
+        _formulario.update { it.copy(guardando = true, errorGeneral = null) }
+        viewModelScope.launch {
+            val original = repository.buscarUsuarioEntity(f.idUsuario)
+            if (original == null) {
+                _formulario.update { it.copy(guardando = false, errorGeneral = "No se encontró tu cuenta") }
+                return@launch
+            }
+            // La contraseña nueva no puede ser la temporal que entregó el administrador
+            if (f.contrasenaNueva == original.contrasena) {
+                _formulario.update {
+                    it.copy(guardando = false, errorContrasenaNueva = "Debe ser distinta de la temporal")
+                }
+                return@launch
+            }
+
+            val exito = repository.actualizarUsuario(
+                original.copy(
+                    contrasena = f.contrasenaNueva,
+                    preguntaSeguridad = f.pregunta,
+                    respuestaSeguridad = hashRespuestaSeguridad(f.respuesta)
+                )
+            )
+            _formulario.update {
+                it.copy(
+                    guardando = false,
+                    guardado = exito,
+                    contrasenaNueva = "", contrasenaConfirmar = "", respuesta = "",
+                    errorGeneral = if (exito) null else "No se pudo guardar tu configuración"
                 )
             }
         }

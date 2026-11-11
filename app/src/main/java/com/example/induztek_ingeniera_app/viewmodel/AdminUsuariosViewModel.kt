@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.induztek_ingeniera_app.data.ProtocoloRepository
 import com.example.induztek_ingeniera_app.data.entities.EmpresaEntity
 import com.example.induztek_ingeniera_app.data.entities.UsuarioEntity
-import com.example.induztek_ingeniera_app.data.normalizarRespuestaSeguridad
 import com.example.induztek_ingeniera_app.model.FormularioUsuarioState
 import com.example.induztek_ingeniera_app.model.Rol
 import com.example.induztek_ingeniera_app.model.Usuario
@@ -85,9 +84,8 @@ class AdminUsuariosViewModel(private val repository: ProtocoloRepository) : View
                     telefono = u.telefono.removePrefix("+56").filter { it.isDigit() },
                     correo = u.correo,
                     idRol = u.idRol,
-                    idEmpresa = u.idEmpresa ?: 0L,
-                    pregunta = u.preguntaSeguridad
-                    // La contraseña y la respuesta quedan vacías: si no se escriben, se conservan las actuales
+                    idEmpresa = u.idEmpresa ?: 0L
+                    // La contraseña queda vacía: si no se escribe, se conserva la actual
                 )
             } else {
                 _formulario.update { it.copy(cargando = false, errorGeneral = "No se encontró el usuario") }
@@ -105,8 +103,6 @@ class AdminUsuariosViewModel(private val repository: ProtocoloRepository) : View
     fun onEmpresaCambia(v: Long) = _formulario.update { it.copy(idEmpresa = v, errorEmpresa = null) }
     fun onContrasenaCambia(v: String) = _formulario.update { it.copy(contrasena = v, errorContrasena = null) }
     fun onAlternarVisibilidad() = _formulario.update { it.copy(contrasenaVisible = !it.contrasenaVisible) }
-    fun onPreguntaCambia(v: String) = _formulario.update { it.copy(pregunta = v, errorPregunta = null) }
-    fun onRespuestaCambia(v: String) = _formulario.update { it.copy(respuesta = v, errorRespuesta = null) }
 
     fun limpiarGuardado() = _formulario.update { it.copy(guardado = false) }
 
@@ -137,16 +133,10 @@ class AdminUsuariosViewModel(private val repository: ProtocoloRepository) : View
             f.contrasena.isNotBlank() && f.contrasena.length < 6 -> "Mínimo 6 caracteres"
             else -> null
         }
-        val errorPregunta = if (f.pregunta.isBlank()) "Elige una pregunta de seguridad" else null
-        val errorRespuesta = when {
-            f.respuesta.isBlank() && !esEdicion -> "Escribe la respuesta"
-            f.respuesta.isNotBlank() && f.respuesta.trim().length < 2 -> "Escribe al menos 2 caracteres"
-            else -> null
-        }
 
         val hayError = listOf(
             errorNombre, errorApellido, errorRut, errorTelefono, errorCorreo,
-            errorEmpresa, errorContrasena, errorPregunta, errorRespuesta
+            errorEmpresa, errorContrasena
         ).any { it != null }
 
         if (hayError) {
@@ -154,7 +144,7 @@ class AdminUsuariosViewModel(private val repository: ProtocoloRepository) : View
                 it.copy(
                     errorNombre = errorNombre, errorApellido = errorApellido, errorRut = errorRut,
                     errorTelefono = errorTelefono, errorCorreo = errorCorreo, errorEmpresa = errorEmpresa,
-                    errorContrasena = errorContrasena, errorPregunta = errorPregunta, errorRespuesta = errorRespuesta
+                    errorContrasena = errorContrasena
                 )
             }
             return
@@ -176,8 +166,16 @@ class AdminUsuariosViewModel(private val repository: ProtocoloRepository) : View
                 return@launch
             }
 
-            // 3) Guardar. Al editar, lo que no se escribió (contraseña, respuesta) y la foto se conservan.
+            // 3) Guardar. Al editar, lo que no se escribió (contraseña) y la foto se conservan.
             val original = if (esEdicion) repository.buscarUsuarioEntity(f.idUsuario) else null
+
+            // La pregunta de seguridad la elige el propio usuario (no el administrador):
+            //  - usuario nuevo: queda sin pregunta y se la pedirán en su primer ingreso;
+            //  - edición sin cambiar la contraseña: se conserva la pregunta que ya tenía;
+            //  - edición con contraseña nueva (cuenta reiniciada): se borra para que cree una nueva.
+            val reinicioDeClave = esEdicion && f.contrasena.isNotBlank()
+            val preguntaActual = if (original != null && !reinicioDeClave) original.preguntaSeguridad else ""
+            val respuestaActual = if (original != null && !reinicioDeClave) original.respuestaSeguridad else ""
             val entidad = UsuarioEntity(
                 idUsuario = f.idUsuario,
                 nombre = f.nombre.trim(),
@@ -189,9 +187,8 @@ class AdminUsuariosViewModel(private val repository: ProtocoloRepository) : View
                 rut = rutNormalizado,
                 telefono = "+56" + f.telefono,
                 idEmpresa = f.idEmpresa,
-                preguntaSeguridad = f.pregunta,
-                respuestaSeguridad = if (f.respuesta.isBlank() && original != null) original.respuestaSeguridad
-                else normalizarRespuestaSeguridad(f.respuesta)
+                preguntaSeguridad = preguntaActual,
+                respuestaSeguridad = respuestaActual
             )
 
             val exito = if (esEdicion) repository.actualizarUsuario(entidad) else repository.crearUsuario(entidad) > 0

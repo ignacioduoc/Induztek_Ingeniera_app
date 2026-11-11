@@ -14,6 +14,7 @@ data class FormularioPerfilState(
     val respuesta: String = "",
     val contrasenaActual: String = "",
     val contrasenaNueva: String = "",
+    val contrasenaConfirmar: String = "",      // solo en "Configura tu cuenta"
     val contrasenasVisibles: Boolean = false,
 
     // Solo lectura (los cambia el administrador)
@@ -31,6 +32,7 @@ data class FormularioPerfilState(
     val errorRespuesta: String? = null,
     val errorContrasenaActual: String? = null,
     val errorContrasenaNueva: String? = null,
+    val errorContrasenaConfirmar: String? = null,
     val errorGeneral: String? = null,
 
     val cargando: Boolean = false,

@@ -13,8 +13,6 @@ data class FormularioUsuarioState(
     val idEmpresa: Long = 0,
     val contrasena: String = "",
     val contrasenaVisible: Boolean = false,
-    val pregunta: String = "",
-    val respuesta: String = "",
 
     val errorNombre: String? = null,
     val errorApellido: String? = null,
@@ -23,8 +21,6 @@ data class FormularioUsuarioState(
     val errorCorreo: String? = null,
     val errorEmpresa: String? = null,
     val errorContrasena: String? = null,
-    val errorPregunta: String? = null,
-    val errorRespuesta: String? = null,
     val errorGeneral: String? = null,
 
     val cargando: Boolean = false,

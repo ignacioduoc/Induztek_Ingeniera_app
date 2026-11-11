@@ -34,6 +34,7 @@ import com.example.induztek_ingeniera_app.ui.components.BotonPrincipal
 import com.example.induztek_ingeniera_app.ui.components.BotonSecundario
 import com.example.induztek_ingeniera_app.ui.components.CampoContrasena
 import com.example.induztek_ingeniera_app.ui.components.CampoTexto
+import com.example.induztek_ingeniera_app.ui.components.TarjetaSeccion
 import com.example.induztek_ingeniera_app.ui.theme.Dimens
 import com.example.induztek_ingeniera_app.ui.theme.Exito
 import com.example.induztek_ingeniera_app.ui.theme.ExitoFondo
@@ -52,6 +53,10 @@ fun RestablecerContrasenaScreen(
     RestablecerContrasenaContent(
         uiState = uiState,
         onCorreoCambia = viewModel::onCorreoCambia,
+        onContinuar = viewModel::onContinuar,
+        onRespuestaCambia = viewModel::onRespuestaCambia,
+        onVerificarRespuesta = viewModel::onVerificarRespuesta,
+        onVolverAlCorreo = viewModel::onVolverAlCorreo,
         onNuevaCambia = viewModel::onNuevaCambia,
         onConfirmarCambia = viewModel::onConfirmarCambia,
         onAlternarVisibilidad = viewModel::onAlternarVisibilidad,
@@ -60,11 +65,16 @@ fun RestablecerContrasenaScreen(
     )
 }
 
+// Tres pasos en la misma pantalla: 1) correo, 2) pregunta de seguridad, 3) contraseña nueva
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RestablecerContrasenaContent(
     uiState: RestablecerUiState,
     onCorreoCambia: (String) -> Unit,
+    onContinuar: () -> Unit,
+    onRespuestaCambia: (String) -> Unit,
+    onVerificarRespuesta: () -> Unit,
+    onVolverAlCorreo: () -> Unit,
     onNuevaCambia: (String) -> Unit,
     onConfirmarCambia: (String) -> Unit,
     onAlternarVisibilidad: () -> Unit,
@@ -102,52 +112,97 @@ fun RestablecerContrasenaContent(
             verticalArrangement = Arrangement.spacedBy(Dimens.espacioMedio)
         ) {
             Text(
-                text = stringResource(R.string.indicacion_restablecer),
+                text = stringResource(
+                    when (uiState.paso) {
+                        1 -> R.string.indicacion_restablecer
+                        2 -> R.string.indicacion_restablecer_respuesta
+                        else -> R.string.indicacion_restablecer_nueva
+                    }
+                ),
                 style = MaterialTheme.typography.bodyMedium
             )
 
-            CampoTexto(
-                valor = uiState.correo,
-                onValorCambia = onCorreoCambia,
-                etiqueta = stringResource(R.string.campo_correo),
-                icono = R.drawable.ic_correo,
-                error = uiState.errorCorreo,
-                tipoTeclado = KeyboardType.Email
-            )
+            when (uiState.paso) {
+                // ---- Paso 1: correo ----
+                1 -> {
+                    CampoTexto(
+                        valor = uiState.correo,
+                        onValorCambia = onCorreoCambia,
+                        etiqueta = stringResource(R.string.campo_correo),
+                        icono = R.drawable.ic_correo,
+                        error = uiState.errorCorreo,
+                        tipoTeclado = KeyboardType.Email
+                    )
+                    BotonPrincipal(
+                        texto = stringResource(R.string.btn_continuar),
+                        onClick = onContinuar,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
 
+                // ---- Paso 2: pregunta de seguridad ----
+                2 -> {
+                    TarjetaSeccion(titulo = stringResource(R.string.campo_pregunta_seguridad)) {
+                        Text(
+                            text = uiState.pregunta,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        CampoTexto(
+                            valor = uiState.respuesta,
+                            onValorCambia = onRespuestaCambia,
+                            etiqueta = stringResource(R.string.campo_respuesta),
+                            error = uiState.errorRespuesta
+                        )
+                    }
+                    BotonPrincipal(
+                        texto = stringResource(R.string.btn_verificar_respuesta),
+                        onClick = onVerificarRespuesta,
+                        icono = R.drawable.ic_check,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    BotonSecundario(
+                        texto = stringResource(R.string.btn_cambiar_correo),
+                        onClick = onVolverAlCorreo,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
 
-            CampoContrasena(
-                valor = uiState.nueva,
-                onValorCambia = onNuevaCambia,
-                etiqueta = stringResource(R.string.campo_nueva_contrasena),
-                visible = uiState.contrasenaVisible,
-                onAlternarVisible = onAlternarVisibilidad,
-                error = uiState.errorNueva
-            )
-            CampoContrasena(
-                valor = uiState.confirmar,
-                onValorCambia = onConfirmarCambia,
-                etiqueta = stringResource(R.string.campo_confirmar_contrasena),
-                visible = uiState.contrasenaVisible,
-                onAlternarVisible = onAlternarVisibilidad,
-                error = uiState.errorConfirmar
-            )
+                // ---- Paso 3: contraseña nueva ----
+                else -> {
+                    CampoContrasena(
+                        valor = uiState.nueva,
+                        onValorCambia = onNuevaCambia,
+                        etiqueta = stringResource(R.string.campo_nueva_contrasena),
+                        visible = uiState.contrasenaVisible,
+                        onAlternarVisible = onAlternarVisibilidad,
+                        error = uiState.errorNueva
+                    )
+                    CampoContrasena(
+                        valor = uiState.confirmar,
+                        onValorCambia = onConfirmarCambia,
+                        etiqueta = stringResource(R.string.campo_confirmar_contrasena),
+                        visible = uiState.contrasenaVisible,
+                        onAlternarVisible = onAlternarVisibilidad,
+                        error = uiState.errorConfirmar
+                    )
 
-            BotonPrincipal(
-                texto = stringResource(R.string.btn_cambiar_contrasena),
-                onClick = onCambiar,
-                icono = R.drawable.ic_candado,
-                modifier = Modifier.fillMaxWidth()
-            )
+                    BotonPrincipal(
+                        texto = stringResource(R.string.btn_cambiar_contrasena),
+                        onClick = onCambiar,
+                        icono = R.drawable.ic_candado,
+                        habilitado = !uiState.cambioExitoso,
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-
-            if (uiState.cambioExitoso) {
-                MensajeContrasenaCambiada()
-                BotonSecundario(
-                    texto = stringResource(R.string.btn_volver_login),
-                    onClick = onVolver,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    if (uiState.cambioExitoso) {
+                        MensajeContrasenaCambiada()
+                        BotonSecundario(
+                            texto = stringResource(R.string.btn_volver_login),
+                            onClick = onVolver,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
             }
         }
     }
@@ -179,47 +234,52 @@ private fun MensajeContrasenaCambiada() {
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
+@Preview(showBackground = true, showSystemUi = true, name = "Paso 1: correo")
 @Composable
-private fun RestablecerVacioPreview() {
+private fun RestablecerCorreoPreview() {
     InduztekTheme {
         RestablecerContrasenaContent(
             uiState = RestablecerUiState(),
-            onCorreoCambia = {}, onNuevaCambia = {}, onConfirmarCambia = {},
+            onCorreoCambia = {}, onContinuar = {}, onRespuestaCambia = {}, onVerificarRespuesta = {},
+            onVolverAlCorreo = {}, onNuevaCambia = {}, onConfirmarCambia = {},
             onAlternarVisibilidad = {}, onCambiar = {}, onVolver = {}
         )
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true, name = "Con errores")
+@Preview(showBackground = true, showSystemUi = true, name = "Paso 2: pregunta")
 @Composable
-private fun RestablecerConErroresPreview() {
+private fun RestablecerPreguntaPreview() {
     InduztekTheme {
         RestablecerContrasenaContent(
             uiState = RestablecerUiState(
-                correo = "tecnico@gmail.cl",
-                nueva = "lampa26",
-                confirmar = "lampa25",
-                errorConfirmar = "Las contraseñas no coinciden"
+                paso = 2,
+                correo = "tecnico@gmail.com",
+                pregunta = "¿Cómo se llama tu primera mascota?",
+                respuesta = "rex",
+                errorRespuesta = "Respuesta incorrecta (te quedan 2 intentos)"
             ),
-            onCorreoCambia = {}, onNuevaCambia = {}, onConfirmarCambia = {},
+            onCorreoCambia = {}, onContinuar = {}, onRespuestaCambia = {}, onVerificarRespuesta = {},
+            onVolverAlCorreo = {}, onNuevaCambia = {}, onConfirmarCambia = {},
             onAlternarVisibilidad = {}, onCambiar = {}, onVolver = {}
         )
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true, name = "Contraseña cambiada")
+@Preview(showBackground = true, showSystemUi = true, name = "Paso 3: contraseña cambiada")
 @Composable
 private fun RestablecerExitoPreview() {
     InduztekTheme {
         RestablecerContrasenaContent(
             uiState = RestablecerUiState(
-                correo = "tecnico@gmail.cl",
+                paso = 3,
+                correo = "tecnico@gmail.com",
                 nueva = "lampa26",
                 confirmar = "lampa26",
                 cambioExitoso = true
             ),
-            onCorreoCambia = {}, onNuevaCambia = {}, onConfirmarCambia = {},
+            onCorreoCambia = {}, onContinuar = {}, onRespuestaCambia = {}, onVerificarRespuesta = {},
+            onVolverAlCorreo = {}, onNuevaCambia = {}, onConfirmarCambia = {},
             onAlternarVisibilidad = {}, onCambiar = {}, onVolver = {}
         )
     }

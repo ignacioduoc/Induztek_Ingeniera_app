@@ -25,6 +25,7 @@ import com.example.induztek_ingeniera_app.ui.screens.AdminEquiposScreen
 import com.example.induztek_ingeniera_app.ui.screens.AdminUsuarioFormScreen
 import com.example.induztek_ingeniera_app.ui.screens.AdminUsuariosScreen
 import com.example.induztek_ingeniera_app.ui.screens.AgregarEquipoScreen
+import com.example.induztek_ingeniera_app.ui.screens.ConfigurarCuentaScreen
 import com.example.induztek_ingeniera_app.ui.screens.DetalleProtocoloScreen
 import com.example.induztek_ingeniera_app.ui.screens.EmpresasConsultaScreen
 import com.example.induztek_ingeniera_app.ui.screens.HistorialScreen
@@ -76,7 +77,10 @@ fun AppNavegacion(
                 onLoginExitoso = { usuario ->
 
                     protocolosViewModel.registrarIngreso(usuario)
-                    navController.navigate(rutaDeInicio(usuario)) {
+                    // Cuenta nueva o reiniciada (sin pregunta de seguridad): primero debe configurarla
+                    val destino =
+                        if (usuario.tienePreguntaSeguridad) rutaDeInicio(usuario) else Ruta.ConfigurarCuenta.ruta
+                    navController.navigate(destino) {
 
                         popUpTo(Ruta.Login.ruta) { inclusive = true }
                     }
@@ -94,6 +98,28 @@ fun AppNavegacion(
             RestablecerContrasenaScreen(
                 viewModel = restablecerViewModel,
                 onVolver = { navController.navigateUp() }
+            )
+        }
+
+        // ---- Primer ingreso / cuenta reiniciada: contraseña nueva y pregunta de seguridad (obligatorio) ----
+        composable(Ruta.ConfigurarCuenta.ruta) {
+            ConfigurarCuentaScreen(
+                usuario = usuarioActual,
+                viewModel = perfilViewModel,
+                onListo = {
+                    protocolosViewModel.refrescarUsuarioActual()
+                    navController.navigate(rutaDeInicio(usuarioActual)) {
+                        popUpTo(Ruta.ConfigurarCuenta.ruta) { inclusive = true }
+                    }
+                },
+                onCerrarSesion = {
+                    protocolosViewModel.cerrarSesion()
+                    loginViewModel.cerrarSesion()
+                    navController.navigate(Ruta.Login.ruta) {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
             )
         }
 
@@ -183,7 +209,7 @@ fun AppNavegacion(
         composable(Ruta.MisEquipos.ruta) {
             MisEquiposScreen(
                 equipos = equipos,                       // para el cliente, solo los equipos que le pertenecen
-                protocolos = protocolos,                 // para mostrar estado y técnico de la última prueba
+                protocolos = protocolos,
                 onVerUltimaPrueba = { idEquipo ->
                     // Reutiliza el detalle de protocolo: abre la prueba más reciente del equipo
                     val ultima = protocolos.filter { it.equipoId == idEquipo }.maxByOrNull { it.fechaHora }

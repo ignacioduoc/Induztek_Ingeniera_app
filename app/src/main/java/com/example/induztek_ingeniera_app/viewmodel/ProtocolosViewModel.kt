@@ -99,6 +99,13 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
         _usuarioActual.value = usuario
     }
 
+    // Después de editar el perfil: vuelve a leer al usuario para que el inicio muestre el nombre y la foto nuevos
+    fun refrescarUsuarioActual() {
+        val id = _usuarioActual.value?.id ?: return
+        viewModelScope.launch {
+            repository.buscarUsuarioPorId(id)?.let { _usuarioActual.value = it }
+        }
+    }
 
     fun actualizarPerfil(nombre: String, correo: String, fotoPerfil: ByteArray?) {
         val usuario = _usuarioActual.value ?: return

@@ -32,12 +32,17 @@ fun CampoTexto(
     error: String? = null,
     tipoTeclado: KeyboardType = KeyboardType.Text,
     // Texto fijo al inicio del campo (ej: "TR-"), que el usuario no puede borrar
-    prefijo: String? = null
+    prefijo: String? = null,
+    // false = solo lectura: se ve el dato pero no se puede editar (ej: RUT y correo en el perfil)
+    habilitado: Boolean = true,
+    // Texto pequeño bajo el campo cuando no hay error (ej: "Solo el administrador puede modificarlo")
+    ayuda: String? = null
 ) {
     OutlinedTextField(
         value = valor,
         onValueChange = onValorCambia,
         modifier = modifier.fillMaxWidth(),
+        enabled = habilitado,
         label = { Text(etiqueta) },                       // texto flotante (como <label>)
         leadingIcon = if (icono != null) {
             {                                             // ícono a la izquierda
@@ -66,7 +71,9 @@ fun CampoTexto(
             null
         },
         isError = error != null,
-        supportingText = { if (error != null) Text(error) }, // texto de ayuda bajo el campo
+        supportingText = {                                // texto de ayuda bajo el campo
+            if (error != null) Text(error) else if (ayuda != null) Text(ayuda)
+        },
         singleLine = true,                                // una sola línea
         keyboardOptions = KeyboardOptions(
             keyboardType = tipoTeclado,

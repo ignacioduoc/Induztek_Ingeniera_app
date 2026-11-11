@@ -16,7 +16,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Card
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -49,6 +56,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -62,11 +70,14 @@ import com.example.induztek_ingeniera_app.model.Resultado
 import com.example.induztek_ingeniera_app.permisos.Permisos
 import com.example.induztek_ingeniera_app.ui.components.BotonPrincipal
 import com.example.induztek_ingeniera_app.ui.components.CampoTexto
+import com.example.induztek_ingeniera_app.ui.components.FilaDato
 import com.example.induztek_ingeniera_app.ui.components.FotoEvidencia
 import com.example.induztek_ingeniera_app.ui.components.GrupoRadio
 import com.example.induztek_ingeniera_app.ui.components.TarjetaSeccion
 import com.example.induztek_ingeniera_app.ui.formatearFecha
 import com.example.induztek_ingeniera_app.ui.styles.EstilosCampo
+import com.example.induztek_ingeniera_app.ui.styles.EstilosTarjeta
+import com.example.induztek_ingeniera_app.ui.utils.abrirEnMapas
 import com.example.induztek_ingeniera_app.ui.theme.Dimens
 import com.example.induztek_ingeniera_app.ui.theme.Exito
 import com.example.induztek_ingeniera_app.ui.theme.ExitoFondo
@@ -204,15 +215,8 @@ fun NuevoProtocoloContent(
             verticalArrangement = Arrangement.spacedBy(Dimens.espacioMedio)
         ) {
 
-            TarjetaSeccion(titulo = stringResource(R.string.seccion_equipo)) {
-                Text(text = "${equipo.codigo} · ${equipo.tipo}", style = MaterialTheme.typography.bodyMedium)
-                Text(text = equipo.empresaCliente, style = MaterialTheme.typography.bodyMedium)
-                Text(text = equipo.instalacion, style = MaterialTheme.typography.bodyMedium)
-                Text(
-                    text = stringResource(R.string.fecha_hora, formatearFecha(uiState.fechaHora)),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
+            // Tarjeta del equipo: mismo diseño que las tarjetas de la lista
+            TarjetaEquipoProtocolo(equipo = equipo, fechaHora = formatearFecha(uiState.fechaHora))
 
 
             TarjetaSeccion(titulo = stringResource(R.string.seccion_prueba)) {
@@ -323,6 +327,35 @@ fun NuevoProtocoloContent(
             }
 
 
+            // Ubicación del equipo: dirección + botón que la abre en el mapa
+            TarjetaSeccion(titulo = stringResource(R.string.seccion_ubicacion)) {
+                val contexto = LocalContext.current
+                val direccion = equipo.direccion.ifBlank { equipo.direccionEmpresa }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.etiqueta_direccion_tarjeta),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = direccion.ifBlank { stringResource(R.string.sin_direccion_registrada) },
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    FilledTonalIconButton(
+                        onClick = { abrirEnMapas(contexto, equipo.latitud, equipo.longitud, direccion) }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = stringResource(R.string.cd_abrir_mapa)
+                        )
+                    }
+                }
+            }
+
+
             BotonPrincipal(
                 texto = stringResource(R.string.btn_guardar_protocolo),
                 onClick = onGuardar,
@@ -336,6 +369,55 @@ fun NuevoProtocoloContent(
             }
 
             Spacer(Modifier.height(Dimens.espacioGrande))
+        }
+    }
+}
+
+
+@Composable
+private fun TarjetaEquipoProtocolo(equipo: Equipo, fechaHora: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = EstilosTarjeta.forma,
+        colors = EstilosTarjeta.colores(),
+        elevation = EstilosTarjeta.elevacion()
+    ) {
+        Column(
+            modifier = Modifier.padding(Dimens.espacioMedio),
+            verticalArrangement = Arrangement.spacedBy(Dimens.espacioChico)
+        ) {
+            Text(
+                text = "${equipo.codigo} · ${equipo.tipo}",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = equipo.instalacion,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+            if (equipo.empresaCliente.isNotBlank()) {
+                FilaDato(
+                    icono = Icons.Default.Business,
+                    etiqueta = stringResource(R.string.etiqueta_empresa_tarjeta),
+                    valor = equipo.empresaCliente
+                )
+            }
+            if (equipo.nombreCliente.isNotBlank()) {
+                FilaDato(
+                    icono = Icons.Default.Person,
+                    etiqueta = stringResource(R.string.etiqueta_cliente_tarjeta),
+                    valor = equipo.nombreCliente
+                )
+            }
+            FilaDato(
+                icono = Icons.Default.Schedule,
+                etiqueta = stringResource(R.string.etiqueta_fecha_hora_tarjeta),
+                valor = fechaHora
+            )
         }
     }
 }
@@ -384,7 +466,8 @@ private fun MensajeGuardado() {
 
 private val equipoPreview = Equipo(
     "TR-0142", "Transformador 500 kVA", "Planta Lampa · S/E-02",
-    clienteId = 2, id = 1, empresaCliente = "Industrias Aurora S.A."
+    clienteId = 2, id = 1, empresaCliente = "Industrias Aurora S.A.",
+    direccion = "Camino Los Maitenes 1200, Lampa", nombreCliente = "Pedro Salas"
 )
 
 @Preview(showBackground = true, heightDp = 1500)

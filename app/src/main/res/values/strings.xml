@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <resources>
+
+    <!-- ============================================================ -->
+    <!-- GENERAL                                                      -->
+    <!-- ============================================================ -->
     <string name="app_name">Induztek Protocolos</string>
 
-
+    <!-- Login -->
     <string name="titulo_login">Protocolos Induztek</string>
     <string name="subtitulo_login">Ingresa con tu cuenta</string>
     <string name="campo_correo">Correo electrónico</string>
@@ -13,7 +17,16 @@
     <string name="btn_olvide_contrasena">¿Olvidaste tu contraseña?</string>
     <string name="logo_descripcion">Logo Induztek Ingeniería SpA</string>
 
+    <!-- Restablecer contraseña -->
+    <string name="titulo_restablecer">Restablecer contraseña</string>
+    <string name="indicacion_restablecer">Escribe el correo de tu cuenta y elige una contraseña nueva de al menos 6 caracteres.</string>
+    <string name="campo_nueva_contrasena">Nueva contraseña</string>
+    <string name="campo_confirmar_contrasena">Repite la nueva contraseña</string>
+    <string name="btn_cambiar_contrasena">Cambiar contraseña</string>
+    <string name="contrasena_cambiada">Listo: tu contraseña se cambió. Ya puedes iniciar sesión con ella.</string>
+    <string name="btn_volver_login">Volver al inicio de sesión</string>
 
+    <!-- Menú lateral y cierre de sesión -->
     <string name="saludo">Hola, %1$s</string>
     <string name="rol_empresa">%1$s · %2$s</string>
     <string name="menu_cerrar_sesion">Cerrar sesión</string>
@@ -21,19 +34,60 @@
     <string name="dialogo_mensaje">Tendrás que ingresar de nuevo con tu correo y contraseña.</string>
     <string name="dialogo_cancelar">Cancelar</string>
 
+    <!-- Accesibilidad (descripciones de íconos) -->
+    <string name="cd_mostrar_contrasena">Mostrar contraseña</string>
+    <string name="cd_ocultar_contrasena">Ocultar contraseña</string>
+    <string name="cd_volver">Volver</string>
+    <string name="cd_menu">Abrir menú</string>
+    <string name="cd_historial">Ver historial del equipo</string>
+    <string name="cd_foto_evidencia">Foto de evidencia del equipo</string>
 
+    <!-- Etiquetas que comparten las tarjetas (equipos, usuarios, empresas) -->
+    <string name="etiqueta_cliente_tarjeta">Cliente</string>
+    <string name="etiqueta_empresa_tarjeta">Empresa</string>
+    <string name="etiqueta_direccion_tarjeta">Dirección</string>
+    <string name="etiqueta_tecnico_tarjeta">Revisado por</string>
+    <string name="etiqueta_rut_tarjeta">RUT</string>
+    <string name="sin_direccion_registrada">Sin dirección registrada</string>
+    <string name="sin_empresa">Sin empresa</string>
+    <string name="agregar_direccion">Agregar dirección</string>
+
+    <!-- Búsqueda y filtros (listas del administrador) -->
+    <string name="buscar_usuarios">Buscar por nombre, correo o RUT</string>
+    <string name="buscar_equipos">Buscar por código, tipo o cliente</string>
+    <string name="buscar_empresas">Buscar por nombre o dirección</string>
+    <string name="cd_filtrar">Filtrar</string>
+    <string name="cd_limpiar_busqueda">Borrar búsqueda</string>
+    <string name="cd_quitar_filtro">Quitar filtro</string>
+    <string name="filtro_todos">Todos</string>
+    <string name="filtro_limpiar">Limpiar filtros</string>
+    <string name="filtro_rol">Rol</string>
+    <string name="filtro_empresa">Empresa</string>
+    <string name="filtro_cliente">Cliente</string>
+    <string name="filtro_comuna">Comuna</string>
+    <string name="buscar_protocolos">Buscar por equipo, instalación o técnico</string>
+    <string name="filtro_resultado">Resultado</string>
+    <string name="filtro_estado">Estado</string>
+    <string name="filtro_equipo">Equipo</string>
+    <string name="sin_resultados">No se encontraron resultados</string>
+
+
+    <!-- ============================================================ -->
+    <!-- TÉCNICO                                                      -->
+    <!-- ============================================================ -->
+
+    <!-- Inicio: lista de equipos -->
     <string name="titulo_inicio_tecnico">Equipos</string>
     <string name="indicacion_equipos">Toca un equipo para registrar una nueva prueba.</string>
     <string name="lista_vacia_equipos">No hay equipos registrados</string>
 
-
+    <!-- Nuevo protocolo -->
     <string name="titulo_nuevo_protocolo">Nuevo protocolo</string>
     <string name="seccion_equipo">Equipo</string>
     <string name="fecha_hora">Fecha y hora: %1$s</string>
     <string name="seccion_prueba">Prueba</string>
     <string name="campo_tipo_prueba">Tipo de prueba</string>
     <string name="seccion_mediciones">Mediciones</string>
-
     <string name="campo_at_bt">AT – BT (GΩ)</string>
     <string name="campo_at_tierra">AT – Tierra (GΩ)</string>
     <string name="campo_bt_tierra">BT – Tierra (GΩ)</string>
@@ -43,32 +97,15 @@
     <string name="btn_guardar_protocolo">Guardar protocolo</string>
     <string name="protocolo_guardado">Protocolo guardado: el cliente ya puede verlo.</string>
 
-
+    <!-- Foto de evidencia y permiso de cámara -->
     <string name="seccion_foto">Foto de evidencia</string>
     <string name="texto_sin_foto">Opcional: toma una foto del equipo o de su placa para que el cliente la vea.</string>
     <string name="btn_tomar_foto">Tomar foto</string>
     <string name="btn_otra_foto">Tomar otra foto</string>
-
-
     <string name="permiso_camara_denegado">Sin permiso de cámara no se puede tomar la foto</string>
     <string name="btn_ajustes">Ajustes</string>
 
-
-    <string name="titulo_inicio_cliente">Mis protocolos</string>
-    <string name="indicacion_protocolos">Toca un protocolo para ver el detalle y formalizarlo.</string>
-    <string name="lista_vacia_protocolos">Todavía no hay protocolos de tus equipos</string>
-
-
-    <string name="titulo_detalle">Detalle del protocolo</string>
-    <string name="tecnico_nombre">Técnico: %1$s</string>
-    <string name="observaciones_detalle">Observaciones: %1$s</string>
-    <string name="sin_foto">Este protocolo no tiene foto de evidencia.</string>
-    <string name="btn_historial">Ver historial del equipo</string>
-    <string name="btn_formalizar">Formalizar protocolo</string>
-    <string name="dialogo_formalizar_titulo">¿Formalizar el protocolo?</string>
-    <string name="dialogo_formalizar_mensaje">Das tu conformidad con la prueba del equipo %1$s. Esto no se puede deshacer.</string>
-
-
+    <!-- Historial del equipo -->
     <string name="titulo_historial">Historial del equipo</string>
     <string name="seccion_grafico">Comparación de pruebas</string>
     <string name="campo_medicion">Medición</string>
@@ -76,24 +113,7 @@
     <string name="seccion_pruebas">Pruebas registradas</string>
     <string name="sin_pruebas">Este equipo todavía no tiene pruebas registradas.</string>
 
-
-    <string name="titulo_restablecer">Restablecer contraseña</string>
-    <string name="indicacion_restablecer">Escribe el correo de tu cuenta y elige una contraseña nueva de al menos 6 caracteres.</string>
-    <string name="campo_nueva_contrasena">Nueva contraseña</string>
-    <string name="campo_confirmar_contrasena">Repite la nueva contraseña</string>
-    <string name="btn_cambiar_contrasena">Cambiar contraseña</string>
-    <string name="contrasena_cambiada">Listo: tu contraseña se cambió. Ya puedes iniciar sesión con ella.</string>
-    <string name="btn_volver_login">Volver al inicio de sesión</string>
-
-
-    <string name="cd_mostrar_contrasena">Mostrar contraseña</string>
-    <string name="cd_ocultar_contrasena">Ocultar contraseña</string>
-    <string name="cd_volver">Volver</string>
-    <string name="cd_menu">Abrir menú</string>
-    <string name="cd_historial">Ver historial del equipo</string>
-    <string name="cd_foto_evidencia">Foto de evidencia del equipo</string>
-
-    <!-- Tarea 4: el técnico agrega equipos -->
+    <!-- Agregar equipo (Tarea 4) -->
     <string name="btn_agregar_equipo">Agregar equipo</string>
     <string name="titulo_agregar_equipo">Nuevo equipo</string>
     <string name="seccion_datos_equipo">Datos del equipo</string>
@@ -109,35 +129,165 @@
     <string name="campo_valor_tipo">Valor (Ej: 75)</string>
     <string name="etiqueta_unidad_tipo">Unidad</string>
     <string name="tipo_se_guardara">Se guardará como: %1$s</string>
-    <string name="error_elegir_tipo">Elige el tipo de equipo</string>
-    <string name="error_nombre_tipo_vacio">Ingresa el nombre del tipo</string>
-    <string name="error_nombre_tipo_formato">Usa solo letras (mínimo 3)</string>
-    <string name="error_valor_tipo">Ingresa un número de 1 a 99999</string>
     <string name="campo_instalacion_equipo">Instalación</string>
     <string name="campo_nombre_planta">Nombre de la planta (Ej: Lampa)</string>
     <string name="campo_numero_se">N° de subestación S/E (Ej: 2)</string>
     <string name="instalacion_se_guardara">Se guardará como: %1$s</string>
     <string name="opcion_otra_instalacion">Otra instalación…</string>
     <string name="etiqueta_empresa_equipo">Empresa donde está el equipo</string>
-    <string name="etiqueta_cliente_tarjeta">Cliente</string>
-    <string name="etiqueta_empresa_tarjeta">Empresa</string>
-    <string name="etiqueta_direccion_tarjeta">Dirección</string>
-    <string name="agregar_direccion">Agregar dirección</string>
-    <string name="etiqueta_tecnico_tarjeta">Revisado por</string>
-    <string name="sin_direccion_registrada">Sin dirección registrada</string>
     <string name="etiqueta_cliente_equipo">Cliente dueño del equipo</string>
     <string name="etiqueta_direccion_equipo">Dirección del equipo (la de la empresa)</string>
     <string name="empresa_sin_direccion">Esta empresa no tiene dirección registrada</string>
     <string name="sin_empresas_con_clientes">Todavía no hay empresas con clientes registrados.</string>
+    <string name="btn_guardar_equipo">Guardar equipo</string>
+    <string name="equipo_agregado">Equipo agregado correctamente</string>
+
+    <!-- Errores del formulario de equipo -->
     <string name="error_codigo_vacio">Ingresa el código del equipo</string>
     <string name="error_codigo_formato">Escribe solo números, de 3 a 5 dígitos (Ej: 0142)</string>
     <string name="error_codigo_repetido">Ya existe un equipo con ese código</string>
+    <string name="error_elegir_tipo">Elige el tipo de equipo</string>
+    <string name="error_nombre_tipo_vacio">Ingresa el nombre del tipo</string>
+    <string name="error_nombre_tipo_formato">Usa solo letras (mínimo 3)</string>
+    <string name="error_valor_tipo">Ingresa un número de 1 a 99999</string>
     <string name="error_elegir_instalacion">Elige la instalación</string>
     <string name="error_planta_vacia">Ingresa el nombre de la planta</string>
     <string name="error_planta_formato">Usa solo letras y números (mínimo 3)</string>
     <string name="error_numero_se">Ingresa el número de S/E (1 a 99)</string>
     <string name="error_elegir_empresa">Elige la empresa</string>
     <string name="error_elegir_cliente">Elige el cliente dueño</string>
-    <string name="btn_guardar_equipo">Guardar equipo</string>
-    <string name="equipo_agregado">Equipo agregado correctamente</string>
+
+
+    <!-- ============================================================ -->
+    <!-- CLIENTE                                                      -->
+    <!-- ============================================================ -->
+
+    <!-- Inicio: lista de protocolos -->
+    <string name="titulo_inicio_cliente">Mis protocolos</string>
+    <string name="indicacion_protocolos">Toca un protocolo para ver el detalle y formalizarlo.</string>
+    <string name="lista_vacia_protocolos">Todavía no hay protocolos de tus equipos</string>
+
+    <!-- Detalle del protocolo -->
+    <string name="titulo_detalle">Detalle del protocolo</string>
+    <string name="tecnico_nombre">Técnico: %1$s</string>
+    <string name="observaciones_detalle">Observaciones: %1$s</string>
+    <string name="sin_foto">Este protocolo no tiene foto de evidencia.</string>
+    <string name="btn_historial">Ver historial del equipo</string>
+    <string name="btn_formalizar">Formalizar protocolo</string>
+    <string name="dialogo_formalizar_titulo">¿Formalizar el protocolo?</string>
+    <string name="dialogo_formalizar_mensaje">Das tu conformidad con la prueba del equipo %1$s. Esto no se puede deshacer.</string>
+
+
+    <!-- ============================================================ -->
+    <!-- ADMINISTRADOR (Tarea 3)                                      -->
+    <!-- ============================================================ -->
+
+    <!-- Inicio y menú -->
+    <string name="titulo_inicio_administrador">Administración</string>
+    <string name="indicacion_administrador">Elige qué quieres gestionar.</string>
+    <string name="menu_usuarios">Usuarios</string>
+    <string name="menu_equipos">Equipos</string>
+    <string name="menu_empresas">Empresas</string>
+    <string name="descripcion_gestion_usuarios">Ver usuarios, crear técnicos y clientes, y modificar sus datos.</string>
+    <string name="descripcion_gestion_equipos">Agregar y editar equipos, asignados a una empresa y a un cliente.</string>
+    <string name="descripcion_gestion_empresas">Agregar y editar empresas: nombre, dirección y logo.</string>
+    <!-- Solo la usa GestionPendienteScreen.kt; se puede borrar junto con ese archivo -->
+    <string name="gestion_pendiente">Esta sección se construye en el siguiente paso.</string>
+
+    <!-- Usuarios: lista -->
+    <string name="indicacion_usuarios">Toca un usuario para modificar sus datos.</string>
+    <string name="lista_vacia_usuarios">No hay usuarios registrados</string>
+    <string name="cd_nuevo_usuario">Nuevo usuario</string>
+
+    <!-- Usuarios: formulario -->
+    <string name="titulo_nuevo_usuario">Nuevo usuario</string>
+    <string name="titulo_editar_usuario">Editar usuario</string>
+    <string name="seccion_datos_personales">Datos personales</string>
+    <string name="seccion_cuenta">Cuenta</string>
+    <string name="seccion_seguridad">Seguridad</string>
+    <string name="campo_nombre">Nombre</string>
+    <string name="campo_apellido">Apellido</string>
+    <string name="campo_rut">RUT (Ej: 12345678-5)</string>
+    <string name="campo_telefono">Teléfono (Ej: 912345678)</string>
+    <string name="etiqueta_rol">Rol</string>
+    <string name="rol_fijo">Rol: %1$s</string>
+    <string name="etiqueta_empresa_usuario">Empresa</string>
+    <string name="campo_contrasena_opcional">Nueva contraseña (opcional)</string>
+    <string name="campo_pregunta_seguridad">Pregunta de seguridad</string>
+    <string name="campo_respuesta">Respuesta</string>
+    <string name="campo_respuesta_opcional">Nueva respuesta (opcional)</string>
+    <string name="btn_guardar_usuario">Guardar usuario</string>
+    <string name="usuario_guardado">Usuario guardado correctamente</string>
+
+    <!-- Empresas: lista y formulario -->
+    <string name="indicacion_empresas">Toca una empresa para modificar sus datos.</string>
+    <string name="lista_vacia_empresas">No hay empresas registradas</string>
+    <string name="cd_nueva_empresa">Nueva empresa</string>
+    <string name="cd_logo_empresa">Logo de la empresa</string>
+    <string name="titulo_nueva_empresa">Nueva empresa</string>
+    <string name="titulo_editar_empresa">Editar empresa</string>
+    <string name="seccion_datos_empresa">Datos de la empresa</string>
+    <string name="seccion_logo_empresa">Logo</string>
+    <string name="campo_nombre_empresa">Nombre de la empresa</string>
+    <string name="campo_direccion_empresa">Dirección (Ej: Av. Providencia 1234, Providencia)</string>
+    <string name="indicacion_logo_empresa">Opcional: elige una imagen de la galería para usarla como logo.</string>
+    <string name="btn_elegir_logo">Elegir logo</string>
+    <string name="btn_cambiar_logo">Cambiar logo</string>
+    <string name="btn_quitar_logo">Quitar logo</string>
+    <string name="btn_guardar_empresa">Guardar empresa</string>
+    <string name="empresa_guardada">Empresa guardada correctamente</string>
+    <string name="error_cargar_logo">No se pudo cargar la imagen</string>
+
+    <!-- Equipos: lista y formulario -->
+    <string name="indicacion_equipos_admin">Toca un equipo para modificar sus datos.</string>
+    <string name="cd_nuevo_equipo">Nuevo equipo</string>
+    <string name="titulo_editar_equipo">Editar equipo</string>
+    <string name="equipo_guardado">Equipo guardado correctamente</string>
+    <string name="campo_instalacion_ejemplo">Instalación (Ej: Planta Lampa · S/E-02)</string>
+
+
+    <!-- Perfil (todos los roles) -->
+    <string name="titulo_editar_perfil">Editar perfil</string>
+    <string name="perfil_guardado">Perfil actualizado correctamente</string>
+    <string name="btn_guardar_cambios">Guardar cambios</string>
+    <string name="ayuda_solo_admin">Solo el administrador puede modificarlo</string>
+    <string name="seccion_cambiar_contrasena">Cambiar contraseña</string>
+    <string name="indicacion_cambiar_contrasena">Opcional: déjalo vacío si no quieres cambiar tu contraseña.</string>
+    <string name="campo_contrasena_actual">Contraseña actual</string>
+    <string name="campo_contrasena_nueva">Contraseña nueva</string>
+    <string name="cd_foto_perfil">Foto de perfil</string>
+    <string name="cd_cambiar_foto">Cambiar foto</string>
+    <string name="dialogo_foto_titulo">Foto de perfil</string>
+    <string name="dialogo_foto_mensaje">Selecciona el origen de la imagen:</string>
+    <string name="btn_camara">Cámara</string>
+    <string name="btn_galeria">Galería</string>
+    <string name="error_foto_procesar">Error al procesar la captura</string>
+    <string name="error_foto_cargar">Error al cargar la imagen</string>
+    <string name="error_foto_archivo">Error al preparar el archivo de la foto</string>
+
+    <!-- Menú lateral de técnico y cliente -->
+    <string name="menu_mi_perfil">Mi perfil</string>
+    <string name="menu_mis_equipos">Mis equipos</string>
+    <string name="menu_mi_empresa">Mi empresa</string>
+    <string name="indicacion_mis_equipos">Toca un equipo para ver su última prueba.</string>
+    <string name="lista_vacia_mis_equipos">Todavía no tienes equipos asignados</string>
+    <string name="buscar_mis_equipos">Buscar por código, tipo o instalación</string>
+    <string name="filtro_instalacion">Instalación</string>
+    <string name="cd_ver_mapa">Ver ubicación en el mapa</string>
+    <string name="indicacion_empresas_consulta">Empresas registradas en el sistema.</string>
+    <string name="indicacion_mi_empresa">Datos de tu empresa. Si algo está mal, avísale al administrador.</string>
+
+    <!-- Ubicación / mapa -->
+    <string name="seccion_ubicacion">Ubicación</string>
+    <string name="cd_abrir_mapa">Abrir ubicación en el mapa</string>
+    <string name="etiqueta_fecha_hora_tarjeta">Fecha y hora</string>
+    <string name="error_sin_ubicacion">Este equipo no tiene dirección ni ubicación registrada</string>
+    <string name="error_sin_app_mapas">No se encontró una aplicación de mapas</string>
+
+    <!-- Detalle del protocolo -->
+    <string name="etiqueta_prueba_tarjeta">Prueba</string>
+    <string name="seccion_observaciones">Observaciones</string>
+
+    <string name="sin_pruebas_titulo">Aún no hay pruebas registradas</string>
+    <string name="sin_pruebas_ayuda">Cuando un técnico registre una prueba para este equipo, aquí verás la comparación de sus mediciones.</string>
 </resources>

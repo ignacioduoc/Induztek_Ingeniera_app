@@ -1,12 +1,8 @@
 package com.example.induztek_ingeniera_app.ui.screens
 
-import android.graphics.BitmapFactory
 import android.widget.Toast
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -18,11 +14,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Business
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
@@ -48,15 +43,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -67,7 +60,13 @@ import com.example.induztek_ingeniera_app.R
 import com.example.induztek_ingeniera_app.model.Equipo
 import com.example.induztek_ingeniera_app.model.Rol
 import com.example.induztek_ingeniera_app.model.Usuario
+import com.example.induztek_ingeniera_app.ui.components.BarraBusquedaFiltro
+import com.example.induztek_ingeniera_app.ui.components.GrupoFiltro
 import com.example.induztek_ingeniera_app.ui.components.MenuSesion
+import com.example.induztek_ingeniera_app.ui.components.TarjetaBienvenida
+import com.example.induztek_ingeniera_app.ui.utils.abrirEnMapas
+import com.example.induztek_ingeniera_app.ui.components.OpcionMenu
+import com.example.induztek_ingeniera_app.ui.components.coincideBusqueda
 import com.example.induztek_ingeniera_app.ui.theme.Dimens
 import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
 import com.example.induztek_ingeniera_app.ui.utils.buscarCoordenadasGratis
@@ -79,11 +78,11 @@ fun InicioTecnicoScreen(
     usuario: Usuario?,
     equipos: List<Equipo>,
     onAgregarEquipo: () -> Unit = {},
+    onIrEmpresas: () -> Unit = {},
     onEditarPerfil: () -> Unit = {},
     onCerrarSesion: () -> Unit,
     onNuevaPrueba: (Long) -> Unit = {},
     onVerHistorial: (Long) -> Unit = {},
-    onVerMapa: (lat: Double, lng: Double, codigo: String, instalacion: String) -> Unit = { _, _, _, _ -> },
     onGuardarUbicacion: (idEquipo: Long, direccion: String, lat: Double, lng: Double) -> Unit = { _, _, _, _ -> }
 ) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -91,10 +90,27 @@ fun InicioTecnicoScreen(
     val context = LocalContext.current
 
 
-    val bitmapFoto = remember(usuario?.fotoPerfil) {
-        usuario?.fotoPerfil?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
-    }
 
+    // Búsqueda y filtros de la lista de equipos
+    var consulta by rememberSaveable { mutableStateOf("") }
+    var empresaElegida by rememberSaveable { mutableStateOf<String?>(null) }
+    var clienteElegido by rememberSaveable { mutableStateOf<String?>(null) }
+
+    val empresasLista = equipos.map { it.empresaCliente }.filter { it.isNotBlank() }.distinct().sorted()
+    // Si ya se eligió una empresa, solo se ofrecen los clientes de esa empresa
+    val clientesLista = equipos
+        .filter { empresaElegida == null || it.empresaCliente == empresaElegida }
+        .map { it.nombreCliente }.filter { it.isNotBlank() }.distinct().sorted()
+
+    val equiposFiltrados = equipos.filter { e ->
+        (empresaElegida == null || e.empresaCliente == empresaElegida) &&
+                (clienteElegido == null || e.nombreCliente == clienteElegido) &&
+                (coincideBusqueda(e.codigo, consulta) ||
+                        coincideBusqueda(e.tipo, consulta) ||
+                        coincideBusqueda(e.instalacion, consulta) ||
+                        coincideBusqueda(e.nombreCliente, consulta) ||
+                        coincideBusqueda(e.empresaCliente, consulta))
+    }
 
     var equipoAEditar by remember { mutableStateOf<Equipo?>(null) }
     var textoDireccionTemp by remember { mutableStateOf("") }
@@ -160,7 +176,20 @@ fun InicioTecnicoScreen(
         )
     }
 
-    MenuSesion(drawerState = drawerState, onCerrarSesion = onCerrarSesion) {
+    // Opciones del menú lateral del técnico ("Equipos" es esta misma pantalla)
+    val opcionesMenu = listOf(
+        OpcionMenu(stringResource(R.string.menu_equipos), Icons.Default.Build, {}, seleccionada = true),
+        OpcionMenu(stringResource(R.string.menu_empresas), Icons.Default.Business, onIrEmpresas),
+        OpcionMenu(stringResource(R.string.btn_agregar_equipo), Icons.Default.Add, onAgregarEquipo),
+        OpcionMenu(stringResource(R.string.menu_mi_perfil), Icons.Default.Person, onEditarPerfil)
+    )
+
+    MenuSesion(
+        drawerState = drawerState,
+        onCerrarSesion = onCerrarSesion,
+        usuario = usuario,
+        opciones = opcionesMenu
+    ) {
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -194,67 +223,36 @@ fun InicioTecnicoScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                // Encabezado interactivo: Avatar + Saludo + Botón Editar Perfil
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(Dimens.espacioPantalla)
-                        .clickable { onEditarPerfil() }
-                ) {
-                    Row(
-                        modifier = Modifier.padding(Dimens.espacioMedio),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Dimens.espacioMedio)
-                    ) {
-                        // Avatar circular con foto o inicial
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primaryContainer),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (bitmapFoto != null) {
-                                Image(
-                                    bitmap = bitmapFoto.asImageBitmap(),
-                                    contentDescription = "Foto de Perfil",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                            } else {
-                                Text(
-                                    text = usuario?.nombre?.take(1)?.uppercase() ?: "T",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
+                TarjetaBienvenida(
+                    usuario = usuario,
+                    modifier = Modifier.padding(Dimens.espacioPantalla)
+                )
+
+                BarraBusquedaFiltro(
+                    consulta = consulta,
+                    onConsultaCambia = { consulta = it },
+                    placeholder = stringResource(R.string.buscar_equipos),
+                    grupos = listOf(
+                        GrupoFiltro(
+                            titulo = stringResource(R.string.filtro_empresa),
+                            opciones = empresasLista,
+                            seleccionada = empresaElegida,
+                            onElegir = {
+                                empresaElegida = it
+                                clienteElegido = null          // al cambiar de empresa se vuelve a elegir el cliente
                             }
-                        }
-
-
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(Dimens.espacioMini)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.saludo, usuario?.nombre ?: ""),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            Text(
-                                text = stringResource(R.string.rol_empresa, usuario?.rolNombre ?: "", usuario?.empresa ?: ""),
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-
-
-                        IconButton(onClick = onEditarPerfil) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Editar Perfil",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                }
+                        ),
+                        GrupoFiltro(
+                            titulo = stringResource(R.string.filtro_cliente),
+                            opciones = clientesLista,
+                            seleccionada = clienteElegido,
+                            onElegir = { clienteElegido = it }
+                        )
+                    ),
+                    modifier = Modifier.padding(
+                        start = Dimens.espacioPantalla, end = Dimens.espacioPantalla, bottom = Dimens.espacioChico
+                    )
+                )
 
                 Text(
                     text = stringResource(R.string.indicacion_equipos),
@@ -263,9 +261,11 @@ fun InicioTecnicoScreen(
                     modifier = Modifier.padding(horizontal = Dimens.espacioPantalla)
                 )
 
-                if (equipos.isEmpty()) {
+                if (equipos.isEmpty() || equiposFiltrados.isEmpty()) {
                     Text(
-                        text = stringResource(R.string.lista_vacia_equipos),
+                        text = stringResource(
+                            if (equipos.isEmpty()) R.string.lista_vacia_equipos else R.string.sin_resultados
+                        ),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(Dimens.espacioMedio)
                     )
@@ -276,7 +276,7 @@ fun InicioTecnicoScreen(
                     contentPadding = PaddingValues(start = Dimens.espacioMedio, top = Dimens.espacioMedio, end = Dimens.espacioMedio, bottom = 88.dp),
                     verticalArrangement = Arrangement.spacedBy(Dimens.espacioChico)
                 ) {
-                    items(equipos, key = { it.id }) { equipo ->
+                    items(equiposFiltrados, key = { it.id }) { equipo ->
                         Card(
                             onClick = { onNuevaPrueba(equipo.id) },
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -300,16 +300,13 @@ fun InicioTecnicoScreen(
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
+                                    // Abre la ubicación del equipo en la app de mapas
                                     IconButton(onClick = {
-                                        if (equipo.latitud != 0.0 && equipo.longitud != 0.0) {
-                                            onVerMapa(equipo.latitud, equipo.longitud, equipo.codigo, equipo.instalacion)
-                                        } else {
-                                            Toast.makeText(context, "Ingresa primero una dirección válida", Toast.LENGTH_SHORT).show()
-                                        }
+                                        abrirEnMapas(context, equipo.latitud, equipo.longitud, equipo.direccion)
                                     }) {
                                         Icon(
-                                            painter = painterResource(R.drawable.ic_menu),
-                                            contentDescription = "Ver Ubicación GPS",
+                                            imageVector = Icons.Default.LocationOn,
+                                            contentDescription = stringResource(R.string.cd_ver_mapa),
                                             tint = MaterialTheme.colorScheme.primary
                                         )
                                     }

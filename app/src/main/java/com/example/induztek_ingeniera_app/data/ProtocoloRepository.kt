@@ -33,6 +33,11 @@ class ProtocoloRepository(
         return entity?.toDomainModel()
     }
 
+    // La entidad completa (con contraseña y respuesta de seguridad) para que el administrador pueda editarla
+    suspend fun buscarUsuarioEntity(id: Long): UsuarioEntity? {
+        return usuarioDao.buscarUsuarioPorId(id).firstOrNull()
+    }
+
     suspend fun cambiarContrasena(correo: String, nueva: String): Boolean {
         return usuarioDao.actualizarContrasena(correo, nueva) > 0
     }

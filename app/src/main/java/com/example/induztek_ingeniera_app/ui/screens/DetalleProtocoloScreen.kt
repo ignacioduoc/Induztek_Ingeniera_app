@@ -10,7 +10,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
@@ -39,15 +49,15 @@ import com.example.induztek_ingeniera_app.model.Resultado
 import com.example.induztek_ingeniera_app.ui.components.BotonPrincipal
 import com.example.induztek_ingeniera_app.ui.components.BotonSecundario
 import com.example.induztek_ingeniera_app.ui.components.EtiquetaEstado
+import com.example.induztek_ingeniera_app.ui.components.FilaDato
 import com.example.induztek_ingeniera_app.ui.components.FotoEvidencia
 import com.example.induztek_ingeniera_app.ui.components.TarjetaSeccion
 import com.example.induztek_ingeniera_app.ui.components.colorDe
 import com.example.induztek_ingeniera_app.ui.formatearFecha
 import com.example.induztek_ingeniera_app.ui.formatearMedicion
+import com.example.induztek_ingeniera_app.ui.styles.EstilosTarjeta
 import com.example.induztek_ingeniera_app.ui.theme.Dimens
 import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,7 +88,6 @@ fun DetalleProtocoloScreen(
             }
         )
     }
-
 
     val foto = remember(protocolo.foto) {
         protocolo.foto?.let { bytes -> ConvertidorImagen.aBitmap(bytes)?.asImageBitmap() }
@@ -113,53 +122,89 @@ fun DetalleProtocoloScreen(
                 .padding(Dimens.espacioPantalla),
             verticalArrangement = Arrangement.spacedBy(Dimens.espacioMedio)
         ) {
-            // 1) Equipo: código, tipo e instalación llegan por el JOIN con la tabla equipos
-            TarjetaSeccion(titulo = stringResource(R.string.seccion_equipo)) {
-                Text(text = "${protocolo.codigoEquipo} · ${protocolo.tipoEquipo}", style = MaterialTheme.typography.bodyMedium)
-                Text(text = protocolo.instalacion, style = MaterialTheme.typography.bodyMedium)
-            }
-
-            // 2) Prueba: qué se probó, cuándo y quién (el nombre llega por el JOIN con usuarios)
-            TarjetaSeccion(titulo = stringResource(R.string.seccion_prueba)) {
-                Text(text = protocolo.tipoPrueba, style = MaterialTheme.typography.bodyMedium)
-                Text(
-                    text = stringResource(R.string.fecha_hora, formatearFecha(protocolo.fechaHora)),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Text(
-                    text = stringResource(R.string.tecnico_nombre, protocolo.nombreTecnico),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-
-            // 3) MEDICIÓN: una fila por medición, con los mismos nombres del formulario
-            TarjetaSeccion(titulo = stringResource(R.string.seccion_mediciones)) {
-                FilaMedicion(etiqueta = stringResource(R.string.campo_at_bt), valor = protocolo.atBt)
-                FilaMedicion(etiqueta = stringResource(R.string.campo_at_tierra), valor = protocolo.atTierra)
-                FilaMedicion(etiqueta = stringResource(R.string.campo_bt_tierra), valor = protocolo.btTierra)
-                FilaMedicion(etiqueta = stringResource(R.string.campo_indice_pol), valor = protocolo.indicePolarizacion)
-            }
-
-            // 4) Resultado y estado con chips de color + observaciones (solo si hay)
-            TarjetaSeccion(titulo = stringResource(R.string.seccion_resultado)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(Dimens.espacioChico)) {
-                    EtiquetaEstado(texto = protocolo.resultado.etiqueta, color = colorDe(protocolo.resultado))
-                    EtiquetaEstado(texto = protocolo.estado.etiqueta, color = colorDe(protocolo.estado))
-                }
-                if (protocolo.observaciones.isNotBlank()) {
+            // 1) Tarjeta principal: equipo, resultado/estado y datos de la prueba
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = EstilosTarjeta.forma,
+                colors = EstilosTarjeta.colores(),
+                elevation = EstilosTarjeta.elevacion()
+            ) {
+                Column(
+                    modifier = Modifier.padding(Dimens.espacioMedio),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.espacioChico)
+                ) {
                     Text(
-                        text = stringResource(R.string.observaciones_detalle, protocolo.observaciones),
-                        style = MaterialTheme.typography.bodyMedium
+                        text = "${protocolo.codigoEquipo} · ${protocolo.tipoEquipo}",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = protocolo.instalacion,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    // Resultado y estado con chips de color
+                    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.espacioChico)) {
+                        EtiquetaEstado(texto = protocolo.resultado.etiqueta, color = colorDe(protocolo.resultado))
+                        EtiquetaEstado(texto = protocolo.estado.etiqueta, color = colorDe(protocolo.estado))
+                    }
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                    FilaDato(
+                        icono = Icons.Default.Description,
+                        etiqueta = stringResource(R.string.etiqueta_prueba_tarjeta),
+                        valor = protocolo.tipoPrueba
+                    )
+                    FilaDato(
+                        icono = Icons.Default.Schedule,
+                        etiqueta = stringResource(R.string.etiqueta_fecha_hora_tarjeta),
+                        valor = formatearFecha(protocolo.fechaHora)
+                    )
+                    if (protocolo.nombreTecnico.isNotBlank()) {
+                        FilaDato(
+                            icono = Icons.Default.Build,
+                            etiqueta = stringResource(R.string.etiqueta_tecnico_tarjeta),
+                            valor = protocolo.nombreTecnico
+                        )
+                    }
+                    FilaDato(
+                        icono = Icons.Default.LocationOn,
+                        etiqueta = stringResource(R.string.etiqueta_direccion_tarjeta),
+                        valor = protocolo.direccionEquipo.ifBlank { stringResource(R.string.sin_direccion_registrada) }
                     )
                 }
             }
 
-            // 5) Foto de evidencia que tomó el técnico
+            // 2) Mediciones: una fila por medición, con el valor destacado
+            TarjetaSeccion(titulo = stringResource(R.string.seccion_mediciones)) {
+                FilaMedicion(etiqueta = stringResource(R.string.campo_at_bt), valor = protocolo.atBt)
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                FilaMedicion(etiqueta = stringResource(R.string.campo_at_tierra), valor = protocolo.atTierra)
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                FilaMedicion(etiqueta = stringResource(R.string.campo_bt_tierra), valor = protocolo.btTierra)
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                FilaMedicion(etiqueta = stringResource(R.string.campo_indice_pol), valor = protocolo.indicePolarizacion)
+            }
+
+            // 3) Observaciones (solo si hay)
+            if (protocolo.observaciones.isNotBlank()) {
+                TarjetaSeccion(titulo = stringResource(R.string.seccion_observaciones)) {
+                    Text(text = protocolo.observaciones, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+
+            // 4) Foto de evidencia que tomó el técnico
             TarjetaSeccion(titulo = stringResource(R.string.seccion_foto)) {
                 if (foto != null) {
                     FotoEvidencia(foto = foto, descripcion = stringResource(R.string.cd_foto_evidencia))
                 } else {
-                    Text(text = stringResource(R.string.sin_foto), style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = stringResource(R.string.sin_foto),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 
@@ -169,7 +214,6 @@ fun DetalleProtocoloScreen(
                 onClick = onVerHistorial,
                 modifier = Modifier.fillMaxWidth()
             )
-
 
             BotonPrincipal(
                 texto = stringResource(R.string.btn_formalizar),
@@ -183,26 +227,31 @@ fun DetalleProtocoloScreen(
         }
     }
 }
-
-// MEDICIÓN: una fila "nombre ........ valor", como en un informe.
-// SpaceBetween = el nombre a la izquierda y el valor a la derecha.
+// MEDICIÓN: nombre a la izquierda y el valor a la derecha dentro de una "píldora" de color
 @Composable
 private fun FilaMedicion(etiqueta: String, valor: Double) {
     Row(
         modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(text = etiqueta, style = MaterialTheme.typography.bodyMedium)
-        Text(
-            // 13.1 -> "13,1" (Formatos.kt: el mismo formato que usa el gráfico)
-            text = formatearMedicion(valor),
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Bold
-        )
+        Surface(
+            shape = RoundedCornerShape(50),
+            color = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        ) {
+            Text(
+                text = formatearMedicion(valor),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = Dimens.espacioMedio, vertical = Dimens.espacioMini)
+            )
+        }
     }
 }
 
-// Protocolo de ejemplo para las vistas previas (TR-0142, recién registrado en terreno)
+// Protocolo de ejemplo para las vistas previas
 private val protocoloPreview = Protocolo(
     equipoId = 1, tecnicoId = 1, fechaHora = 1792503000000, tipoPrueba = "Aislamiento 5 kV DC",
     atBt = 12.9, atTierra = 9.1, btTierra = 6.2, indicePolarizacion = 1.8,
@@ -210,7 +259,8 @@ private val protocoloPreview = Protocolo(
     observaciones = "Índice de polarización bajo 2,0: repetir la prueba en 3 meses.",
     estado = EstadoProtocolo.REGISTRADO_EN_TERRENO, id = 5,
     codigoEquipo = "TR-0142", tipoEquipo = "Transformador 500 kVA",
-    instalacion = "Planta Lampa · S/E-02", nombreTecnico = "Matías Rojas"
+    instalacion = "Planta Lampa · S/E-02", nombreTecnico = "Matías Rojas",
+    direccionEquipo = "Camino Los Maitenes 1200, Lampa"
 )
 
 @Preview(showBackground = true, heightDp = 1200)

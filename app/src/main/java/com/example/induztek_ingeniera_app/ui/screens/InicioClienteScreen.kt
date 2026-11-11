@@ -1,32 +1,21 @@
 package com.example.induztek_ingeniera_app.ui.screens
 
-import android.graphics.BitmapFactory
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -34,31 +23,32 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.example.induztek_ingeniera_app.R
 import com.example.induztek_ingeniera_app.model.EstadoProtocolo
 import com.example.induztek_ingeniera_app.model.Protocolo
 import com.example.induztek_ingeniera_app.model.Resultado
 import com.example.induztek_ingeniera_app.model.Rol
 import com.example.induztek_ingeniera_app.model.Usuario
-import com.example.induztek_ingeniera_app.ui.components.EtiquetaEstado
-import com.example.induztek_ingeniera_app.ui.components.FilaDato
+import com.example.induztek_ingeniera_app.ui.components.BarraBusquedaFiltro
+import com.example.induztek_ingeniera_app.ui.components.GrupoFiltro
 import com.example.induztek_ingeniera_app.ui.components.MenuSesion
-import com.example.induztek_ingeniera_app.ui.components.colorDe
+import com.example.induztek_ingeniera_app.ui.components.OpcionMenu
+import com.example.induztek_ingeniera_app.ui.components.TarjetaBienvenida
+import com.example.induztek_ingeniera_app.ui.components.coincideBusqueda
 import com.example.induztek_ingeniera_app.ui.formatearFecha
 import com.example.induztek_ingeniera_app.ui.theme.Dimens
 import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
+import com.example.induztek_ingeniera_app.ui.utils.abrirEnMapas
 import kotlinx.coroutines.launch
 
 
@@ -67,19 +57,51 @@ import kotlinx.coroutines.launch
 fun InicioClienteScreen(
     usuario: Usuario?,
     protocolos: List<Protocolo>,
+    onIrMisEquipos: () -> Unit = {},
+    onIrMiEmpresa: () -> Unit = {},
     onEditarPerfil: () -> Unit = {},
     onCerrarSesion: () -> Unit,
-    onVerProtocolo: (Long) -> Unit
+    onVerProtocolo: (Long) -> Unit,
+    onVerHistorial: (Long) -> Unit = {}
 ) {
 
-    val bitmapFoto = remember(usuario?.fotoPerfil) {
-        usuario?.fotoPerfil?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
-    }
-
+    val context = LocalContext.current
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    MenuSesion(drawerState = drawerState, onCerrarSesion = onCerrarSesion) {
+    // Búsqueda y filtros de la lista de protocolos
+    var consulta by rememberSaveable { mutableStateOf("") }
+    var resultadoElegido by rememberSaveable { mutableStateOf<String?>(null) }
+    var estadoElegido by rememberSaveable { mutableStateOf<String?>(null) }
+    var equipoElegido by rememberSaveable { mutableStateOf<String?>(null) }
+
+    val equiposLista = protocolos.map { it.codigoEquipo }.filter { it.isNotBlank() }.distinct().sorted()
+
+    val protocolosFiltrados = protocolos.filter { p ->
+        (resultadoElegido == null || p.resultado.etiqueta == resultadoElegido) &&
+                (estadoElegido == null || p.estado.etiqueta == estadoElegido) &&
+                (equipoElegido == null || p.codigoEquipo == equipoElegido) &&
+                (coincideBusqueda(p.codigoEquipo, consulta) ||
+                        coincideBusqueda(p.tipoEquipo, consulta) ||
+                        coincideBusqueda(p.instalacion, consulta) ||
+                        coincideBusqueda(p.nombreTecnico, consulta) ||
+                        coincideBusqueda(p.tipoPrueba, consulta))
+    }
+
+    // Opciones del menú lateral del cliente ("Mis protocolos" es esta misma pantalla)
+    val opcionesMenu = listOf(
+        OpcionMenu(stringResource(R.string.titulo_inicio_cliente), Icons.Default.Description, {}, seleccionada = true),
+        OpcionMenu(stringResource(R.string.menu_mis_equipos), Icons.Default.Build, onIrMisEquipos),
+        OpcionMenu(stringResource(R.string.menu_mi_empresa), Icons.Default.Business, onIrMiEmpresa),
+        OpcionMenu(stringResource(R.string.menu_mi_perfil), Icons.Default.Person, onEditarPerfil)
+    )
+
+    MenuSesion(
+        drawerState = drawerState,
+        onCerrarSesion = onCerrarSesion,
+        usuario = usuario,
+        opciones = opcionesMenu
+    ) {
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -107,66 +129,39 @@ fun InicioClienteScreen(
                     .padding(innerPadding)
             ) {
 
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(Dimens.espacioPantalla)
-                        .clickable { onEditarPerfil() }
-                ) {
-                    Row(
-                        modifier = Modifier.padding(Dimens.espacioMedio),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Dimens.espacioMedio)
-                    ) {
+                TarjetaBienvenida(
+                    usuario = usuario,
+                    modifier = Modifier.padding(Dimens.espacioPantalla)
+                )
 
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primaryContainer),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (bitmapFoto != null) {
-                                Image(
-                                    bitmap = bitmapFoto.asImageBitmap(),
-                                    contentDescription = "Foto de Perfil",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                            } else {
-                                Text(
-                                    text = usuario?.nombre?.take(1)?.uppercase() ?: "C",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                            }
-                        }
-
-
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(Dimens.espacioMini)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.saludo, usuario?.nombre ?: ""),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            Text(
-                                text = stringResource(R.string.rol_empresa, usuario?.rolNombre ?: "", usuario?.empresa ?: ""),
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-
-
-                        IconButton(onClick = onEditarPerfil) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Editar Perfil",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                }
+                BarraBusquedaFiltro(
+                    consulta = consulta,
+                    onConsultaCambia = { consulta = it },
+                    placeholder = stringResource(R.string.buscar_protocolos),
+                    grupos = listOf(
+                        GrupoFiltro(
+                            titulo = stringResource(R.string.filtro_resultado),
+                            opciones = Resultado.entries.map { it.etiqueta },
+                            seleccionada = resultadoElegido,
+                            onElegir = { resultadoElegido = it }
+                        ),
+                        GrupoFiltro(
+                            titulo = stringResource(R.string.filtro_estado),
+                            opciones = EstadoProtocolo.entries.map { it.etiqueta },
+                            seleccionada = estadoElegido,
+                            onElegir = { estadoElegido = it }
+                        ),
+                        GrupoFiltro(
+                            titulo = stringResource(R.string.filtro_equipo),
+                            opciones = equiposLista,
+                            seleccionada = equipoElegido,
+                            onElegir = { equipoElegido = it }
+                        )
+                    ),
+                    modifier = Modifier.padding(
+                        start = Dimens.espacioPantalla, end = Dimens.espacioPantalla, bottom = Dimens.espacioChico
+                    )
+                )
 
                 Text(
                     text = stringResource(R.string.indicacion_protocolos),
@@ -175,9 +170,11 @@ fun InicioClienteScreen(
                     modifier = Modifier.padding(horizontal = Dimens.espacioPantalla)
                 )
 
-                if (protocolos.isEmpty()) {
+                if (protocolos.isEmpty() || protocolosFiltrados.isEmpty()) {
                     Text(
-                        text = stringResource(R.string.lista_vacia_protocolos),
+                        text = stringResource(
+                            if (protocolos.isEmpty()) R.string.lista_vacia_protocolos else R.string.sin_resultados
+                        ),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(Dimens.espacioMedio)
                     )
@@ -188,57 +185,21 @@ fun InicioClienteScreen(
                     contentPadding = PaddingValues(Dimens.espacioMedio),
                     verticalArrangement = Arrangement.spacedBy(Dimens.espacioChico)
                 ) {
-                    items(protocolos, key = { it.id }) { protocolo ->
-                        Card(
+                    items(protocolosFiltrados, key = { it.id }) { protocolo ->
+                        // Misma tarjeta que "Mis equipos"
+                        TarjetaMiEquipo(
+                            titulo = "${protocolo.codigoEquipo} · ${protocolo.tipoEquipo}",
+                            instalacion = protocolo.instalacion,
+                            direccion = protocolo.direccionEquipo,
+                            fecha = formatearFecha(protocolo.fechaHora),
+                            resultado = protocolo.resultado,
+                            estado = protocolo.estado,
+                            empresa = usuario?.empresa.orEmpty(),
+                            tecnico = protocolo.nombreTecnico,
                             onClick = { onVerProtocolo(protocolo.id) },
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(Dimens.espacioMedio),
-                                verticalArrangement = Arrangement.spacedBy(Dimens.espacioChico)
-                            ) {
-                                // Encabezado: fecha, equipo e instalación
-                                Text(
-                                    text = formatearFecha(protocolo.fechaHora),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    text = "${protocolo.codigoEquipo} · ${protocolo.tipoEquipo}",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                Text(
-                                    text = protocolo.instalacion,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-
-                                // Resultado y estado del protocolo
-                                Row(horizontalArrangement = Arrangement.spacedBy(Dimens.espacioChico)) {
-                                    EtiquetaEstado(texto = protocolo.resultado.etiqueta, color = colorDe(protocolo.resultado))
-                                    EtiquetaEstado(texto = protocolo.estado.etiqueta, color = colorDe(protocolo.estado))
-                                }
-
-                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                                // Quién hizo la prueba y dónde está el equipo
-                                if (protocolo.nombreTecnico.isNotBlank()) {
-                                    FilaDato(
-                                        icono = Icons.Default.Build,
-                                        etiqueta = stringResource(R.string.etiqueta_tecnico_tarjeta),
-                                        valor = protocolo.nombreTecnico
-                                    )
-                                }
-                                FilaDato(
-                                    icono = Icons.Default.LocationOn,
-                                    etiqueta = stringResource(R.string.etiqueta_direccion_tarjeta),
-                                    valor = if (protocolo.direccionEquipo.isNotBlank()) protocolo.direccionEquipo
-                                    else stringResource(R.string.sin_direccion_registrada)
-                                )
-                            }
-                        }
+                            onVerMapa = { abrirEnMapas(context, 0.0, 0.0, protocolo.direccionEquipo) },
+                            onVerHistorial = { onVerHistorial(protocolo.equipoId) }
+                        )
                     }
                 }
             }

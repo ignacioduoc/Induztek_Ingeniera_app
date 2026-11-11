@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
@@ -29,10 +30,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.example.induztek_ingeniera_app.R
 import com.example.induztek_ingeniera_app.model.DatoGrafico
 import com.example.induztek_ingeniera_app.model.Equipo
@@ -48,6 +54,7 @@ import com.example.induztek_ingeniera_app.ui.formatearFechaCorta
 import com.example.induztek_ingeniera_app.ui.styles.EstilosCampo
 import com.example.induztek_ingeniera_app.ui.theme.Dimens
 import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
+import com.example.induztek_ingeniera_app.ui.utils.abrirEnMapas
 
 
 private enum class Medicion(val nombre: Int) {
@@ -73,6 +80,7 @@ fun HistorialScreen(
     onVolver: () -> Unit
 ) {
 
+    val context = LocalContext.current
     var medicion by remember { mutableStateOf(Medicion.AT_BT) }
     var expandido by remember { mutableStateOf(false) }
 
@@ -113,20 +121,47 @@ fun HistorialScreen(
             verticalArrangement = Arrangement.spacedBy(Dimens.espacioMedio)
         ) {
 
+            // Equipo: la misma tarjeta de "Mis equipos" (sin clic ni ícono de estadísticas)
             item {
-                TarjetaSeccion(titulo = stringResource(R.string.seccion_equipo)) {
-                    Text(text = "${equipo.codigo} · ${equipo.tipo}", style = MaterialTheme.typography.bodyMedium)
-                    Text(text = equipo.empresaCliente, style = MaterialTheme.typography.bodyMedium)
-                    Text(text = equipo.instalacion, style = MaterialTheme.typography.bodyMedium)
-                }
+                val direccion = equipo.direccion.ifBlank { equipo.direccionEmpresa }
+                TarjetaMiEquipo(
+                    titulo = "${equipo.codigo} · ${equipo.tipo}",
+                    instalacion = equipo.instalacion,
+                    direccion = direccion,
+                    empresa = equipo.empresaCliente,
+                    onVerMapa = { abrirEnMapas(context, equipo.latitud, equipo.longitud, direccion) }
+                )
             }
-
 
             item {
                 TarjetaSeccion(titulo = stringResource(R.string.seccion_grafico)) {
 
                     if (historial.isEmpty()) {
-                        Text(text = stringResource(R.string.sin_pruebas), style = MaterialTheme.typography.bodyMedium)
+                        // Aviso amable en vez de una tarjeta vacía
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = Dimens.espacioMedio),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(Dimens.espacioChico)
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_bar_chart),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(40.dp)
+                            )
+                            Text(
+                                text = stringResource(R.string.sin_pruebas_titulo),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                textAlign = TextAlign.Center
+                            )
+                            Text(
+                                text = stringResource(R.string.sin_pruebas_ayuda),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     } else {
 
                         ExposedDropdownMenuBox(
@@ -204,7 +239,6 @@ fun HistorialScreen(
         }
     }
 }
-
 private val equipoPreview = Equipo(
     "TR-0142", "Transformador 500 kVA", "Planta Lampa · S/E-02",
     clienteId = 2, id = 1, empresaCliente = "Industrias Aurora S.A."

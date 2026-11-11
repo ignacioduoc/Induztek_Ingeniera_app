@@ -1,8 +1,6 @@
 package com.example.induztek_ingeniera_app.ui.screens
 
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,7 +30,9 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
+import com.example.induztek_ingeniera_app.ui.utils.abrirEnMapas
 import androidx.lifecycle.LifecycleEventObserver
+import java.io.File
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -53,8 +53,14 @@ fun MapaTecnicoScreen(
 
 
     val mapView = remember(codigoEquipo, latitud, longitud) {
-        Configuration.getInstance().load(context, context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
-        Configuration.getInstance().userAgentValue = context.packageName
+        // OpenStreetMap bloquea ("Access blocked 403") a las apps que se identifican con el nombre
+        // de paquete por defecto (com.example...). Hay que mandar un User-Agent propio y descriptivo.
+        Configuration.getInstance().apply {
+            load(context, context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
+            userAgentValue = "InduztekProtocolos/1.0 (Android; proyecto academico Duoc UC)"
+            osmdroidBasePath = File(context.filesDir, "osmdroid")
+            osmdroidTileCache = File(context.cacheDir, "osmdroid_tiles")
+        }
 
         MapView(context).apply {
             setTileSource(TileSourceFactory.MAPNIK)
@@ -112,7 +118,7 @@ fun MapaTecnicoScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { abrirNavegacionGPS(context, latitud, longitud) },
+                onClick = { abrirEnMapas(context, latitud, longitud, "") },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(
@@ -133,6 +139,15 @@ fun MapaTecnicoScreen(
                 modifier = Modifier.fillMaxSize()
             )
 
+            // Atribución obligatoria de OpenStreetMap
+            Text(
+                text = "© OpenStreetMap contributors",
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(8.dp)
+            )
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -148,17 +163,5 @@ fun MapaTecnicoScreen(
                 }
             }
         }
-    }
-}
-
-private fun abrirNavegacionGPS(context: Context, latitud: Double, longitud: Double) {
-    val geoUri = Uri.parse("geo:$latitud,$longitud?q=$latitud,$longitud")
-    val mapIntent = Intent(Intent.ACTION_VIEW, geoUri)
-
-    try {
-        context.startActivity(mapIntent)
-    } catch (e: Exception) {
-        val googleMapsWeb = Uri.parse("https://www.google.com/maps/search/?api=1&query=$latitud,$longitud")
-        context.startActivity(Intent(Intent.ACTION_VIEW, googleMapsWeb))
     }
 }

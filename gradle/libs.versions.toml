@@ -1,5 +1,5 @@
 [versions]
-agp = "9.3.0"
+agp = "9.4.1"
 coreKtx = "1.19.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
@@ -10,7 +10,7 @@ kotlin = "2.2.10"
 composeBom = "2026.02.01"
 coreKtxVersion = "1.19.1"
 
-ksp = "2.0.21-1.0.28" # O la versión compatible con tu versión de Kotlin
+ksp = "2.3.6" # O la versión compatible con tu versión de Kotlin
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

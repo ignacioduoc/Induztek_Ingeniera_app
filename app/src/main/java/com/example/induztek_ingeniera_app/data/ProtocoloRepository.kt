@@ -1,5 +1,6 @@
 package com.example.induztek_ingeniera_app.data
 
+import android.util.Base64
 import com.example.induztek_ingeniera_app.data.dao.EquipoDao
 import com.example.induztek_ingeniera_app.data.dao.ProtocoloDao
 import com.example.induztek_ingeniera_app.data.dao.UsuarioDao
@@ -9,20 +10,21 @@ import com.example.induztek_ingeniera_app.data.entities.EquipoEntity
 import com.example.induztek_ingeniera_app.data.entities.ProtocoloConDetalles
 import com.example.induztek_ingeniera_app.data.entities.ProtocoloEntity
 import com.example.induztek_ingeniera_app.data.entities.UsuarioEntity
+import com.example.induztek_ingeniera_app.data.network.EquipoApiDto
+import com.example.induztek_ingeniera_app.data.network.ProtocoloApiDto
+import com.example.induztek_ingeniera_app.data.network.RetrofitClient
+import com.example.induztek_ingeniera_app.data.network.UbicacionRequestDto
 import com.example.induztek_ingeniera_app.model.Rol
 import com.example.induztek_ingeniera_app.model.Usuario
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onStart
 import java.security.MessageDigest
 import java.security.SecureRandom
 
-// La respuesta de seguridad se guarda y se compara siempre así: sin espacios sobrantes y en minúsculas.
-// Úsala también al crear o editar un usuario, antes de guardar la respuesta.
 fun normalizarRespuestaSeguridad(texto: String): String = texto.trim().lowercase()
 
-// ---------- Hash de la respuesta de seguridad ----------
-// Se guarda como "sha256:<sal>:<hash>": la sal es al azar para cada respuesta, así dos usuarios
-// con la misma respuesta no dejan el mismo hash. Nunca se guarda la respuesta en texto plano.
 private const val PREFIJO_HASH = "sha256:"
 
 private fun sha256Hex(texto: String): String =
@@ -34,7 +36,6 @@ fun hashRespuestaSeguridad(respuesta: String): String {
     return "$PREFIJO_HASH$sal:${sha256Hex(sal + normalizarRespuestaSeguridad(respuesta))}"
 }
 
-// ¿Lo guardado ya es un hash? (si no, es una cuenta antigua con la respuesta en texto plano)
 private fun esHashRespuesta(guardada: String): Boolean =
     guardada.startsWith(PREFIJO_HASH) && guardada.count { it == ':' } == 2
 
@@ -59,12 +60,10 @@ class ProtocoloRepository(
         return entity?.toDomainModel()
     }
 
-    // La entidad completa (con contraseña y respuesta de seguridad) para que el administrador pueda editarla
     suspend fun buscarUsuarioEntity(id: Long): UsuarioEntity? {
         return usuarioDao.buscarUsuarioPorId(id).firstOrNull()
     }
 
-    // true si esa contraseña es justo la que ya tiene la cuenta (para no permitir "cambiarla" por la misma)
     suspend fun esContrasenaActual(correo: String, contrasena: String): Boolean {
         return usuarioDao.iniciarSesion(correo.trim(), contrasena) != null
     }
@@ -78,13 +77,12 @@ class ProtocoloRepository(
     }
 
 
-    // ---------- Usuarios (Tareas 2, 3 y 6) ----------
+    // ---------- Usuarios ----------
 
     fun listarUsuarios(): Flow<List<UsuarioEntity>> {
         return usuarioDao.listarUsuarios()
     }
 
-    // Devuelve el id nuevo, o -1 si el correo o el RUT ya existen
     suspend fun crearUsuario(usuario: UsuarioEntity): Long {
         return usuarioDao.insertarUsuario(usuario)
     }
@@ -93,7 +91,6 @@ class ProtocoloRepository(
         return usuarioDao.actualizarUsuario(usuario) > 0
     }
 
-    // idExcluir = 0 al crear; al editar, el id del usuario (para que no choque consigo mismo)
     suspend fun existeCorreo(correo: String, idExcluir: Long = 0): Boolean {
         return usuarioDao.contarPorCorreo(correo.trim(), idExcluir) > 0
     }
@@ -102,13 +99,10 @@ class ProtocoloRepository(
         return usuarioDao.contarPorRut(rut.trim(), idExcluir) > 0
     }
 
-    // null = no existe ese correo, o ese usuario no tiene pregunta de seguridad guardada
     suspend fun obtenerPreguntaSeguridad(correo: String): String? {
         return usuarioDao.obtenerPreguntaSeguridad(correo.trim())?.takeIf { it.isNotBlank() }
     }
 
-    // Una respuesta vacía o muy corta nunca es válida, y una cuenta sin pregunta tampoco se puede verificar.
-    // Las cuentas antiguas (respuesta en texto plano) se aceptan una vez y quedan guardadas ya con hash.
     suspend fun verificarRespuestaSeguridad(correo: String, respuesta: String): Boolean {
         val normalizada = normalizarRespuestaSeguridad(respuesta)
         if (normalizada.length < 2) return false
@@ -119,14 +113,13 @@ class ProtocoloRepository(
 
         if (esHashRespuesta(guardada)) return coincideConHash(guardada, normalizada)
 
-        // Cuenta antigua: compara en texto plano y, si coincide, la convierte a hash
         if (normalizarRespuestaSeguridad(guardada) != normalizada) return false
         usuarioDao.actualizarRespuestaSeguridad(correo.trim(), hashRespuestaSeguridad(normalizada))
         return true
     }
 
 
-    // ---------- Empresas (Tareas 3 y 5) ----------
+    // ---------- Empresas ----------
 
     fun obtenerEmpresas(): Flow<List<EmpresaEntity>> {
         return equipoDao.obtenerEmpresas()
@@ -136,7 +129,6 @@ class ProtocoloRepository(
         return equipoDao.buscarEmpresaPorId(idEmpresa)
     }
 
-    // Devuelve el id nuevo, o -1 si ya existe una empresa con ese nombre
     suspend fun crearEmpresa(empresa: EmpresaEntity): Long {
         return equipoDao.insertarEmpresa(empresa)
     }
@@ -150,24 +142,54 @@ class ProtocoloRepository(
     }
 
 
-    // ---------- Equipos (Tareas 3, 4, 5 y 7) ----------
+    // ---------- Equipos (Sincronizado con ms-equipos:8083 + Room) ----------
 
-    // Estas dos ya traen la empresa, su dirección y el nombre del cliente dueño
     fun obtenerTodosLosEquipos(): Flow<List<EquipoConDetalles>> {
-        return equipoDao.obtenerTodos()
+        return equipoDao.obtenerTodos().onStart {
+            try {
+                val remotos = RetrofitClient.equiposApi.listarTodos().map { it.toEntity() }
+                if (remotos.isNotEmpty()) {
+                    equipoDao.insertarEquipos(remotos)
+                }
+            } catch (_: Exception) {
+                // Modo offline: Room emite lo que tiene localmente
+            }
+        }
     }
 
     fun obtenerEquiposPorCliente(idCliente: Long): Flow<List<EquipoConDetalles>> {
-        return equipoDao.obtenerEquiposPorCliente(idCliente)
+        return equipoDao.obtenerEquiposPorCliente(idCliente).onStart {
+            try {
+                val remotos = RetrofitClient.equiposApi.listarPorCliente(idCliente).map { it.toEntity() }
+                if (remotos.isNotEmpty()) {
+                    equipoDao.insertarEquipos(remotos)
+                }
+            } catch (_: Exception) { }
+        }
     }
 
     fun buscarEquipoPorId(idEquipo: Long): Flow<EquipoEntity?> {
         return equipoDao.buscarEquipoPorId(idEquipo)
     }
 
-    // Devuelve el id nuevo, o -1 si el código ya existe
     suspend fun crearEquipo(equipo: EquipoEntity): Long {
-        return equipoDao.insertarEquipo(equipo)
+        val idLocal = equipoDao.insertarEquipo(equipo)
+        if (idLocal > 0) {
+            try {
+                RetrofitClient.equiposApi.crear(
+                    EquipoApiDto(
+                        codigo = equipo.codigo,
+                        tipo = equipo.tipo,
+                        instalacion = equipo.instalacion,
+                        direccion = equipo.direccion,
+                        latitud = equipo.latitud,
+                        longitud = equipo.longitud,
+                        idCliente = equipo.id_cliente
+                    )
+                )
+            } catch (_: Exception) { }
+        }
+        return idLocal
     }
 
     suspend fun actualizarEquipo(equipo: EquipoEntity): Boolean {
@@ -180,32 +202,86 @@ class ProtocoloRepository(
 
     suspend fun actualizarUbicacionEquipo(idEquipo: Long, direccion: String, latitud: Double, longitud: Double) {
         equipoDao.actualizarUbicacion(idEquipo, direccion, latitud, longitud)
+        try {
+            RetrofitClient.equiposApi.actualizarUbicacion(
+                id = idEquipo,
+                req = UbicacionRequestDto(direccion, latitud, longitud)
+            )
+        } catch (_: Exception) { }
     }
 
 
-    // ---------- Protocolos ----------
+    // ---------- Protocolos (Sincronizado con ms-protocolos:8084 + Room) ----------
 
     suspend fun insertarProtocolo(protocolo: ProtocoloEntity): Long {
-        return protocoloDao.insertarProtocolo(protocolo)
+        val dto = ProtocoloApiDto(
+            idEquipo = protocolo.idEquipo,
+            idTecnico = protocolo.idTecnico,
+            fechaHora = protocolo.fechaHora,
+            tipoPrueba = protocolo.tipoPrueba,
+            atBt = protocolo.atBt,
+            atTierra = protocolo.atTierra,
+            btTierra = protocolo.btTierra,
+            indicePolarizacion = protocolo.indicePolarizacion,
+            resultado = protocolo.resultado,
+            observaciones = protocolo.observaciones,
+            estado = protocolo.estado,
+            foto = protocolo.foto?.let { Base64.encodeToString(it, Base64.NO_WRAP) }
+        )
+
+        return try {
+            val response = RetrofitClient.protocolosApi.crear(dto)
+            if (response.isSuccessful && response.body() != null) {
+                protocoloDao.insertarProtocolo(response.body()!!.toEntity())
+            } else {
+                protocoloDao.insertarProtocolo(protocolo.copy(sincronizado = false))
+            }
+        } catch (_: Exception) {
+            protocoloDao.insertarProtocolo(protocolo.copy(sincronizado = false))
+        }
     }
 
     suspend fun formalizarProtocolo(id: Long): Boolean {
-        return protocoloDao.formalizarProtocolo(id) > 0
+        val localOk = protocoloDao.formalizarProtocolo(id) > 0
+        try {
+            RetrofitClient.protocolosApi.formalizar(id)
+        } catch (_: Exception) { }
+        return localOk
     }
 
-    fun listarProtocolosDeCliente(clienteId: Long): Flow<List<ProtocoloConDetalles>> {
-        return protocoloDao.listarProtocolosDeCliente(clienteId)
+    fun listarProtocolosDeCliente(clienteId: Long): Flow<List<ProtocoloConDetalles>> = flow {
+        try {
+            val remotos = RetrofitClient.protocolosApi.listarPorCliente(clienteId)
+                .map { it.toConDetalles() }
+            emit(remotos)
+        } catch (_: Exception) {
+            protocoloDao.listarProtocolosDeCliente(clienteId).collect { emit(it) }
+        }
     }
 
-    fun listarProtocolosDeEquipo(equipoId: Long): Flow<List<ProtocoloConDetalles>> {
-        return protocoloDao.listarProtocolosDeEquipo(equipoId)
+    fun listarProtocolosDeEquipo(equipoId: Long): Flow<List<ProtocoloConDetalles>> = flow {
+        try {
+            val remotos = RetrofitClient.protocolosApi.listarPorEquipo(equipoId)
+                .map { it.toConDetalles() }
+            emit(remotos)
+        } catch (_: Exception) {
+            protocoloDao.listarProtocolosDeEquipo(equipoId).collect { emit(it) }
+        }
     }
 
     suspend fun buscarProtocoloPorId(id: Long): ProtocoloConDetalles? {
-        return protocoloDao.buscarProtocoloPorId(id).firstOrNull()
+        return try {
+            val response = RetrofitClient.protocolosApi.obtenerPorId(id)
+            if (response.isSuccessful) {
+                response.body()?.toConDetalles()
+            } else {
+                protocoloDao.buscarProtocoloPorId(id).firstOrNull()
+            }
+        } catch (_: Exception) {
+            protocoloDao.buscarProtocoloPorId(id).firstOrNull()
+        }
     }
 
-    // El nombre y la dirección de la empresa salen de la tabla "empresas" (por id_empresa).
     private suspend fun UsuarioEntity.toDomainModel(): Usuario {
         val rolNombre = when (this.idRol) {
             Rol.ID_TECNICO -> "Técnico"

@@ -23,7 +23,6 @@ interface EquipoDao {
     @Update
     suspend fun actualizarEquipo(equipo: EquipoEntity): Int
 
-
     // LEFT JOIN: no se pierde un equipo aunque todavía no tenga empresa asignada
     @Query("""
         SELECT e.*,
@@ -36,7 +35,6 @@ interface EquipoDao {
         ORDER BY e.id_equipo ASC
     """)
     fun obtenerTodos(): Flow<List<EquipoConDetalles>>
-
 
     @Query("""
         SELECT e.*,
@@ -51,23 +49,18 @@ interface EquipoDao {
     """)
     fun obtenerEquiposPorCliente(idCliente: Long): Flow<List<EquipoConDetalles>>
 
-
     @Query("SELECT * FROM equipos WHERE id_equipo = :idEquipo LIMIT 1")
     fun buscarEquipoPorId(idEquipo: Long): Flow<EquipoEntity?>
 
-
     @Query("UPDATE equipos SET direccion = :direccion, latitud = :lat, longitud = :lng WHERE id_equipo = :idEquipo")
     suspend fun actualizarUbicacion(idEquipo: Long, direccion: String, lat: Double, lng: Double)
-
 
     // Validar código repetido. Al crear se pasa idExcluir = 0; al editar, el id del equipo
     @Query("SELECT COUNT(*) FROM equipos WHERE LOWER(codigo) = LOWER(:codigo) AND id_equipo != :idExcluir")
     suspend fun contarPorCodigo(codigo: String, idExcluir: Long): Int
 
-
     // ---------- Empresas (el equipo pertenece a una empresa, por eso van en este DAO) ----------
 
-    // IGNORE: si el nombre ya existe no pisa la fila de otra empresa, devuelve -1
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertarEmpresa(empresa: EmpresaEntity): Long
 
@@ -80,7 +73,6 @@ interface EquipoDao {
     @Query("SELECT * FROM empresas WHERE id_empresa = :idEmpresa LIMIT 1")
     suspend fun buscarEmpresaPorId(idEmpresa: Long): EmpresaEntity?
 
-    // Validar nombre repetido. Al crear se pasa idExcluir = 0; al editar, el id de la empresa
     @Query("SELECT COUNT(*) FROM empresas WHERE LOWER(nombre) = LOWER(:nombre) AND id_empresa != :idExcluir")
     suspend fun contarEmpresasPorNombre(nombre: String, idExcluir: Long): Int
 }

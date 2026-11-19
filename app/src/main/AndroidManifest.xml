@@ -38,7 +38,9 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Induztek" >
+        android:theme="@style/Theme.Induztek"
+        android:usesCleartextTraffic="true"
+        >
 
         <!-- CORRECCIÓN CRÍTICA: Ruta absoluta completa para evitar el ClassNotFoundException -->
         <activity

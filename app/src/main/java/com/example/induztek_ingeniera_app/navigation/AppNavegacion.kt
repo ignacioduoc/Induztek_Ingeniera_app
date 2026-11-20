@@ -31,6 +31,7 @@ import com.example.induztek_ingeniera_app.ui.screens.EmpresasConsultaScreen
 import com.example.induztek_ingeniera_app.ui.screens.HistorialScreen
 import com.example.induztek_ingeniera_app.ui.screens.InicioAdministradorScreen
 import com.example.induztek_ingeniera_app.ui.screens.InicioClienteScreen
+import com.example.induztek_ingeniera_app.ui.screens.InicioSupervisorScreen
 import com.example.induztek_ingeniera_app.ui.screens.InicioTecnicoScreen
 import com.example.induztek_ingeniera_app.ui.screens.LoginScreen
 import com.example.induztek_ingeniera_app.ui.screens.MapaTecnicoScreen
@@ -46,6 +47,7 @@ import com.example.induztek_ingeniera_app.viewmodel.LoginViewModel
 import com.example.induztek_ingeniera_app.viewmodel.PerfilViewModel
 import com.example.induztek_ingeniera_app.viewmodel.ProtocolosViewModel
 import com.example.induztek_ingeniera_app.viewmodel.RestablecerContrasenaViewModel
+import com.example.induztek_ingeniera_app.viewmodel.SupervisorViewModel
 
 @Composable
 fun AppNavegacion(
@@ -55,6 +57,7 @@ fun AppNavegacion(
     adminUsuariosViewModel: AdminUsuariosViewModel,         // Tarea 3: gestión de usuarios
     adminEmpresasViewModel: AdminEmpresasViewModel,         // Tarea 3: gestión de empresas
     adminEquiposViewModel: AdminEquiposViewModel,           // Tarea 3: gestión de equipos
+    supervisorViewModel: SupervisorViewModel,
     perfilViewModel: PerfilViewModel                        // Tarea 6: edición de perfil (todos los roles)
 ) {
     val navController = rememberNavController()
@@ -415,6 +418,22 @@ fun AppNavegacion(
                 onVolver = { navController.navigateUp() }
             )
         }
+
+        composable(Ruta.InicioSupervisor.ruta) {
+            InicioSupervisorScreen(
+                usuario = usuarioActual,
+                viewModel = supervisorViewModel,
+                onEditarPerfil = { navController.navigate(Ruta.Perfil.ruta) },
+                onCerrarSesion = {
+                    protocolosViewModel.cerrarSesion()
+                    loginViewModel.cerrarSesion()
+                    navController.navigate(Ruta.Login.ruta) {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
     }
 }
 
@@ -423,5 +442,6 @@ private fun rutaDeInicio(usuario: Usuario?): String = when {
     usuario == null -> Ruta.Login.ruta                       // sin sesión -> login
     usuario.rolId == Rol.ID_TECNICO -> Ruta.InicioTecnico.ruta
     usuario.rolId == Rol.ID_ADMINISTRADOR -> Ruta.InicioAdministrador.ruta
+    usuario.rolId == Rol.ID_SUPERVISOR -> Ruta.InicioSupervisor.ruta
     else -> Ruta.InicioCliente.ruta
 }

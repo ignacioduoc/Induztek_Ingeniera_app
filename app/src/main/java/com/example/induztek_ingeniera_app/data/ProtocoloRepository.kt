@@ -196,6 +196,10 @@ class ProtocoloRepository(
         return equipoDao.actualizarEquipo(equipo) > 0
     }
 
+    suspend fun asignarTecnicoAEquipo(idEquipo: Long, idTecnico: Long?) {
+        equipoDao.asignarTecnico(idEquipo, idTecnico)
+    }
+
     suspend fun existeCodigoEquipo(codigo: String, idExcluir: Long = 0): Boolean {
         return equipoDao.contarPorCodigo(codigo.trim(), idExcluir) > 0
     }
@@ -287,6 +291,7 @@ class ProtocoloRepository(
             Rol.ID_TECNICO -> "Técnico"
             Rol.ID_CLIENTE -> "Cliente"
             Rol.ID_ADMINISTRADOR -> "Administrador"
+            Rol.ID_SUPERVISOR -> "Supervisor"
             else -> "Usuario"
         }
         val empresaVinculada = this.idEmpresa?.let { equipoDao.buscarEmpresaPorId(it) }
@@ -305,5 +310,6 @@ class ProtocoloRepository(
             direccionEmpresa = empresaVinculada?.direccion ?: "",
             tienePreguntaSeguridad = this.preguntaSeguridad.isNotBlank()
         )
+
     }
 }

@@ -13,6 +13,8 @@ sealed class Ruta(val ruta: String) {
     data object InicioCliente : Ruta("inicio_cliente")
     data object InicioAdministrador : Ruta("inicio_administrador")
 
+    data object InicioSupervisor : Ruta("inicio_supervisor")
+
     // Gestión del administrador (una opción del menú por cada una)
     data object AdminUsuarios : Ruta("admin_usuarios")
     data object AdminUsuarioForm : Ruta("admin_usuario_form")      // crear y editar usuario

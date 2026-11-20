@@ -19,12 +19,18 @@ import androidx.room.PrimaryKey
             entity = EmpresaEntity::class,
             parentColumns = ["id_empresa"],
             childColumns = ["id_empresa"]
+        ),
+        ForeignKey(
+            entity = UsuarioEntity::class,
+            parentColumns = ["id_usuario"],
+            childColumns = ["id_tecnico"]
         )
     ],
     indices = [
         Index(value = ["codigo"], unique = true),
         Index(value = ["id_cliente"]),
-        Index(value = ["id_empresa"])
+        Index(value = ["id_empresa"]),
+        Index(value = ["id_tecnico"])
     ]
 )
 data class EquipoEntity(
@@ -37,14 +43,15 @@ data class EquipoEntity(
     val latitud: Double = 0.0,
     val longitud: Double = 0.0,
     val id_cliente: Long,
-    val id_empresa: Long? = null
+    val id_empresa: Long? = null,
+    val id_tecnico: Long? = null
 )
 
-// Equipo + su empresa + la dirección de la empresa + el nombre del cliente dueño
+// Equipo + su empresa + la dirección de la empresa + el nombre del cliente dueño + técnico asignado
 data class EquipoConDetalles(
     @Embedded val equipo: EquipoEntity,
-
     @ColumnInfo(name = "nombre_empresa") val nombreEmpresa: String,
     @ColumnInfo(name = "direccion_empresa") val direccionEmpresa: String,
-    @ColumnInfo(name = "nombre_cliente") val nombreCliente: String
+    @ColumnInfo(name = "nombre_cliente") val nombreCliente: String,
+    @ColumnInfo(name = "nombre_tecnico") val nombreTecnico: String = ""
 )

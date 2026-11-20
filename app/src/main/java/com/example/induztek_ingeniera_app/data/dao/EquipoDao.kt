@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface EquipoDao {
 
-    // IGNORE: si el código ya existe no pisa el equipo de otro (ni rompe los protocolos), devuelve -1
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertarEquipos(equipos: List<EquipoEntity>)
 
@@ -23,15 +22,16 @@ interface EquipoDao {
     @Update
     suspend fun actualizarEquipo(equipo: EquipoEntity): Int
 
-    // LEFT JOIN: no se pierde un equipo aunque todavía no tenga empresa asignada
     @Query("""
         SELECT e.*,
                COALESCE(emp.nombre, '') AS nombre_empresa,
                COALESCE(emp.direccion, '') AS direccion_empresa,
-               TRIM(COALESCE(cli.nombre, '') || ' ' || COALESCE(cli.apellido, '')) AS nombre_cliente
+               TRIM(COALESCE(cli.nombre, '') || ' ' || COALESCE(cli.apellido, '')) AS nombre_cliente,
+               TRIM(COALESCE(tec.nombre, '') || ' ' || COALESCE(tec.apellido, '')) AS nombre_tecnico
         FROM equipos e
         LEFT JOIN empresas emp ON e.id_empresa = emp.id_empresa
         LEFT JOIN usuarios cli ON e.id_cliente = cli.id_usuario
+        LEFT JOIN usuarios tec ON e.id_tecnico = tec.id_usuario
         ORDER BY e.id_equipo ASC
     """)
     fun obtenerTodos(): Flow<List<EquipoConDetalles>>
@@ -40,10 +40,12 @@ interface EquipoDao {
         SELECT e.*,
                COALESCE(emp.nombre, '') AS nombre_empresa,
                COALESCE(emp.direccion, '') AS direccion_empresa,
-               TRIM(COALESCE(cli.nombre, '') || ' ' || COALESCE(cli.apellido, '')) AS nombre_cliente
+               TRIM(COALESCE(cli.nombre, '') || ' ' || COALESCE(cli.apellido, '')) AS nombre_cliente,
+               TRIM(COALESCE(tec.nombre, '') || ' ' || COALESCE(tec.apellido, '')) AS nombre_tecnico
         FROM equipos e
         LEFT JOIN empresas emp ON e.id_empresa = emp.id_empresa
         LEFT JOIN usuarios cli ON e.id_cliente = cli.id_usuario
+        LEFT JOIN usuarios tec ON e.id_tecnico = tec.id_usuario
         WHERE e.id_cliente = :idCliente
         ORDER BY e.id_equipo ASC
     """)
@@ -55,11 +57,13 @@ interface EquipoDao {
     @Query("UPDATE equipos SET direccion = :direccion, latitud = :lat, longitud = :lng WHERE id_equipo = :idEquipo")
     suspend fun actualizarUbicacion(idEquipo: Long, direccion: String, lat: Double, lng: Double)
 
-    // Validar código repetido. Al crear se pasa idExcluir = 0; al editar, el id del equipo
+    @Query("UPDATE equipos SET id_tecnico = :idTecnico WHERE id_equipo = :idEquipo")
+    suspend fun asignarTecnico(idEquipo: Long, idTecnico: Long?)
+
     @Query("SELECT COUNT(*) FROM equipos WHERE LOWER(codigo) = LOWER(:codigo) AND id_equipo != :idExcluir")
     suspend fun contarPorCodigo(codigo: String, idExcluir: Long): Int
 
-    // ---------- Empresas (el equipo pertenece a una empresa, por eso van en este DAO) ----------
+    // ---------- Empresas ----------
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertarEmpresa(empresa: EmpresaEntity): Long

@@ -57,6 +57,7 @@ class AdminUsuariosViewModel(private val repository: ProtocoloRepository) : View
         Rol.ID_TECNICO -> "Técnico"
         Rol.ID_CLIENTE -> "Cliente"
         Rol.ID_ADMINISTRADOR -> "Administrador"
+        Rol.ID_SUPERVISOR -> "Supervisor"
         else -> "Usuario"
     }
 

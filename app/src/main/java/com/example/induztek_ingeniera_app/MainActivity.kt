@@ -17,6 +17,7 @@ import com.example.induztek_ingeniera_app.viewmodel.LoginViewModel
 import com.example.induztek_ingeniera_app.viewmodel.PerfilViewModel
 import com.example.induztek_ingeniera_app.viewmodel.ProtocolosViewModel
 import com.example.induztek_ingeniera_app.viewmodel.RestablecerContrasenaViewModel
+import com.example.induztek_ingeniera_app.viewmodel.SupervisorViewModel
 
 
 class MainActivity : ComponentActivity() {
@@ -57,6 +58,9 @@ class MainActivity : ComponentActivity() {
                     modelClass.isAssignableFrom(PerfilViewModel::class.java) ->
                         PerfilViewModel(repository) as T
 
+                    modelClass.isAssignableFrom(SupervisorViewModel::class.java) ->
+                        SupervisorViewModel(repository) as T
+
                     else -> throw IllegalArgumentException("ViewModel desconocido: ${modelClass.name}")
                 }
             }
@@ -72,6 +76,7 @@ class MainActivity : ComponentActivity() {
                 val adminEmpresasViewModel: AdminEmpresasViewModel = viewModel(factory = viewModelFactory)
                 val adminEquiposViewModel: AdminEquiposViewModel = viewModel(factory = viewModelFactory)
                 val perfilViewModel: PerfilViewModel = viewModel(factory = viewModelFactory)
+                val supervisorViewModel: SupervisorViewModel = viewModel(factory = viewModelFactory)
 
 
                 AppNavegacion(
@@ -81,6 +86,7 @@ class MainActivity : ComponentActivity() {
                     adminUsuariosViewModel = adminUsuariosViewModel,
                     adminEmpresasViewModel = adminEmpresasViewModel,
                     adminEquiposViewModel = adminEquiposViewModel,
+                    supervisorViewModel = supervisorViewModel,
                     perfilViewModel = perfilViewModel
                 )
             }

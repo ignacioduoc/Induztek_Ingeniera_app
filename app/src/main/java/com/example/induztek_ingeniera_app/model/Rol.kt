@@ -8,5 +8,6 @@ data class Rol(
         const val ID_TECNICO = 1L
         const val ID_CLIENTE = 2L
         const val ID_ADMINISTRADOR = 3L
+        const val ID_SUPERVISOR = 4L
     }
 }

@@ -48,7 +48,8 @@ import com.example.induztek_ingeniera_app.viewmodel.LoginViewModel
 @Composable
 fun LoginScreen(
     onLoginExitoso: (Usuario) -> Unit,
-    onOlvideContrasena: () -> Unit,          // NUEVO: abre "Restablecer contraseña"
+    onOlvideContrasena: () -> Unit,
+    onRegistrarseCliente: () -> Unit = {},
     viewModel: LoginViewModel
 ) {
 
@@ -62,14 +63,14 @@ fun LoginScreen(
         }
     }
 
-    // 3. El contenido solo dibuja (sirve para las vistas previas)
     LoginContent(
         uiState = uiState,
         onCorreoCambia = viewModel::onCorreoCambia,
         onContrasenaCambia = viewModel::onContrasenaCambia,
         onAlternarVisibilidad = viewModel::onAlternarVisibilidad,
         onIngresar = { viewModel.onIngresar() },
-        onOlvideContrasena = onOlvideContrasena
+        onOlvideContrasena = onOlvideContrasena,
+        onRegistrarseCliente = onRegistrarseCliente
     )
 }
 
@@ -80,7 +81,8 @@ fun LoginContent(
     onContrasenaCambia: (String) -> Unit,
     onAlternarVisibilidad: () -> Unit,
     onIngresar: () -> Unit,
-    onOlvideContrasena: () -> Unit
+    onOlvideContrasena: () -> Unit,
+    onRegistrarseCliente: () -> Unit = {}
 ) {
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { innerPadding ->
         Column(
@@ -127,7 +129,6 @@ fun LoginContent(
                 error = uiState.errorContrasena
             )
 
-            // Error de la BD: los campos están bien escritos, pero no existe ese usuario
             uiState.errorCredenciales?.let { mensaje ->
                 Text(
                     text = mensaje,
@@ -142,11 +143,24 @@ fun LoginContent(
                 modifier = Modifier.fillMaxWidth()
             )
 
-
             TextButton(onClick = onOlvideContrasena) {
                 Text(stringResource(R.string.btn_olvide_contrasena))
             }
 
+            // --- NUEVO BLOQUE DE REGISTRO ---
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "¿No tienes cuenta de cliente?",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                TextButton(onClick = onRegistrarseCliente) {
+                    Text("Regístrate aquí")
+                }
+            }
+            // ------------------------------------------
 
             if (uiState.usuarioIngresado != null) {
                 MensajeBienvenida(nombre = uiState.usuarioIngresado.nombre)

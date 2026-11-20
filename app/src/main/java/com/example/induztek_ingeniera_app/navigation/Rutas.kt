@@ -46,4 +46,6 @@ sealed class Ruta(val ruta: String) {
         fun crear(codigo: String, instalacion: String, lat: Double, lng: Double) =
             "mapa/${Uri.encode(codigo)}/${Uri.encode(instalacion)}/$lat/$lng"
     }
+
+    data object RegistroCliente : Ruta("registro_cliente") //registrarse como usuario cliente
 }

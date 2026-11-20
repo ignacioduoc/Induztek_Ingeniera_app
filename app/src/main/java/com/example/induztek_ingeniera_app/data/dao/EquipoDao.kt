@@ -51,6 +51,21 @@ interface EquipoDao {
     """)
     fun obtenerEquiposPorCliente(idCliente: Long): Flow<List<EquipoConDetalles>>
 
+    @Query("""
+        SELECT e.*,
+               COALESCE(emp.nombre, '') AS nombre_empresa,
+               COALESCE(emp.direccion, '') AS direccion_empresa,
+               TRIM(COALESCE(cli.nombre, '') || ' ' || COALESCE(cli.apellido, '')) AS nombre_cliente,
+               TRIM(COALESCE(tec.nombre, '') || ' ' || COALESCE(tec.apellido, '')) AS nombre_tecnico
+        FROM equipos e
+        LEFT JOIN empresas emp ON e.id_empresa = emp.id_empresa
+        LEFT JOIN usuarios cli ON e.id_cliente = cli.id_usuario
+        LEFT JOIN usuarios tec ON e.id_tecnico = tec.id_usuario
+        WHERE e.id_tecnico = :idTecnico
+        ORDER BY e.id_equipo ASC
+    """)
+    fun obtenerEquiposPorTecnico(idTecnico: Long): Flow<List<EquipoConDetalles>>
+
     @Query("SELECT * FROM equipos WHERE id_equipo = :idEquipo LIMIT 1")
     fun buscarEquipoPorId(idEquipo: Long): Flow<EquipoEntity?>
 

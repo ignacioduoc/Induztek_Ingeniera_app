@@ -168,6 +168,10 @@ class ProtocoloRepository(
         }
     }
 
+    fun obtenerEquiposPorTecnico(idTecnico: Long): Flow<List<EquipoConDetalles>> {
+        return equipoDao.obtenerEquiposPorTecnico(idTecnico)
+    }
+
     fun buscarEquipoPorId(idEquipo: Long): Flow<EquipoEntity?> {
         return equipoDao.buscarEquipoPorId(idEquipo)
     }

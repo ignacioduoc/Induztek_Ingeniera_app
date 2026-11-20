@@ -50,7 +50,7 @@ fun AdminUsuarioFormScreen(
     // Cuando el ViewModel avisa que se guardó: mensaje, se limpia la señal y se vuelve a la lista
     LaunchedEffect(f.guardado) {
         if (f.guardado) {
-            Toast.makeText(context, context.getString(R.string.usuario_guardado), Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Usuario guardado correctamente", Toast.LENGTH_SHORT).show()
             viewModel.limpiarGuardado()
             onVolver()
         }
@@ -132,8 +132,8 @@ fun AdminUsuarioFormScreen(
                     tipoTeclado = KeyboardType.Email
                 )
 
-                // Rol: se elige solo al crear. Al editar queda fijo (así nadie se quita el rol de administrador por error)
-                if (f.esEdicion) {
+                // Si es Administrador queda fijo para evitar quitarse el rol por error; en otros casos se puede elegir o cambiar a Supervisor
+                if (f.esEdicion && f.idRol == Rol.ID_ADMINISTRADOR) {
                     Text(
                         text = stringResource(R.string.rol_fijo, nombreDeRol(f.idRol)),
                         style = MaterialTheme.typography.bodyMedium
@@ -141,7 +141,7 @@ fun AdminUsuarioFormScreen(
                 } else {
                     Text(stringResource(R.string.etiqueta_rol), style = MaterialTheme.typography.labelLarge)
                     GrupoRadio(
-                        opciones = listOf(Rol.ID_TECNICO, Rol.ID_CLIENTE),
+                        opciones = listOf(Rol.ID_TECNICO, Rol.ID_CLIENTE, Rol.ID_SUPERVISOR),
                         seleccionada = f.idRol,
                         onSeleccionar = viewModel::onRolCambia,
                         textoDe = { nombreDeRol(it) }
@@ -198,6 +198,7 @@ fun AdminUsuarioFormScreen(
 private fun nombreDeRol(idRol: Long): String = when (idRol) {
     Rol.ID_TECNICO -> "Técnico"
     Rol.ID_CLIENTE -> "Cliente"
+    Rol.ID_SUPERVISOR -> "Supervisor"
     Rol.ID_ADMINISTRADOR -> "Administrador"
     else -> "Usuario"
 }

@@ -53,12 +53,12 @@ import com.example.induztek_ingeniera_app.viewmodel.SupervisorViewModel
 fun AppNavegacion(
     loginViewModel: LoginViewModel,
     protocolosViewModel: ProtocolosViewModel,
-    restablecerViewModel: RestablecerContrasenaViewModel,    // NUEVO (Paso 16)
-    adminUsuariosViewModel: AdminUsuariosViewModel,         // Tarea 3: gestión de usuarios
-    adminEmpresasViewModel: AdminEmpresasViewModel,         // Tarea 3: gestión de empresas
-    adminEquiposViewModel: AdminEquiposViewModel,           // Tarea 3: gestión de equipos
+    restablecerViewModel: RestablecerContrasenaViewModel,
+    adminUsuariosViewModel: AdminUsuariosViewModel,
+    adminEmpresasViewModel: AdminEmpresasViewModel,
+    adminEquiposViewModel: AdminEquiposViewModel,
     supervisorViewModel: SupervisorViewModel,
-    perfilViewModel: PerfilViewModel                        // Tarea 6: edición de perfil (todos los roles)
+    perfilViewModel: PerfilViewModel
 ) {
     val navController = rememberNavController()
 
@@ -79,22 +79,17 @@ fun AppNavegacion(
             LoginScreen(
                 viewModel = loginViewModel,
                 onLoginExitoso = { usuario ->
-
                     protocolosViewModel.registrarIngreso(usuario)
-                    // Cuenta nueva o reiniciada (sin pregunta de seguridad): primero debe configurarla
                     val destino =
                         if (usuario.tienePreguntaSeguridad) rutaDeInicio(usuario) else Ruta.ConfigurarCuenta.ruta
                     navController.navigate(destino) {
-
                         popUpTo(Ruta.Login.ruta) { inclusive = true }
                     }
                 },
-
                 onOlvideContrasena = {
                     restablecerViewModel.limpiar()
                     navController.navigate(Ruta.RestablecerContrasena.ruta)
                 },
-
                 onRegistrarseCliente = {
                     loginViewModel.limpiarRegistro()
                     navController.navigate(Ruta.RegistroCliente.ruta)
@@ -144,13 +139,9 @@ fun AppNavegacion(
                 equipos = equipos,
                 onAgregarEquipo = { navController.navigate(Ruta.AgregarEquipo.ruta) },
                 onIrEmpresas = { navController.navigate(Ruta.EmpresasConsulta.ruta) },
-
                 onEditarPerfil = { navController.navigate(Ruta.Perfil.ruta) },
-
                 onNuevaPrueba = { idEquipo -> navController.navigate(Ruta.NuevoProtocolo.crear(idEquipo)) },
-
                 onVerHistorial = { idEquipo -> navController.navigate(Ruta.Historial.crear(idEquipo)) },
-
                 onGuardarUbicacion = { idEquipo, direccion, lat, lng ->
                     protocolosViewModel.actualizarUbicacionEquipo(idEquipo, direccion, lat, lng)
                 },
@@ -158,13 +149,12 @@ fun AppNavegacion(
                     protocolosViewModel.cerrarSesion()
                     loginViewModel.cerrarSesion()
                     navController.navigate(Ruta.Login.ruta) {
-                        popUpTo(0) { inclusive = true }       // borra TODO el historial
+                        popUpTo(0) { inclusive = true }
                         launchSingleTop = true
                     }
                 }
             )
         }
-
 
         composable(Ruta.AgregarEquipo.ruta) {
             AgregarEquipoScreen(
@@ -178,7 +168,6 @@ fun AppNavegacion(
             )
         }
 
-
         composable(
             route = Ruta.NuevoProtocolo.ruta,
             arguments = listOf(navArgument("idEquipo") { type = NavType.LongType })
@@ -188,11 +177,10 @@ fun AppNavegacion(
             val tecnico = usuarioActual
 
             if (equipo != null && tecnico != null) {
-
                 NuevoProtocoloScreen(
                     equipo = equipo,
                     tecnicoId = tecnico.id,
-                    onGuardar = { protocolo -> protocolosViewModel.guardarProtocolo(protocolo) },  // INSERT
+                    onGuardar = { protocolo -> protocolosViewModel.guardarProtocolo(protocolo) },
                     onVolver = { navController.navigateUp() }
                 )
             }
@@ -214,29 +202,33 @@ fun AppNavegacion(
                         launchSingleTop = true
                     }
                 },
-
-                onVerProtocolo = { idProtocolo -> navController.navigate(Ruta.DetalleProtocolo.crear(idProtocolo)) }
+                onVerProtocolo = { idProtocolo -> navController.navigate(Ruta.DetalleProtocolo.crear(idProtocolo)) },
+                onSolicitarEquipo = { codigo, tipo, instalacion, direccion, onResultado ->
+                    protocolosViewModel.solicitarEquipoCliente(codigo, tipo, instalacion, direccion, onResultado)
+                }
             )
         }
-
 
         // ---- Cliente: "Mis equipos" ----
         composable(Ruta.MisEquipos.ruta) {
             MisEquiposScreen(
-                equipos = equipos,                       // para el cliente, solo los equipos que le pertenecen
+                equipos = equipos,
                 protocolos = protocolos,
                 onVerUltimaPrueba = { idEquipo ->
-                    // Reutiliza el detalle de protocolo: abre la prueba más reciente del equipo
                     val ultima = protocolos.filter { it.equipoId == idEquipo }.maxByOrNull { it.fechaHora }
                     navController.navigate(
                         if (ultima != null) Ruta.DetalleProtocolo.crear(ultima.id)
-                        else Ruta.Historial.crear(idEquipo)       // sin pruebas todavía: historial
+                        else Ruta.Historial.crear(idEquipo)
                     )
                 },
                 onVerHistorial = { idEquipo -> navController.navigate(Ruta.Historial.crear(idEquipo)) },
+                onSolicitarEquipo = { codigo, tipo, instalacion, direccion, onResultado ->
+                    protocolosViewModel.solicitarEquipoCliente(codigo, tipo, instalacion, direccion, onResultado)
+                },
                 onVolver = { navController.navigateUp() }
             )
         }
+
         // ---- Empresas en modo consulta: técnico ve todas, cliente solo la suya ----
         composable(Ruta.EmpresasConsulta.ruta) {
             val esCliente = usuarioActual?.rolId == Rol.ID_CLIENTE
@@ -250,8 +242,7 @@ fun AppNavegacion(
             )
         }
 
-
-        // ---- Administrador (Tarea 3) ----
+        // ---- Administrador ----
         composable(Ruta.InicioAdministrador.ruta) {
             InicioAdministradorScreen(
                 usuario = usuarioActual,
@@ -274,11 +265,11 @@ fun AppNavegacion(
             AdminUsuariosScreen(
                 usuarios = usuariosAdmin,
                 onNuevoUsuario = {
-                    adminUsuariosViewModel.abrirFormulario(0)             // 0 = formulario vacío
+                    adminUsuariosViewModel.abrirFormulario(0)
                     navController.navigate(Ruta.AdminUsuarioForm.ruta)
                 },
                 onEditarUsuario = { idUsuario ->
-                    adminUsuariosViewModel.abrirFormulario(idUsuario)     // carga los datos del usuario
+                    adminUsuariosViewModel.abrirFormulario(idUsuario)
                     navController.navigate(Ruta.AdminUsuarioForm.ruta)
                 },
                 onVolver = { navController.navigateUp() }
@@ -296,11 +287,11 @@ fun AppNavegacion(
             AdminEmpresasScreen(
                 empresas = empresasAdmin,
                 onNuevaEmpresa = {
-                    adminEmpresasViewModel.abrirFormulario(0)             // 0 = formulario vacío
+                    adminEmpresasViewModel.abrirFormulario(0)
                     navController.navigate(Ruta.AdminEmpresaForm.ruta)
                 },
                 onEditarEmpresa = { idEmpresa ->
-                    adminEmpresasViewModel.abrirFormulario(idEmpresa)     // carga los datos de la empresa
+                    adminEmpresasViewModel.abrirFormulario(idEmpresa)
                     navController.navigate(Ruta.AdminEmpresaForm.ruta)
                 },
                 onVolver = { navController.navigateUp() }
@@ -318,11 +309,11 @@ fun AppNavegacion(
             AdminEquiposScreen(
                 equipos = equiposAdmin,
                 onNuevoEquipo = {
-                    adminEquiposViewModel.abrirFormulario(0)              // 0 = formulario vacío
+                    adminEquiposViewModel.abrirFormulario(0)
                     navController.navigate(Ruta.AdminEquipoForm.ruta)
                 },
                 onEditarEquipo = { idEquipo ->
-                    adminEquiposViewModel.abrirFormulario(idEquipo)       // carga los datos del equipo
+                    adminEquiposViewModel.abrirFormulario(idEquipo)
                     navController.navigate(Ruta.AdminEquipoForm.ruta)
                 },
                 onVolver = { navController.navigateUp() }
@@ -335,7 +326,6 @@ fun AppNavegacion(
                 onVolver = { navController.navigateUp() }
             )
         }
-
 
         composable(
             route = Ruta.Mapa.ruta,
@@ -360,7 +350,6 @@ fun AppNavegacion(
             )
         }
 
-
         composable(
             route = Ruta.DetalleProtocolo.ruta,
             arguments = listOf(navArgument("idProtocolo") { type = NavType.LongType })
@@ -378,16 +367,14 @@ fun AppNavegacion(
                 DetalleProtocoloScreen(
                     protocolo = protocolo,
                     onFormalizar = {
-                        protocolosViewModel.formalizar(protocolo.id)                 // UPDATE
+                        protocolosViewModel.formalizar(protocolo.id)
                         navController.navigateUp()
                     },
-
                     onVerHistorial = { navController.navigate(Ruta.Historial.crear(protocolo.equipoId)) },
                     onVolver = { navController.navigateUp() }
                 )
             }
         }
-
 
         composable(
             route = Ruta.Historial.ruta,
@@ -395,7 +382,6 @@ fun AppNavegacion(
         ) { entrada ->
             val idEquipo = entrada.arguments?.getLong("idEquipo") ?: 0L
             val equipo = remember(idEquipo) { protocolosViewModel.obtenerEquipo(idEquipo) }
-
 
             val historialFlow = remember(idEquipo) { protocolosViewModel.historialDe(idEquipo) }
             val historial by historialFlow.collectAsStateWithLifecycle()
@@ -408,7 +394,6 @@ fun AppNavegacion(
                 )
             }
         }
-
 
         composable(Ruta.Perfil.ruta) {
             PerfilScreen(
@@ -437,9 +422,8 @@ fun AppNavegacion(
     }
 }
 
-
 private fun rutaDeInicio(usuario: Usuario?): String = when {
-    usuario == null -> Ruta.Login.ruta                       // sin sesión -> login
+    usuario == null -> Ruta.Login.ruta
     usuario.rolId == Rol.ID_TECNICO -> Ruta.InicioTecnico.ruta
     usuario.rolId == Rol.ID_ADMINISTRADOR -> Ruta.InicioAdministrador.ruta
     usuario.rolId == Rol.ID_SUPERVISOR -> Ruta.InicioSupervisor.ruta

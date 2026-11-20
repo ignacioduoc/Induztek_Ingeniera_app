@@ -15,5 +15,6 @@ data class Equipo(
 
     val idEmpresa: Long = 0,
     val direccionEmpresa: String = "",
-    val nombreCliente: String = ""
+    val nombreCliente: String = "",
+    val nombreTecnico: String = ""
 )

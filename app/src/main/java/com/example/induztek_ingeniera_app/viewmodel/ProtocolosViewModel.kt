@@ -38,10 +38,10 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
     val equipos: StateFlow<List<Equipo>> = _usuarioActual
         .flatMapLatest { usuario ->
             when (usuario?.rolId) {
-                1L -> repository.obtenerTodosLosEquipos().map { lista ->
+                Rol.ID_TECNICO -> repository.obtenerEquiposPorTecnico(usuario.id).map { lista ->
                     lista.map { it.toDomainModel() }
                 }
-                2L -> repository.obtenerEquiposPorCliente(usuario.id).map { lista ->
+                Rol.ID_CLIENTE -> repository.obtenerEquiposPorCliente(usuario.id).map { lista ->
                     lista.map { it.toDomainModel() }
                 }
                 else -> flowOf<List<Equipo>>(emptyList())
@@ -146,7 +146,37 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
                     latitud = latitud,
                     longitud = longitud,
                     id_cliente = idCliente,
-                    id_empresa = idEmpresa
+                    id_empresa = idEmpresa,
+                    id_tecnico = _usuarioActual.value?.id
+                )
+            )
+            onResultado(nuevoId != -1L)
+        }
+    }
+
+    // El cliente solicita inspección de un equipo nuevo (queda sin técnico para que el Supervisor lo asigne)
+    fun solicitarEquipoCliente(
+        codigo: String,
+        tipo: String,
+        instalacion: String,
+        direccion: String,
+        onResultado: (Boolean) -> Unit
+    ) {
+        val cliente = _usuarioActual.value ?: return
+        viewModelScope.launch {
+            if (repository.existeCodigoEquipo(codigo)) {
+                onResultado(false)
+                return@launch
+            }
+            val nuevoId = repository.crearEquipo(
+                EquipoEntity(
+                    codigo = codigo.trim().uppercase(),
+                    tipo = tipo.trim(),
+                    instalacion = instalacion.trim(),
+                    direccion = direccion.trim(),
+                    id_cliente = cliente.id,
+                    id_empresa = cliente.idEmpresa,
+                    id_tecnico = null
                 )
             )
             onResultado(nuevoId != -1L)
@@ -231,7 +261,8 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
             idEmpresa = this.equipo.id_empresa ?: 0L,
             empresaCliente = this.nombreEmpresa,
             direccionEmpresa = this.direccionEmpresa,
-            nombreCliente = this.nombreCliente
+            nombreCliente = this.nombreCliente,
+            nombreTecnico = this.nombreTecnico
         )
     }
 

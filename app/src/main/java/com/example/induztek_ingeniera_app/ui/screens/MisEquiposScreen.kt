@@ -11,23 +11,28 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -44,6 +49,7 @@ import com.example.induztek_ingeniera_app.model.EstadoProtocolo
 import com.example.induztek_ingeniera_app.model.Protocolo
 import com.example.induztek_ingeniera_app.model.Resultado
 import com.example.induztek_ingeniera_app.ui.components.BarraBusquedaFiltro
+import com.example.induztek_ingeniera_app.ui.components.CampoTexto
 import com.example.induztek_ingeniera_app.ui.components.EtiquetaEstado
 import com.example.induztek_ingeniera_app.ui.components.FilaDato
 import com.example.induztek_ingeniera_app.ui.components.GrupoFiltro
@@ -54,23 +60,26 @@ import com.example.induztek_ingeniera_app.ui.theme.Dimens
 import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
 import com.example.induztek_ingeniera_app.ui.utils.abrirEnMapas
 
-
-/**
- * "Mis equipos" del cliente: solo los equipos que le pertenecen.
- * Tocar un equipo abre el detalle de su última prueba; el ícono del mapa muestra dónde está.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MisEquiposScreen(
     equipos: List<Equipo>,
-    protocolos: List<Protocolo> = emptyList(),   // para mostrar estado y técnico de la última prueba
+    protocolos: List<Protocolo> = emptyList(),
     onVerUltimaPrueba: (Long) -> Unit,
     onVerHistorial: (Long) -> Unit,
+    onSolicitarEquipo: ((codigo: String, tipo: String, instalacion: String, direccion: String, onResultado: (Boolean) -> Unit) -> Unit)? = null,
     onVolver: () -> Unit
 ) {
     val context = LocalContext.current
     var consulta by rememberSaveable { mutableStateOf("") }
     var instalacionElegida by rememberSaveable { mutableStateOf<String?>(null) }
+
+    var mostrarDialogoSolicitud by rememberSaveable { mutableStateOf(false) }
+    var codigo by rememberSaveable { mutableStateOf("") }
+    var tipo by rememberSaveable { mutableStateOf("") }
+    var instalacion by rememberSaveable { mutableStateOf("") }
+    var direccionNueva by rememberSaveable { mutableStateOf("") }
+    var errorFormulario by remember { mutableStateOf<String?>(null) }
 
     val instalaciones = equipos.map { it.instalacion }.filter { it.isNotBlank() }.distinct().sorted()
     val equiposFiltrados = equipos.filter { e ->
@@ -99,6 +108,22 @@ fun MisEquiposScreen(
                     navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
+        },
+        floatingActionButton = {
+            if (onSolicitarEquipo != null) {
+                ExtendedFloatingActionButton(
+                    onClick = {
+                        codigo = ""
+                        tipo = ""
+                        instalacion = ""
+                        direccionNueva = ""
+                        errorFormulario = null
+                        mostrarDialogoSolicitud = true
+                    },
+                    icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                    text = { Text("Solicitar equipo") }
+                )
+            }
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
@@ -147,7 +172,6 @@ fun MisEquiposScreen(
                 verticalArrangement = Arrangement.spacedBy(Dimens.espacioChico)
             ) {
                 items(equiposFiltrados, key = { it.id }) { equipo ->
-                    // Última prueba del equipo (la más reciente) para mostrar su estado y técnico
                     val ultima = protocolos.filter { it.equipoId == equipo.id }.maxByOrNull { it.fechaHora }
                     val direccion = equipo.direccion.ifBlank { equipo.direccionEmpresa }
                     TarjetaMiEquipo(
@@ -159,28 +183,85 @@ fun MisEquiposScreen(
                         estado = ultima?.estado,
                         empresa = equipo.empresaCliente,
                         tecnico = ultima?.nombreTecnico.orEmpty(),
-                        onClick = { onVerUltimaPrueba(equipo.id) },     // tarjeta: detalle de su última prueba
+                        onClick = { onVerUltimaPrueba(equipo.id) },
                         onVerMapa = { abrirEnMapas(context, equipo.latitud, equipo.longitud, direccion) },
-                        onVerHistorial = { onVerHistorial(equipo.id) }  // estadísticas: historial
+                        onVerHistorial = { onVerHistorial(equipo.id) }
                     )
                 }
             }
         }
     }
+
+    if (mostrarDialogoSolicitud && onSolicitarEquipo != null) {
+        AlertDialog(
+            onDismissRequest = { mostrarDialogoSolicitud = false },
+            title = { Text("Solicitar inspección de equipo") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    CampoTexto(
+                        valor = codigo,
+                        onValorCambia = { codigo = it; errorFormulario = null },
+                        etiqueta = "Código del equipo (ej. TR-0450)"
+                    )
+                    CampoTexto(
+                        valor = tipo,
+                        onValorCambia = { tipo = it; errorFormulario = null },
+                        etiqueta = "Tipo (ej. Transformador 500 kVA)"
+                    )
+                    CampoTexto(
+                        valor = instalacion,
+                        onValorCambia = { instalacion = it; errorFormulario = null },
+                        etiqueta = "Instalación (ej. Planta Sur · S/E-01)"
+                    )
+                    CampoTexto(
+                        valor = direccionNueva,
+                        onValorCambia = { direccionNueva = it; errorFormulario = null },
+                        etiqueta = "Dirección"
+                    )
+                    errorFormulario?.let {
+                        Text(
+                            text = it,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    if (codigo.isBlank() || tipo.isBlank() || instalacion.isBlank()) {
+                        errorFormulario = "Completa código, tipo e instalación"
+                        return@TextButton
+                    }
+                    onSolicitarEquipo(codigo, tipo, instalacion, direccionNueva) { exito ->
+                        if (exito) {
+                            mostrarDialogoSolicitud = false
+                        } else {
+                            errorFormulario = "Ya existe un equipo con ese código"
+                        }
+                    }
+                }) {
+                    Text("Enviar solicitud")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { mostrarDialogoSolicitud = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
 }
-/**
- * Tarjeta de "Mis equipos", reutilizada en "Mis protocolos" y en el "Historial del equipo".
- * Los datos opcionales (fecha, resultado, estado, técnico, empresa) solo se muestran si existen.
- */
+
 @Composable
 fun TarjetaMiEquipo(
-    titulo: String,                    // "TR-0142 · Transformador 500 kVA"
+    titulo: String,
     instalacion: String,
     direccion: String,
     onVerMapa: () -> Unit,
     modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null,          // null = la tarjeta no es clickeable (ej.: dentro del historial)
-    onVerHistorial: (() -> Unit)? = null,   // null = sin ícono de estadísticas
+    onClick: (() -> Unit)? = null,
+    onVerHistorial: (() -> Unit)? = null,
     fecha: String? = null,
     resultado: Resultado? = null,
     estado: EstadoProtocolo? = null,
@@ -215,7 +296,6 @@ fun TarjetaMiEquipo(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                // Ubicación del equipo en la app de mapas
                 IconButton(onClick = onVerMapa) {
                     Icon(
                         imageVector = Icons.Default.LocationOn,
@@ -223,7 +303,6 @@ fun TarjetaMiEquipo(
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
-                // Estadísticas: historial de pruebas del equipo (solo si se entrega la acción)
                 if (onVerHistorial != null) {
                     IconButton(onClick = onVerHistorial) {
                         Icon(
@@ -235,7 +314,6 @@ fun TarjetaMiEquipo(
                 }
             }
 
-            // Resultado y estado de la última prueba (Aprobado / Formalizado, etc.)
             if (resultado != null && estado != null) {
                 Row(horizontalArrangement = Arrangement.spacedBy(Dimens.espacioChico)) {
                     EtiquetaEstado(texto = resultado.etiqueta, color = colorDe(resultado))
@@ -252,7 +330,6 @@ fun TarjetaMiEquipo(
                     valor = empresa
                 )
             }
-            // "Revisado por: técnico"
             if (tecnico.isNotBlank()) {
                 FilaDato(
                     icono = Icons.Default.Build,
@@ -274,7 +351,6 @@ fun TarjetaMiEquipo(
         Card(modifier = modifier.fillMaxWidth(), colors = colores, elevation = elevacion, content = contenido)
     }
 }
-
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

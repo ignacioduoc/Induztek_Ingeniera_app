@@ -10,10 +10,10 @@ import com.example.induztek_ingeniera_app.data.entities.EquipoEntity
 import com.example.induztek_ingeniera_app.data.entities.ProtocoloConDetalles
 import com.example.induztek_ingeniera_app.data.entities.ProtocoloEntity
 import com.example.induztek_ingeniera_app.data.entities.UsuarioEntity
-import com.example.induztek_ingeniera_app.data.network.EquipoApiDto
-import com.example.induztek_ingeniera_app.data.network.ProtocoloApiDto
-import com.example.induztek_ingeniera_app.data.network.RetrofitClient
-import com.example.induztek_ingeniera_app.data.network.UbicacionRequestDto
+import com.example.induztek_ingeniera_app.data.remote.EquipoApiDto
+import com.example.induztek_ingeniera_app.data.remote.ProtocoloApiDto
+import com.example.induztek_ingeniera_app.data.remote.RetrofitClient
+import com.example.induztek_ingeniera_app.data.remote.UbicacionRequestDto
 import com.example.induztek_ingeniera_app.model.Rol
 import com.example.induztek_ingeniera_app.model.Usuario
 import kotlinx.coroutines.flow.Flow

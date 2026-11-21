@@ -82,14 +82,22 @@ class LoginViewModel(private val repository: ProtocoloRepository) : ViewModel() 
         }
 
         viewModelScope.launch {
-            val usuarioRoom = repository.iniciarSesion(correoLimpio, contrasenaLimpia)
-            if (usuarioRoom != null) {
-                _uiState.update {
-                    it.copy(errorCredenciales = null, usuarioIngresado = usuarioRoom)
+            try {
+                // El Repository pregunta a auth y usuarios (o a Room si no hay conexión)
+                val usuario = repository.iniciarSesion(correoLimpio, contrasenaLimpia)
+                if (usuario != null) {
+                    _uiState.update {
+                        it.copy(errorCredenciales = null, usuarioIngresado = usuario)
+                    }
+                } else {
+                    _uiState.update {
+                        it.copy(errorCredenciales = "Correo o contraseña incorrectos")
+                    }
                 }
-            } else {
+            } catch (e: Exception) {
+                // Error del servidor (por ejemplo, un microservicio apagado)
                 _uiState.update {
-                    it.copy(errorCredenciales = "Correo o contraseña incorrectos")
+                    it.copy(errorCredenciales = e.message ?: "No se pudo iniciar sesión")
                 }
             }
         }

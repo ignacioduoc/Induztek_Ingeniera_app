@@ -147,7 +147,7 @@ class ProtocoloRepository(
     fun obtenerTodosLosEquipos(): Flow<List<EquipoConDetalles>> {
         return equipoDao.obtenerTodos().onStart {
             try {
-                val remotos = RetrofitClient.equiposApi.listarTodos().map { it.toEntity() }
+                val remotos = RetrofitClient.equipoApi.listarTodos().map { it.toEntity() }
                 if (remotos.isNotEmpty()) {
                     equipoDao.insertarEquipos(remotos)
                 }
@@ -160,7 +160,7 @@ class ProtocoloRepository(
     fun obtenerEquiposPorCliente(idCliente: Long): Flow<List<EquipoConDetalles>> {
         return equipoDao.obtenerEquiposPorCliente(idCliente).onStart {
             try {
-                val remotos = RetrofitClient.equiposApi.listarPorCliente(idCliente).map { it.toEntity() }
+                val remotos = RetrofitClient.equipoApi.listarPorCliente(idCliente).map { it.toEntity() }
                 if (remotos.isNotEmpty()) {
                     equipoDao.insertarEquipos(remotos)
                 }
@@ -180,7 +180,7 @@ class ProtocoloRepository(
         val idLocal = equipoDao.insertarEquipo(equipo)
         if (idLocal > 0) {
             try {
-                RetrofitClient.equiposApi.crear(
+                RetrofitClient.equipoApi.crear(
                     EquipoApiDto(
                         codigo = equipo.codigo,
                         tipo = equipo.tipo,
@@ -211,7 +211,7 @@ class ProtocoloRepository(
     suspend fun actualizarUbicacionEquipo(idEquipo: Long, direccion: String, latitud: Double, longitud: Double) {
         equipoDao.actualizarUbicacion(idEquipo, direccion, latitud, longitud)
         try {
-            RetrofitClient.equiposApi.actualizarUbicacion(
+            RetrofitClient.equipoApi.actualizarUbicacion(
                 id = idEquipo,
                 req = UbicacionRequestDto(direccion, latitud, longitud)
             )
@@ -238,7 +238,7 @@ class ProtocoloRepository(
         )
 
         return try {
-            val response = RetrofitClient.protocolosApi.crear(dto)
+            val response = RetrofitClient.protocoloApi.crear(dto)
             if (response.isSuccessful && response.body() != null) {
                 protocoloDao.insertarProtocolo(response.body()!!.toEntity())
             } else {
@@ -252,14 +252,14 @@ class ProtocoloRepository(
     suspend fun formalizarProtocolo(id: Long): Boolean {
         val localOk = protocoloDao.formalizarProtocolo(id) > 0
         try {
-            RetrofitClient.protocolosApi.formalizar(id)
+            RetrofitClient.protocoloApi.formalizar(id)
         } catch (_: Exception) { }
         return localOk
     }
 
     fun listarProtocolosDeCliente(clienteId: Long): Flow<List<ProtocoloConDetalles>> = flow {
         try {
-            val remotos = RetrofitClient.protocolosApi.listarPorCliente(clienteId)
+            val remotos = RetrofitClient.protocoloApi.listarPorCliente(clienteId)
                 .map { it.toConDetalles() }
             emit(remotos)
         } catch (_: Exception) {
@@ -269,7 +269,7 @@ class ProtocoloRepository(
 
     fun listarProtocolosDeEquipo(equipoId: Long): Flow<List<ProtocoloConDetalles>> = flow {
         try {
-            val remotos = RetrofitClient.protocolosApi.listarPorEquipo(equipoId)
+            val remotos = RetrofitClient.protocoloApi.listarPorEquipo(equipoId)
                 .map { it.toConDetalles() }
             emit(remotos)
         } catch (_: Exception) {
@@ -279,7 +279,7 @@ class ProtocoloRepository(
 
     suspend fun buscarProtocoloPorId(id: Long): ProtocoloConDetalles? {
         return try {
-            val response = RetrofitClient.protocolosApi.obtenerPorId(id)
+            val response = RetrofitClient.protocoloApi.obtenerPorId(id)
             if (response.isSuccessful) {
                 response.body()?.toConDetalles()
             } else {

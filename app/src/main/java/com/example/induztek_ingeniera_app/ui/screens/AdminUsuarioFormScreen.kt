@@ -41,13 +41,13 @@ import com.example.induztek_ingeniera_app.viewmodel.AdminUsuariosViewModel
 @Composable
 fun AdminUsuarioFormScreen(
     viewModel: AdminUsuariosViewModel,
+    esSupervisor: Boolean = false,
     onVolver: () -> Unit
 ) {
     val f by viewModel.formulario.collectAsStateWithLifecycle()
     val empresas by viewModel.empresas.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    // Cuando el ViewModel avisa que se guardó: mensaje, se limpia la señal y se vuelve a la lista
     LaunchedEffect(f.guardado) {
         if (f.guardado) {
             Toast.makeText(context, "Usuario guardado correctamente", Toast.LENGTH_SHORT).show()
@@ -107,7 +107,6 @@ fun AdminUsuarioFormScreen(
                 )
                 CampoTexto(
                     valor = f.rut,
-                    // Se aceptan números, K, puntos y guion. Al guardar se deja como 12345678-5
                     onValorCambia = { viewModel.onRutCambia(it.filter { c -> c.isDigit() || c in "kK.-" }.take(12)) },
                     etiqueta = stringResource(R.string.campo_rut),
                     error = f.errorRut
@@ -132,7 +131,6 @@ fun AdminUsuarioFormScreen(
                     tipoTeclado = KeyboardType.Email
                 )
 
-                // Si es Administrador queda fijo para evitar quitarse el rol por error; en otros casos se puede elegir o cambiar a Supervisor
                 if (f.esEdicion && f.idRol == Rol.ID_ADMINISTRADOR) {
                     Text(
                         text = stringResource(R.string.rol_fijo, nombreDeRol(f.idRol)),
@@ -140,8 +138,13 @@ fun AdminUsuarioFormScreen(
                     )
                 } else {
                     Text(stringResource(R.string.etiqueta_rol), style = MaterialTheme.typography.labelLarge)
+                    val rolesPermitidos = if (esSupervisor) {
+                        listOf(Rol.ID_TECNICO, Rol.ID_CLIENTE)
+                    } else {
+                        listOf(Rol.ID_TECNICO, Rol.ID_CLIENTE, Rol.ID_SUPERVISOR)
+                    }
                     GrupoRadio(
-                        opciones = listOf(Rol.ID_TECNICO, Rol.ID_CLIENTE, Rol.ID_SUPERVISOR),
+                        opciones = rolesPermitidos,
                         seleccionada = f.idRol,
                         onSeleccionar = viewModel::onRolCambia,
                         textoDe = { nombreDeRol(it) }
@@ -167,7 +170,6 @@ fun AdminUsuarioFormScreen(
                     onAlternarVisible = viewModel::onAlternarVisibilidad,
                     error = f.errorContrasena
                 )
-                // La pregunta de seguridad la elige el propio usuario al ingresar
                 Text(
                     text = stringResource(R.string.ayuda_pregunta_seguridad),
                     style = MaterialTheme.typography.bodySmall,

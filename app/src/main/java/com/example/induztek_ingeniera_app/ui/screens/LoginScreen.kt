@@ -49,7 +49,6 @@ import com.example.induztek_ingeniera_app.viewmodel.LoginViewModel
 fun LoginScreen(
     onLoginExitoso: (Usuario) -> Unit,
     onOlvideContrasena: () -> Unit,
-    onRegistrarseCliente: () -> Unit = {},
     viewModel: LoginViewModel
 ) {
 
@@ -69,8 +68,7 @@ fun LoginScreen(
         onContrasenaCambia = viewModel::onContrasenaCambia,
         onAlternarVisibilidad = viewModel::onAlternarVisibilidad,
         onIngresar = { viewModel.onIngresar() },
-        onOlvideContrasena = onOlvideContrasena,
-        onRegistrarseCliente = onRegistrarseCliente
+        onOlvideContrasena = onOlvideContrasena
     )
 }
 
@@ -81,8 +79,7 @@ fun LoginContent(
     onContrasenaCambia: (String) -> Unit,
     onAlternarVisibilidad: () -> Unit,
     onIngresar: () -> Unit,
-    onOlvideContrasena: () -> Unit,
-    onRegistrarseCliente: () -> Unit = {}
+    onOlvideContrasena: () -> Unit
 ) {
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { innerPadding ->
         Column(
@@ -146,21 +143,6 @@ fun LoginContent(
             TextButton(onClick = onOlvideContrasena) {
                 Text(stringResource(R.string.btn_olvide_contrasena))
             }
-
-            // --- NUEVO BLOQUE DE REGISTRO ---
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "¿No tienes cuenta de cliente?",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                TextButton(onClick = onRegistrarseCliente) {
-                    Text("Regístrate aquí")
-                }
-            }
-            // ------------------------------------------
 
             if (uiState.usuarioIngresado != null) {
                 MensajeBienvenida(nombre = uiState.usuarioIngresado.nombre)

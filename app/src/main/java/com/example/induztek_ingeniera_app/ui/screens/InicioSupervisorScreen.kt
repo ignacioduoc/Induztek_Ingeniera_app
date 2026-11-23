@@ -47,6 +47,7 @@ import com.example.induztek_ingeniera_app.viewmodel.SupervisorViewModel
 fun InicioSupervisorScreen(
     usuario: Usuario?,
     viewModel: SupervisorViewModel,
+    onIrGestionUsuarios: () -> Unit = {},
     onEditarPerfil: () -> Unit,
     onCerrarSesion: () -> Unit
 ) {
@@ -73,6 +74,7 @@ fun InicioSupervisorScreen(
                     }
                 },
                 actions = {
+                    TextButton(onClick = onIrGestionUsuarios) { Text("Usuarios") }
                     TextButton(onClick = onEditarPerfil) { Text("Perfil") }
                     TextButton(onClick = onCerrarSesion) { Text("Salir") }
                 }
@@ -156,13 +158,20 @@ fun InicioSupervisorScreen(
                     verticalArrangement = Arrangement.spacedBy(Dimens.espacioMedio)
                 ) {
                     BotonPrincipal(
-                        texto = "Crear cuenta de técnico",
+                        texto = "Gestionar cuentas (Técnicos y Clientes)",
+                        onClick = onIrGestionUsuarios,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    OutlinedButton(
                         onClick = {
                             viewModel.limpiarFormularioTecnico()
                             mostrarDialogoNuevoTecnico = true
                         },
                         modifier = Modifier.fillMaxWidth()
-                    )
+                    ) {
+                        Text("Crear cuenta rápida de técnico")
+                    }
 
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),

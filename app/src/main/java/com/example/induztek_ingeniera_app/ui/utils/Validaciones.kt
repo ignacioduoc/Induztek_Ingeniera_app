@@ -4,11 +4,14 @@ package com.example.induztek_ingeniera_app.ui.utils
 // Reglas de validación compartidas (formulario de usuarios; después también el perfil)
 object Validaciones {
 
-    // Preguntas entre las que se elige al crear o editar un usuario
+    // Preguntas entre las que se elige al configurar o editar un usuario
     val PREGUNTAS_SEGURIDAD = listOf(
         "¿Cuál es el nombre de tu primera mascota?",
         "¿En qué ciudad naciste?",
-        "¿Cuál es el nombre de tu primer colegio?"
+        "¿Cuál es el nombre de tu primer colegio?",
+        "¿Cuál es el segundo nombre de tu madre?",
+        "¿Cuál es tu comida favorita?",
+        "¿Cuál fue tu primer trabajo?"
     )
 
     // Equipos: el código siempre empieza con "TR-" y el resto son solo números

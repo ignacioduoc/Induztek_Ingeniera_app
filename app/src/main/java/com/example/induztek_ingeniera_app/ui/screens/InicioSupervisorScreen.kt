@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -32,13 +30,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.induztek_ingeniera_app.data.entities.EquipoConDetalles
 import com.example.induztek_ingeniera_app.model.Usuario
 import com.example.induztek_ingeniera_app.ui.components.BotonPrincipal
-import com.example.induztek_ingeniera_app.ui.components.CampoTexto
 import com.example.induztek_ingeniera_app.ui.theme.Dimens
 import com.example.induztek_ingeniera_app.viewmodel.SupervisorViewModel
 
@@ -53,11 +49,9 @@ fun InicioSupervisorScreen(
 ) {
     val equipos by viewModel.equipos.collectAsStateWithLifecycle()
     val tecnicos by viewModel.tecnicos.collectAsStateWithLifecycle()
-    val formState by viewModel.nuevoTecnicoState.collectAsStateWithLifecycle()
 
     var tabSeleccionada by remember { mutableIntStateOf(0) }
     var equipoAAsignar by remember { mutableStateOf<EquipoConDetalles?>(null) }
-    var mostrarDialogoNuevoTecnico by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -163,16 +157,6 @@ fun InicioSupervisorScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    OutlinedButton(
-                        onClick = {
-                            viewModel.limpiarFormularioTecnico()
-                            mostrarDialogoNuevoTecnico = true
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Crear cuenta rápida de técnico")
-                    }
-
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(Dimens.espacioChico)
@@ -186,7 +170,10 @@ fun InicioSupervisorScreen(
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text("Correo: ${tec.correo}", style = MaterialTheme.typography.bodyMedium)
-                                    Text("RUT: ${tec.rut ?: "N/A"} · Tel: ${tec.telefono.ifBlank { "N/A" }}", style = MaterialTheme.typography.bodySmall)
+                                    Text(
+                                        text = "RUT: ${tec.rut ?: "N/A"} · Tel: ${tec.telefono.ifBlank { "N/A" }}",
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
                                 }
                             }
                         }
@@ -196,7 +183,6 @@ fun InicioSupervisorScreen(
         }
     }
 
-    // Diálogo para asignar/reasignar técnico a una solicitud de equipo
     equipoAAsignar?.let { item ->
         var tecnicoSeleccionadoId by remember(item) { mutableStateOf(item.equipo.id_tecnico) }
 
@@ -233,73 +219,6 @@ fun InicioSupervisorScreen(
             },
             dismissButton = {
                 TextButton(onClick = { equipoAAsignar = null }) {
-                    Text("Cancelar")
-                }
-            }
-        )
-    }
-
-    // Diálogo para crear nueva cuenta de técnico
-    if (mostrarDialogoNuevoTecnico) {
-        AlertDialog(
-            onDismissRequest = { mostrarDialogoNuevoTecnico = false },
-            title = { Text("Nueva cuenta de Técnico") },
-            text = {
-                Column(
-                    modifier = Modifier.verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    CampoTexto(
-                        valor = formState.nombre,
-                        onValorCambia = viewModel::onNombreCambia,
-                        etiqueta = "Nombre",
-                        error = formState.errorNombre
-                    )
-                    CampoTexto(
-                        valor = formState.apellido,
-                        onValorCambia = viewModel::onApellidoCambia,
-                        etiqueta = "Apellido",
-                        error = formState.errorApellido
-                    )
-                    CampoTexto(
-                        valor = formState.rut,
-                        onValorCambia = viewModel::onRutCambia,
-                        etiqueta = "RUT (ej. 12.345.678-9)",
-                        error = formState.errorRut
-                    )
-                    CampoTexto(
-                        valor = formState.telefono,
-                        onValorCambia = viewModel::onTelefonoCambia,
-                        etiqueta = "Teléfono (Ej: 912345678)",
-                        error = formState.errorTelefono,
-                        tipoTeclado = KeyboardType.Phone
-                    )
-                    CampoTexto(
-                        valor = formState.correo,
-                        onValorCambia = viewModel::onCorreoCambia,
-                        etiqueta = "Correo electrónico",
-                        error = formState.errorCorreo,
-                        tipoTeclado = KeyboardType.Email
-                    )
-                    CampoTexto(
-                        valor = formState.contrasena,
-                        onValorCambia = viewModel::onContrasenaCambia,
-                        etiqueta = "Contraseña temporal (mín. 6)",
-                        error = formState.errorContrasena
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.crearCuentaTecnico {
-                        mostrarDialogoNuevoTecnico = false
-                    }
-                }) {
-                    Text("Crear técnico")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { mostrarDialogoNuevoTecnico = false }) {
                     Text("Cancelar")
                 }
             }

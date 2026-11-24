@@ -6,6 +6,7 @@ import com.example.induztek_ingeniera_app.data.ProtocoloRepository
 import com.example.induztek_ingeniera_app.data.entities.EmpresaEntity
 import com.example.induztek_ingeniera_app.model.FormularioEmpresaState
 import com.example.induztek_ingeniera_app.ui.utils.Validaciones
+import com.example.induztek_ingeniera_app.ui.utils.eliminarImagenSiExiste
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -14,24 +15,23 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-
 class AdminEmpresasViewModel(private val repository: ProtocoloRepository) : ViewModel() {
 
     // ---------- Lista ----------
 
-    // Room avisa los cambios: al crear o editar una empresa la lista se actualiza sola
     val empresas: StateFlow<List<EmpresaEntity>> = repository.obtenerEmpresas()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
 
     // ---------- Formulario (crear / editar) ----------
 
     private val _formulario = MutableStateFlow(FormularioEmpresaState())
     val formulario: StateFlow<FormularioEmpresaState> = _formulario.asStateFlow()
 
-    // idEmpresa = 0 -> formulario vacío para crear. Otro id -> carga esa empresa para editarla.
+    private var logoOriginal: String? = null
+
     fun abrirFormulario(idEmpresa: Long) {
         if (idEmpresa == 0L) {
+            logoOriginal = null
             _formulario.value = FormularioEmpresaState()
             return
         }
@@ -39,6 +39,7 @@ class AdminEmpresasViewModel(private val repository: ProtocoloRepository) : View
         viewModelScope.launch {
             val e = repository.buscarEmpresa(idEmpresa)
             if (e != null) {
+                logoOriginal = e.logo
                 _formulario.value = FormularioEmpresaState(
                     idEmpresa = e.idEmpresa,
                     nombre = e.nombre,
@@ -51,10 +52,17 @@ class AdminEmpresasViewModel(private val repository: ProtocoloRepository) : View
         }
     }
 
-    // Cada vez que se escribe en un campo, se borra su error
     fun onNombreCambia(v: String) = _formulario.update { it.copy(nombre = v, errorNombre = null) }
     fun onDireccionCambia(v: String) = _formulario.update { it.copy(direccion = v, errorDireccion = null) }
-    fun onLogoCambia(bytes: ByteArray?) = _formulario.update { it.copy(logo = bytes, errorGeneral = null) }
+
+    fun onLogoCambia(nuevaRuta: String?) {
+        val anteriorEnFormulario = _formulario.value.logo
+        // Si había una imagen temporal distinta a la original de BD, la limpiamos
+        if (anteriorEnFormulario != null && anteriorEnFormulario != logoOriginal && anteriorEnFormulario != nuevaRuta) {
+            eliminarImagenSiExiste(anteriorEnFormulario)
+        }
+        _formulario.update { it.copy(logo = nuevaRuta, errorGeneral = null) }
+    }
 
     fun limpiarGuardado() = _formulario.update { it.copy(guardado = false) }
 
@@ -63,7 +71,6 @@ class AdminEmpresasViewModel(private val repository: ProtocoloRepository) : View
         val nombre = f.nombre.trim()
         val direccion = f.direccion.trim()
 
-        // 1) Validaciones que no necesitan la base de datos
         val errorNombre = when {
             nombre.isBlank() -> "Ingresa el nombre de la empresa"
             !Validaciones.nombreEmpresaValido(nombre) -> "Entre 3 y 60 caracteres (letras, números y . , & -)"
@@ -79,7 +86,6 @@ class AdminEmpresasViewModel(private val repository: ProtocoloRepository) : View
             return
         }
 
-        // 2) Nombre repetido (consulta a la base). Al editar se excluye a la propia empresa.
         _formulario.update { it.copy(guardando = true, errorGeneral = null) }
         viewModelScope.launch {
             if (repository.existeNombreEmpresa(nombre, f.idEmpresa)) {
@@ -89,7 +95,11 @@ class AdminEmpresasViewModel(private val repository: ProtocoloRepository) : View
                 return@launch
             }
 
-            // 3) Guardar
+            // Si se reemplazó o quitó el logo original al editar, borramos el antiguo de disco
+            if (logoOriginal != null && logoOriginal != f.logo) {
+                eliminarImagenSiExiste(logoOriginal)
+            }
+
             val entidad = EmpresaEntity(
                 idEmpresa = f.idEmpresa,
                 nombre = nombre,
@@ -97,6 +107,9 @@ class AdminEmpresasViewModel(private val repository: ProtocoloRepository) : View
                 logo = f.logo
             )
             val exito = if (f.esEdicion) repository.actualizarEmpresa(entidad) else repository.crearEmpresa(entidad) > 0
+            if (exito) {
+                logoOriginal = f.logo
+            }
             _formulario.update {
                 it.copy(
                     guardando = false,

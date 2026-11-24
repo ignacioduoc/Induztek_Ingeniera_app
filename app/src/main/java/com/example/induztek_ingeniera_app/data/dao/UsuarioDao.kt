@@ -30,14 +30,11 @@ interface UsuarioDao {
     @Query("SELECT COUNT(*) FROM usuarios")
     suspend fun obtenerCantidadUsuarios(): Int
 
-
     @Query("UPDATE usuarios SET nombre = :nombre, correo = :correo, foto_perfil = :fotoPerfil WHERE id_usuario = :idUsuario")
-    suspend fun actualizarPerfil(idUsuario: Long, nombre: String, correo: String, fotoPerfil: ByteArray?)
-
+    suspend fun actualizarPerfil(idUsuario: Long, nombre: String, correo: String, fotoPerfil: String?)
 
     @Query("UPDATE usuarios SET contrasena = :nueva WHERE LOWER(correo) = LOWER(:correo)")
     suspend fun actualizarContrasena(correo: String, nueva: String): Int
-
 
     // Validar correo y RUT repetidos. Al crear se pasa idExcluir = 0; al editar, el id del usuario
     @Query("SELECT COUNT(*) FROM usuarios WHERE LOWER(correo) = LOWER(:correo) AND id_usuario != :idExcluir")
@@ -45,7 +42,6 @@ interface UsuarioDao {
 
     @Query("SELECT COUNT(*) FROM usuarios WHERE rut = :rut AND id_usuario != :idExcluir")
     suspend fun contarPorRut(rut: String, idExcluir: Long): Int
-
 
     // Preguntas de seguridad (Tarea 2)
     @Query("SELECT pregunta_seguridad FROM usuarios WHERE LOWER(correo) = LOWER(:correo) LIMIT 1")

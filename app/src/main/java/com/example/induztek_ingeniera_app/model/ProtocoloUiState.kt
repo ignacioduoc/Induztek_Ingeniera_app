@@ -1,6 +1,5 @@
 package com.example.induztek_ingeniera_app.model
 
-
 data class ProtocoloUiState(
     val fechaHora: Long = System.currentTimeMillis(),
 
@@ -15,9 +14,7 @@ data class ProtocoloUiState(
     val resultado: Resultado = Resultado.APROBADO,
     val observaciones: String = "",
 
-
-    val foto: ByteArray? = null,
-
+    val foto: String? = null,
 
     val errorAtBt: String? = null,
     val errorAtTierra: String? = null,

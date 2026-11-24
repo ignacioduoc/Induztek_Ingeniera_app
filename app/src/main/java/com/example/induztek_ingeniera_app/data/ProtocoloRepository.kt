@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onStart
+import java.io.File
 import java.security.MessageDigest
 import java.security.SecureRandom
 
@@ -72,7 +73,7 @@ class ProtocoloRepository(
         return usuarioDao.actualizarContrasena(correo, nueva) > 0
     }
 
-    suspend fun actualizarPerfilUsuario(idUsuario: Long, nombre: String, correo: String, fotoPerfil: ByteArray?) {
+    suspend fun actualizarPerfilUsuario(idUsuario: Long, nombre: String, correo: String, fotoPerfil: String?) {
         usuarioDao.actualizarPerfil(idUsuario, nombre, correo, fotoPerfil)
     }
 
@@ -222,6 +223,9 @@ class ProtocoloRepository(
     // ---------- Protocolos (Sincronizado con ms-protocolos:8084 + Room) ----------
 
     suspend fun insertarProtocolo(protocolo: ProtocoloEntity): Long {
+        val bytesFoto = protocolo.foto
+            ?.let { File(it).takeIf { f -> f.exists() }?.readBytes() }
+
         val dto = ProtocoloApiDto(
             idEquipo = protocolo.idEquipo,
             idTecnico = protocolo.idTecnico,
@@ -234,13 +238,15 @@ class ProtocoloRepository(
             resultado = protocolo.resultado,
             observaciones = protocolo.observaciones,
             estado = protocolo.estado,
-            foto = protocolo.foto?.let { Base64.encodeToString(it, Base64.NO_WRAP) }
+            foto = bytesFoto?.let { Base64.encodeToString(it, Base64.NO_WRAP) }
         )
 
         return try {
             val response = RetrofitClient.protocoloApi.crear(dto)
             if (response.isSuccessful && response.body() != null) {
-                protocoloDao.insertarProtocolo(response.body()!!.toEntity())
+                protocoloDao.insertarProtocolo(
+                    response.body()!!.toEntity().copy(foto = protocolo.foto)
+                )
             } else {
                 protocoloDao.insertarProtocolo(protocolo.copy(sincronizado = false))
             }
@@ -314,6 +320,5 @@ class ProtocoloRepository(
             direccionEmpresa = empresaVinculada?.direccion ?: "",
             tienePreguntaSeguridad = this.preguntaSeguridad.isNotBlank()
         )
-
     }
 }

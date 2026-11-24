@@ -1,21 +1,21 @@
 package com.example.induztek_ingeniera_app.viewmodel
 
+import android.content.Context
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import com.example.induztek_ingeniera_app.data.ConvertidorImagen
 import com.example.induztek_ingeniera_app.model.Protocolo
 import com.example.induztek_ingeniera_app.model.ProtocoloUiState
 import com.example.induztek_ingeniera_app.model.Resultado
+import com.example.induztek_ingeniera_app.ui.utils.eliminarImagenSiExiste
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-
 class NuevoProtocoloViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProtocoloUiState())
-
     val uiState: StateFlow<ProtocoloUiState> = _uiState.asStateFlow()
 
     fun onTipoPruebaSeleccionado(tipo: String) {
@@ -46,20 +46,26 @@ class NuevoProtocoloViewModel : ViewModel() {
         _uiState.update { it.copy(observaciones = valor, errorObservaciones = null) }
     }
 
-
-    fun onFotoTomada(foto: Bitmap) {
-        _uiState.update { it.copy(foto = ConvertidorImagen.aBytes(foto)) }
+    fun onFotoTomada(context: Context, foto: Bitmap) {
+        val rutaAnterior = _uiState.value.foto
+        val nuevaRuta = ConvertidorImagen.guardarBitmapEnCarpeta(
+            context = context,
+            bitmap = foto,
+            prefijo = "proto"
+        )
+        if (nuevaRuta != null) {
+            eliminarImagenSiExiste(rutaAnterior)
+            _uiState.update { it.copy(foto = nuevaRuta) }
+        }
     }
-
 
     fun onGuardar(equipoId: Long, tecnicoId: Long): Protocolo? {
         val estado = _uiState.value
 
-        val errorAtBt = validarMedicion(estado.atBt)                            // MEDICIÓN
-        val errorAtTierra = validarMedicion(estado.atTierra)                    // MEDICIÓN
-        val errorBtTierra = validarMedicion(estado.btTierra)                    // MEDICIÓN
-        val errorIndice = validarMedicion(estado.indicePolarizacion)            // MEDICIÓN
-        // Si el resultado NO es "Aprobado", hay que explicar por qué
+        val errorAtBt = validarMedicion(estado.atBt)
+        val errorAtTierra = validarMedicion(estado.atTierra)
+        val errorBtTierra = validarMedicion(estado.btTierra)
+        val errorIndice = validarMedicion(estado.indicePolarizacion)
         val errorObservaciones =
             if (estado.resultado != Resultado.APROBADO && estado.observaciones.isBlank())
                 "Explica la observación o el motivo del rechazo" else null
@@ -85,16 +91,15 @@ class NuevoProtocoloViewModel : ViewModel() {
             tecnicoId = tecnicoId,
             fechaHora = estado.fechaHora,
             tipoPrueba = estado.tipoPrueba,
-            atBt = aNumero(estado.atBt),                                        // MEDICIÓN
-            atTierra = aNumero(estado.atTierra),                                // MEDICIÓN
-            btTierra = aNumero(estado.btTierra),                                // MEDICIÓN
-            indicePolarizacion = aNumero(estado.indicePolarizacion),            // MEDICIÓN
+            atBt = aNumero(estado.atBt),
+            atTierra = aNumero(estado.atTierra),
+            btTierra = aNumero(estado.btTierra),
+            indicePolarizacion = aNumero(estado.indicePolarizacion),
             resultado = estado.resultado,
             observaciones = estado.observaciones.trim(),
-            foto = estado.foto                                                  // null si no hay foto
+            foto = estado.foto // Ruta String? en /files/imagenes/ (o null si no hay foto)
         )
     }
-
 
     private fun validarMedicion(texto: String): String? {
         val numero = texto.replace(',', '.').toDoubleOrNull()
@@ -105,7 +110,6 @@ class NuevoProtocoloViewModel : ViewModel() {
             else -> null
         }
     }
-
 
     private fun aNumero(texto: String): Double = texto.replace(',', '.').toDouble()
 }

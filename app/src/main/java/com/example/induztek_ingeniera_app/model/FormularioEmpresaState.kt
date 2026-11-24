@@ -1,12 +1,11 @@
 package com.example.induztek_ingeniera_app.model
 
-
 // Todo lo que muestra el formulario de empresa: lo escrito, los errores por campo y el estado de guardado
 data class FormularioEmpresaState(
     val idEmpresa: Long = 0,                    // 0 = empresa nueva; distinto de 0 = editando
     val nombre: String = "",
     val direccion: String = "",
-    val logo: ByteArray? = null,                // opcional
+    val logo: String? = null,                   // ruta del archivo (opcional)
 
     val errorNombre: String? = null,
     val errorDireccion: String? = null,

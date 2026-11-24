@@ -1,6 +1,5 @@
 package com.example.induztek_ingeniera_app.ui.screens
 
-import android.graphics.BitmapFactory
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -42,14 +41,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.induztek_ingeniera_app.R
+import com.example.induztek_ingeniera_app.data.ConvertidorImagen
 import com.example.induztek_ingeniera_app.ui.components.BotonPrincipal
 import com.example.induztek_ingeniera_app.ui.components.BotonSecundario
 import com.example.induztek_ingeniera_app.ui.components.CampoTexto
 import com.example.induztek_ingeniera_app.ui.components.TarjetaSeccion
 import com.example.induztek_ingeniera_app.ui.theme.Dimens
+import com.example.induztek_ingeniera_app.ui.utils.guardarBytesEnCarpetaImagenes
 import com.example.induztek_ingeniera_app.ui.utils.leerImagenComoPng
 import com.example.induztek_ingeniera_app.viewmodel.AdminEmpresasViewModel
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,7 +60,6 @@ fun AdminEmpresaFormScreen(
     val f by viewModel.formulario.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    // Cuando el ViewModel avisa que se guardó: mensaje, se limpia la señal y se vuelve a la lista
     LaunchedEffect(f.guardado) {
         if (f.guardado) {
             Toast.makeText(context, context.getString(R.string.empresa_guardada), Toast.LENGTH_SHORT).show()
@@ -69,14 +68,22 @@ fun AdminEmpresaFormScreen(
         }
     }
 
-    // Galería: se elige la imagen y se deja achicada (PNG) dentro del formulario
+    // Galería: se achica como PNG, se guarda en /files/imagenes/ y se pasa la ruta al ViewModel
     val launcherGaleria = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         if (uri != null) {
             val bytes = leerImagenComoPng(context, uri)
-            if (bytes != null) {
-                viewModel.onLogoCambia(bytes)
+            val ruta = bytes?.let {
+                guardarBytesEnCarpetaImagenes(
+                    context = context,
+                    bytes = it,
+                    prefijo = "logo",
+                    extension = "png"
+                )
+            }
+            if (ruta != null) {
+                viewModel.onLogoCambia(ruta)
             } else {
                 Toast.makeText(context, context.getString(R.string.error_cargar_logo), Toast.LENGTH_SHORT).show()
             }
@@ -84,7 +91,7 @@ fun AdminEmpresaFormScreen(
     }
 
     val bitmapLogo = remember(f.logo) {
-        f.logo?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
+        ConvertidorImagen.desdeRuta(f.logo)
     }
 
     Scaffold(

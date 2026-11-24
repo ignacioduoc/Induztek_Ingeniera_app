@@ -95,16 +95,12 @@ fun NuevoProtocoloScreen(
     viewModel: NuevoProtocoloViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-
     val context = LocalContext.current
-
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val textoCamaraDenegada = stringResource(R.string.permiso_camara_denegado)
     val textoAjustes = stringResource(R.string.btn_ajustes)
-
 
     fun avisarPermisoDenegado(mensaje: String) {
         scope.launch {
@@ -117,42 +113,37 @@ fun NuevoProtocoloScreen(
         }
     }
 
-
     val lanzadorCamara = rememberLauncherForActivityResult(
         ActivityResultContracts.TakePicturePreview()
     ) { foto: Bitmap? ->
-        if (foto != null) viewModel.onFotoTomada(foto)
+        if (foto != null) viewModel.onFotoTomada(context, foto)
     }
-
 
     fun abrirCamara() {
         try {
             lanzadorCamara.launch(null)
-        } catch (e: ActivityNotFoundException) {
+        } catch (_: ActivityNotFoundException) {
         }
     }
-
 
     val pedirPermisoCamara = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { concedido: Boolean ->
-
         if (concedido) abrirCamara() else avisarPermisoDenegado(textoCamaraDenegada)
     }
 
-
     val foto = remember(uiState.foto) {
-        uiState.foto?.let { bytes -> ConvertidorImagen.aBitmap(bytes)?.asImageBitmap() }
+        ConvertidorImagen.desdeRuta(uiState.foto)?.asImageBitmap()
     }
 
     NuevoProtocoloContent(
         equipo = equipo,
         uiState = uiState,
         onTipoPruebaSeleccionado = viewModel::onTipoPruebaSeleccionado,
-        onAtBtCambia = viewModel::onAtBtCambia,                                 // MEDICIÓN
-        onAtTierraCambia = viewModel::onAtTierraCambia,                         // MEDICIÓN
-        onBtTierraCambia = viewModel::onBtTierraCambia,                         // MEDICIÓN
-        onIndicePolarizacionCambia = viewModel::onIndicePolarizacionCambia,     // MEDICIÓN
+        onAtBtCambia = viewModel::onAtBtCambia,
+        onAtTierraCambia = viewModel::onAtTierraCambia,
+        onBtTierraCambia = viewModel::onBtTierraCambia,
+        onIndicePolarizacionCambia = viewModel::onIndicePolarizacionCambia,
         onResultadoSeleccionado = viewModel::onResultadoSeleccionado,
         onObservacionesCambia = viewModel::onObservacionesCambia,
         onGuardar = { viewModel.onGuardar(equipo.id, tecnicoId)?.let { protocolo -> onGuardar(protocolo) } },

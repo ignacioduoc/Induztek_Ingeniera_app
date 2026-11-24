@@ -1,6 +1,5 @@
 package com.example.induztek_ingeniera_app.ui.screens
 
-import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -45,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.induztek_ingeniera_app.R
+import com.example.induztek_ingeniera_app.data.ConvertidorImagen
 import com.example.induztek_ingeniera_app.data.entities.EmpresaEntity
 import com.example.induztek_ingeniera_app.ui.components.BarraBusquedaFiltro
 import com.example.induztek_ingeniera_app.ui.components.FilaDato
@@ -52,7 +52,6 @@ import com.example.induztek_ingeniera_app.ui.components.GrupoFiltro
 import com.example.induztek_ingeniera_app.ui.components.coincideBusqueda
 import com.example.induztek_ingeniera_app.ui.theme.Dimens
 import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
-
 
 /**
  * Empresas en modo consulta (sin crear ni editar).
@@ -151,16 +150,14 @@ fun EmpresasConsultaScreen(
     }
 }
 
-
 // La comuna es lo que va después de la última coma: "Av. Providencia 1234, Providencia" -> "Providencia"
 private fun comunaDe(direccion: String): String? =
     direccion.substringAfterLast(",", "").trim().ifBlank { null }
 
-
 @Composable
 private fun TarjetaEmpresaConsulta(empresa: EmpresaEntity) {
     val bitmapLogo = remember(empresa.logo) {
-        empresa.logo?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
+        ConvertidorImagen.desdeRuta(empresa.logo)
     }
 
     Card(
@@ -214,7 +211,6 @@ private fun TarjetaEmpresaConsulta(empresa: EmpresaEntity) {
         }
     }
 }
-
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

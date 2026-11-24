@@ -10,6 +10,7 @@ import com.example.induztek_ingeniera_app.data.entities.EquipoEntity
 import com.example.induztek_ingeniera_app.data.entities.ProtocoloConDetalles
 import com.example.induztek_ingeniera_app.data.entities.ProtocoloEntity
 import com.example.induztek_ingeniera_app.data.entities.UsuarioEntity
+import com.example.induztek_ingeniera_app.data.remote.EmpresaRequest
 import com.example.induztek_ingeniera_app.data.remote.EquipoApiDto
 import com.example.induztek_ingeniera_app.data.remote.LoginRequest
 import com.example.induztek_ingeniera_app.data.remote.ProtocoloApiDto
@@ -56,6 +57,7 @@ class ProtocoloRepository(
     private val equipoDao: EquipoDao
 ) {
 
+    // JWT de la sesión actual
     var tokenSesion: String? = null
         private set
 
@@ -63,23 +65,15 @@ class ProtocoloRepository(
 
     suspend fun iniciarSesion(correo: String, contrasena: String): Usuario? {
         return try {
-            // 1) auth revisa correo y contraseña y entrega el token
             val login = RetrofitClient.authApi.iniciarSesion(LoginRequest(correo, contrasena))
             tokenSesion = login.token
-
-            // 2) usuarios entrega los datos de la persona
             val usuario = RetrofitClient.usuarioApi.obtener(login.usuarioId)
-
-            // 3) se arma el Usuario de la app
             usuario.aUsuario(correo = correo, cuentaConfigurada = !login.primerIngreso)
-
         } catch (e: HttpException) {
-            // El servidor respondió con error
-            if (e.code() == 401) null                                  // correo o clave incorrectos
-            else throw Exception("Error del servidor (${e.code()})")    // 503: un servicio apagado, etc.
-
+            if (e.code() == 401) null
+            else throw Exception("Error del servidor (${e.code()})")
         } catch (e: IOException) {
-            // Sin conexión con el servidor: respaldo local en Room (modo híbrido)
+            // Sin conexión: respaldo local
             usuarioDao.iniciarSesion(correo, contrasena)?.toDomainModel()
         }
     }
@@ -148,10 +142,24 @@ class ProtocoloRepository(
     }
 
 
-    // ---------- Empresas ----------
+    // ---------- Empresas (ms-empresas + Room) ----------
 
     fun obtenerEmpresas(): Flow<List<EmpresaEntity>> {
-        return equipoDao.obtenerEmpresas()
+        return equipoDao.obtenerEmpresas().onStart {
+            try {
+                RetrofitClient.empresaApi.listar().forEach { remota ->
+                    val local = equipoDao.buscarEmpresaPorId(remota.id)
+                    if (local == null) {
+                        equipoDao.insertarEmpresa(
+                            EmpresaEntity(idEmpresa = remota.id, nombre = remota.nombre, direccion = remota.direccion)
+                        )
+                    } else if (local.nombre != remota.nombre || local.direccion != remota.direccion) {
+                        // El logo solo vive en el teléfono, se conserva
+                        equipoDao.actualizarEmpresa(local.copy(nombre = remota.nombre, direccion = remota.direccion))
+                    }
+                }
+            } catch (_: Exception) { }
+        }
     }
 
     suspend fun buscarEmpresa(idEmpresa: Long): EmpresaEntity? {
@@ -159,17 +167,30 @@ class ProtocoloRepository(
     }
 
     suspend fun crearEmpresa(empresa: EmpresaEntity): Long {
-        return equipoDao.insertarEmpresa(empresa)
+        return try {
+            val creada = RetrofitClient.empresaApi.crear(EmpresaRequest(empresa.nombre, empresa.direccion))
+            equipoDao.insertarEmpresa(empresa.copy(idEmpresa = creada.id))
+        } catch (e: HttpException) {
+            0L
+        } catch (e: IOException) {
+            equipoDao.insertarEmpresa(empresa)
+        }
     }
 
     suspend fun actualizarEmpresa(empresa: EmpresaEntity): Boolean {
-        return equipoDao.actualizarEmpresa(empresa) > 0
+        val localOk = equipoDao.actualizarEmpresa(empresa) > 0
+        try {
+            RetrofitClient.empresaApi.actualizar(empresa.idEmpresa, EmpresaRequest(empresa.nombre, empresa.direccion))
+        } catch (_: Exception) { }
+        return localOk
     }
 
     suspend fun existeNombreEmpresa(nombre: String, idExcluir: Long = 0): Boolean {
         return equipoDao.contarEmpresasPorNombre(nombre.trim(), idExcluir) > 0
     }
 
+
+    // ---------- Equipos (ms-equipos + Room) ----------
 
     fun obtenerTodosLosEquipos(): Flow<List<EquipoConDetalles>> {
         return equipoDao.obtenerTodos().onStart {
@@ -179,7 +200,7 @@ class ProtocoloRepository(
                     equipoDao.insertarEquipos(remotos)
                 }
             } catch (_: Exception) {
-
+                // Sin conexión: Room muestra lo que tiene
             }
         }
     }
@@ -246,6 +267,7 @@ class ProtocoloRepository(
     }
 
 
+    // ---------- Protocolos (ms-protocolos + Room) ----------
 
     suspend fun insertarProtocolo(protocolo: ProtocoloEntity): Long {
         val bytesFoto = protocolo.foto

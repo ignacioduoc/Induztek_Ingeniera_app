@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.Base64
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -78,12 +79,20 @@ fun guardarBytesEnCarpetaImagenes(
 }
 
 /**
- * Carga un Bitmap desde la ruta almacenada en la base de datos.
+ * Carga un Bitmap desde una ruta local o desde Base64 (fotos que vienen del servidor).
  */
 fun cargarBitmapDesdeRuta(ruta: String?): Bitmap? {
     if (ruta.isNullOrBlank()) return null
+
     val archivo = File(ruta)
-    return if (archivo.exists()) BitmapFactory.decodeFile(archivo.absolutePath) else null
+    if (archivo.exists()) return BitmapFactory.decodeFile(archivo.absolutePath)
+
+    return try {
+        val bytes = Base64.decode(ruta, Base64.DEFAULT)
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+    } catch (e: IllegalArgumentException) {
+        null
+    }
 }
 
 /**

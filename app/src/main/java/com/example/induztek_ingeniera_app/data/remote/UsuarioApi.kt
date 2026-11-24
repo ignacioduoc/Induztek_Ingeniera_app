@@ -8,7 +8,7 @@ import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-// Endpoints del microservicio usuarios
+
 interface UsuarioApi {
 
     @GET("api/usuarios")
@@ -23,7 +23,7 @@ interface UsuarioApi {
     @PUT("api/usuarios/{id}")
     suspend fun actualizar(@Path("id") id: Long, @Body datos: ActualizarUsuarioRequest): UsuarioResponse
 
-    // Sin tipo de retorno: el servidor responde 204 No Content
+
     @DELETE("api/usuarios/{id}")
     suspend fun eliminar(@Path("id") id: Long)
 }

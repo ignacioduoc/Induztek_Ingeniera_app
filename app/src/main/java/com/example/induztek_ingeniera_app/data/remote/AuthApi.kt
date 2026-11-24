@@ -4,7 +4,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST
 
-// Endpoints del microservicio auth (login, cuentas y contraseñas)
+
 interface AuthApi {
 
     @POST("api/auth/login")

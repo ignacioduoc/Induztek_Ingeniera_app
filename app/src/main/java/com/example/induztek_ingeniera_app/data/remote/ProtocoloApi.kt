@@ -7,7 +7,6 @@ import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 
-// Endpoints del microservicio de protocolos (tu compañero)
 interface ProtocoloApi {
 
     @GET("api/protocolos")

@@ -35,7 +35,7 @@ data class EquipoApiDto(
     )
 }
 
-// ---------------- protocolos (tu compañero) ----------------
+
 data class ProtocoloApiDto(
     val idProtocolo: Long? = null,
     val idEquipo: Long,
@@ -87,13 +87,13 @@ data class ProtocoloDetalleApiDto(
     )
 }
 
-// ---------------- auth ----------------
+
 data class LoginRequest(
     val correo: String,
     val contrasena: String
 )
 
-// La API devuelve el token JWT, quién es y su rol
+
 data class LoginResponse(
     val token: String,
     val usuarioId: Long,
@@ -101,14 +101,14 @@ data class LoginResponse(
     val primerIngreso: Boolean
 )
 
-// El administrador crea la cuenta (correo + clave inicial) de una persona ya creada en usuarios
+
 data class CredencialRequest(
     val usuarioId: Long,
     val correo: String,
     val contrasena: String
 )
 
-// Configurar cuenta (primer ingreso) o cambiar la clave
+
 data class CambiarContrasenaRequest(
     val correo: String,
     val contrasenaActual: String,
@@ -125,7 +125,7 @@ data class RestablecerRequest(
     val contrasenaNueva: String
 )
 
-// ---------------- usuarios ----------------
+
 data class RegistroRequest(
     val nombre: String,
     val apellido: String,
@@ -144,7 +144,7 @@ data class ActualizarUsuarioRequest(
     val rolId: Long
 )
 
-// La API NUNCA devuelve la contraseña (ni el correo: ese vive en auth)
+
 data class UsuarioResponse(
     val id: Long,
     val nombre: String,
@@ -158,7 +158,7 @@ data class UsuarioResponse(
     val avatarUrl: String?
 )
 
-// ---------------- empresas ----------------
+
 data class EmpresaRequest(
     val nombre: String,
     val direccion: String
@@ -170,11 +170,7 @@ data class EmpresaResponse(
     val direccion: String
 )
 
-// ---------------- conversión a modelo de la app ----------------
-// Igual que aUsuario() del profe: las pantallas siguen usando Usuario
-// y no saben que los datos vienen de una API.
-// El correo no viene en UsuarioResponse (vive en auth), por eso se pasa aparte.
-// cuentaConfigurada = !primerIngreso: si es false, la app lo manda a Configurar cuenta.
+
 fun UsuarioResponse.aUsuario(correo: String = "", cuentaConfigurada: Boolean = true) = Usuario(
     nombre = nombre,
     correo = correo,

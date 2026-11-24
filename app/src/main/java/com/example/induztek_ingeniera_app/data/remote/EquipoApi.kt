@@ -7,7 +7,7 @@ import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 
-// Endpoints del microservicio de equipos (tu compañero)
+
 interface EquipoApi {
 
     @GET("api/equipos")

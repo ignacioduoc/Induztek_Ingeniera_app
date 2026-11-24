@@ -3,7 +3,6 @@ package com.example.induztek_ingeniera_app.ui.screens
 import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
@@ -61,6 +60,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.induztek_ingeniera_app.R
+import com.example.induztek_ingeniera_app.data.ConvertidorImagen
 import com.example.induztek_ingeniera_app.model.Usuario
 import com.example.induztek_ingeniera_app.ui.components.BotonPrincipal
 import com.example.induztek_ingeniera_app.ui.components.CampoContrasena
@@ -70,38 +70,7 @@ import com.example.induztek_ingeniera_app.ui.components.TarjetaSeccion
 import com.example.induztek_ingeniera_app.ui.theme.Dimens
 import com.example.induztek_ingeniera_app.ui.utils.Validaciones
 import com.example.induztek_ingeniera_app.viewmodel.PerfilViewModel
-import java.io.ByteArrayOutputStream
 import java.io.File
-
-
-private fun comprimirYRedimensionarBitmap(bitmapOriginal: Bitmap, maxDim: Int = 512): ByteArray {
-    val width = bitmapOriginal.width
-    val height = bitmapOriginal.height
-    val ratio = width.toFloat() / height.toFloat()
-
-    val newWidth: Int
-    val newHeight: Int
-    if (width > height) {
-        newWidth = maxDim
-        newHeight = (maxDim / ratio).toInt()
-    } else {
-        newHeight = maxDim
-        newWidth = (maxDim * ratio).toInt()
-    }
-
-    val scaledBitmap = Bitmap.createScaledBitmap(bitmapOriginal, newWidth, newHeight, true)
-
-    val softwareBitmap = try {
-        scaledBitmap.copy(Bitmap.Config.ARGB_8888, false) ?: scaledBitmap
-    } catch (e: Exception) {
-        scaledBitmap
-    }
-
-    val stream = ByteArrayOutputStream()
-    softwareBitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream)
-    return stream.toByteArray()
-}
-
 
 /**
  * Perfil de cualquier rol (técnico, cliente o administrador).
@@ -113,28 +82,24 @@ private fun comprimirYRedimensionarBitmap(bitmapOriginal: Bitmap, maxDim: Int = 
 fun PerfilScreen(
     usuario: Usuario?,
     viewModel: PerfilViewModel,
-    onPerfilGuardado: () -> Unit,        // avisa para refrescar el nombre y la foto del inicio
+    onPerfilGuardado: () -> Unit,
     onVolver: () -> Unit
 ) {
     val context = LocalContext.current
     val f by viewModel.formulario.collectAsStateWithLifecycle()
 
-    // Al entrar se cargan los datos del usuario que inició sesión
     LaunchedEffect(usuario?.id) {
         usuario?.let { viewModel.abrirPerfil(it.id) }
     }
 
-    // Foto: se muestra la actual; si elige otra, se guarda al apretar "Guardar cambios"
-    var bitmapFoto by remember(usuario?.id) {
-        mutableStateOf<Bitmap?>(
-            usuario?.fotoPerfil?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
-        )
+    // Foto actual cargada desde la ruta almacenada en Room (o null si no tiene)
+    var bitmapFoto by remember(usuario?.id, usuario?.fotoPerfil) {
+        mutableStateOf<Bitmap?>(ConvertidorImagen.desdeRuta(usuario?.fotoPerfil))
     }
     var fotoCambiada by remember(usuario?.id) { mutableStateOf(false) }
     var mostrarDialogoOrigen by remember { mutableStateOf(false) }
     var photoUriTemp by remember { mutableStateOf<Uri?>(null) }
 
-    // Cuando el ViewModel avisa que se guardó: mensaje, se limpia la señal, se refresca el inicio y se vuelve
     LaunchedEffect(f.guardado) {
         if (f.guardado) {
             Toast.makeText(context, context.getString(R.string.perfil_guardado), Toast.LENGTH_SHORT).show()
@@ -144,12 +109,11 @@ fun PerfilScreen(
         }
     }
 
-    // Crea el archivo temporal donde la cámara deja la foto
     fun crearUriFoto(): Uri? {
         return try {
             val file = File.createTempFile("avatar_capture_", ".jpg", context.cacheDir)
             FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -171,7 +135,7 @@ fun PerfilScreen(
             try {
                 bitmapFoto = cargarBitmap(uri)
                 fotoCambiada = true
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 Toast.makeText(context, context.getString(R.string.error_foto_procesar), Toast.LENGTH_SHORT).show()
             }
         }
@@ -200,7 +164,7 @@ fun PerfilScreen(
             try {
                 bitmapFoto = cargarBitmap(it)
                 fotoCambiada = true
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 Toast.makeText(context, context.getString(R.string.error_foto_cargar), Toast.LENGTH_SHORT).show()
             }
         }
@@ -428,9 +392,19 @@ fun PerfilScreen(
             BotonPrincipal(
                 texto = stringResource(R.string.btn_guardar_cambios),
                 onClick = {
-                    // Solo se envía la foto si eligió una distinta; si no, queda la que tenía
-                    val fotoNueva = if (fotoCambiada) bitmapFoto?.let { comprimirYRedimensionarBitmap(it) } else null
-                    viewModel.onGuardar(fotoNueva)
+                    // Solo se guarda el archivo nuevo si eligió una foto distinta; si no, queda la ruta actual
+                    val rutaFotoNueva = if (fotoCambiada) {
+                        bitmapFoto?.let {
+                            ConvertidorImagen.guardarBitmapEnCarpeta(
+                                context = context,
+                                bitmap = it,
+                                prefijo = "perfil"
+                            )
+                        }
+                    } else {
+                        null
+                    }
+                    viewModel.onGuardar(rutaFotoNueva)
                 },
                 icono = R.drawable.ic_check,
                 habilitado = !f.guardando && !f.cargando,

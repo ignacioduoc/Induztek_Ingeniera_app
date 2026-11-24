@@ -34,7 +34,7 @@ data class UsuarioEntity(
     @ColumnInfo(collate = ColumnInfo.NOCASE) val correo: String,
     val contrasena: String,
     @ColumnInfo(name = "id_rol") val idRol: Long,
-    @ColumnInfo(name = "foto_perfil", typeAffinity = ColumnInfo.BLOB) val fotoPerfil: ByteArray? = null,
+    @ColumnInfo(name = "foto_perfil") val fotoPerfil: String? = null, // Ruta del archivo en /files/imagenes/
     @ColumnInfo(defaultValue = "''") val apellido: String = "",
     val rut: String? = null,
     @ColumnInfo(defaultValue = "''") val telefono: String = "",

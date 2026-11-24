@@ -6,12 +6,12 @@ import com.example.induztek_ingeniera_app.data.ProtocoloRepository
 import com.example.induztek_ingeniera_app.data.hashRespuestaSeguridad
 import com.example.induztek_ingeniera_app.model.FormularioPerfilState
 import com.example.induztek_ingeniera_app.ui.utils.Validaciones
+import com.example.induztek_ingeniera_app.ui.utils.eliminarImagenSiExiste
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
 
 class PerfilViewModel(private val repository: ProtocoloRepository) : ViewModel() {
 
@@ -59,21 +59,18 @@ class PerfilViewModel(private val repository: ProtocoloRepository) : ViewModel()
     fun limpiarGuardado() = _formulario.update { it.copy(guardado = false) }
 
     /**
-     * nuevaFoto: la foto ya comprimida si el usuario eligió una distinta; null = dejar la que tenía.
-     * Nombre, apellido, teléfono y pregunta se guardan siempre. La respuesta y la contraseña
-     * solo se cambian si se escribieron.
+     * nuevaFoto: ruta del archivo guardado en /files/imagenes/ si el usuario eligió una nueva;
+     * null = mantener la foto que tenía.
      */
-    fun onGuardar(nuevaFoto: ByteArray?) {
+    fun onGuardar(nuevaFoto: String?) {
         val f = _formulario.value
 
-        // 1) Validaciones que no necesitan la base de datos
         val errorNombre = if (!Validaciones.nombreValido(f.nombre)) "Usa solo letras (mínimo 2)" else null
         val errorApellido = if (!Validaciones.nombreValido(f.apellido)) "Usa solo letras (mínimo 2)" else null
         val errorTelefono =
             if (!Validaciones.telefonoValido(f.telefono)) "Ingresa 9 dígitos, parte con 9 (Ej: 912345678)" else null
 
         val errorPregunta = if (f.pregunta.isBlank()) "Elige una pregunta de seguridad" else null
-        // Si cambió la pregunta, la respuesta anterior ya no sirve: hay que escribir una nueva
         val preguntaCambio = f.pregunta != f.preguntaOriginal
         val errorRespuesta = when {
             f.respuesta.isBlank() && preguntaCambio -> "Escribe la respuesta de la nueva pregunta"
@@ -81,7 +78,6 @@ class PerfilViewModel(private val repository: ProtocoloRepository) : ViewModel()
             else -> null
         }
 
-        // La contraseña solo se cambia si escribió algo en alguno de los dos campos
         val quiereCambiarContrasena = f.contrasenaActual.isNotBlank() || f.contrasenaNueva.isNotBlank()
         val errorContrasenaActual =
             if (quiereCambiarContrasena && f.contrasenaActual.isBlank()) "Escribe tu contraseña actual" else null
@@ -109,7 +105,6 @@ class PerfilViewModel(private val repository: ProtocoloRepository) : ViewModel()
             return
         }
 
-        // 2) Se lee el usuario guardado: ahí se comprueba la contraseña actual
         _formulario.update { it.copy(guardando = true, errorGeneral = null) }
         viewModelScope.launch {
             val original = repository.buscarUsuarioEntity(f.idUsuario)
@@ -124,13 +119,16 @@ class PerfilViewModel(private val repository: ProtocoloRepository) : ViewModel()
                 return@launch
             }
 
-            // 3) Guardar. El correo, RUT, empresa y rol no se tocan: los cambia el administrador.
+            // Si eligió una foto distinta y tenía una anterior en disco, borramos la antigua
+            if (nuevaFoto != null && original.fotoPerfil != null && nuevaFoto != original.fotoPerfil) {
+                eliminarImagenSiExiste(original.fotoPerfil)
+            }
+
             val actualizado = original.copy(
                 nombre = f.nombre.trim(),
                 apellido = f.apellido.trim(),
                 telefono = "+56" + f.telefono,
                 preguntaSeguridad = f.pregunta,
-                // La respuesta se guarda con hash (nunca en texto plano); si no escribió una nueva, queda la que había
                 respuestaSeguridad = if (f.respuesta.isBlank()) original.respuestaSeguridad
                 else hashRespuestaSeguridad(f.respuesta),
                 contrasena = if (quiereCambiarContrasena) f.contrasenaNueva else original.contrasena,
@@ -141,7 +139,6 @@ class PerfilViewModel(private val repository: ProtocoloRepository) : ViewModel()
                 it.copy(
                     guardando = false,
                     guardado = exito,
-                    // Si se guardó, la contraseña queda vacía para que no se reenvíe
                     contrasenaActual = if (exito) "" else it.contrasenaActual,
                     contrasenaNueva = if (exito) "" else it.contrasenaNueva,
                     errorGeneral = if (exito) null else "No se pudo guardar tu perfil"
@@ -150,11 +147,6 @@ class PerfilViewModel(private val repository: ProtocoloRepository) : ViewModel()
         }
     }
 
-    /**
-     * "Configura tu cuenta" (primer ingreso o cuenta reiniciada por el administrador).
-     * El usuario ya entró con la contraseña temporal, así que no se la pedimos otra vez:
-     * debe escribir una contraseña nueva (distinta de la temporal) y elegir su pregunta de seguridad.
-     */
     fun onConfigurarCuenta() {
         val f = _formulario.value
 
@@ -188,7 +180,6 @@ class PerfilViewModel(private val repository: ProtocoloRepository) : ViewModel()
                 _formulario.update { it.copy(guardando = false, errorGeneral = "No se encontró tu cuenta") }
                 return@launch
             }
-            // La contraseña nueva no puede ser la temporal que entregó el administrador
             if (f.contrasenaNueva == original.contrasena) {
                 _formulario.update {
                     it.copy(guardando = false, errorContrasenaNueva = "Debe ser distinta de la temporal")

@@ -38,7 +38,6 @@ import com.example.induztek_ingeniera_app.ui.screens.MapaTecnicoScreen
 import com.example.induztek_ingeniera_app.ui.screens.MisEquiposScreen
 import com.example.induztek_ingeniera_app.ui.screens.NuevoProtocoloScreen
 import com.example.induztek_ingeniera_app.ui.screens.PerfilScreen
-import com.example.induztek_ingeniera_app.ui.screens.RegistroClienteScreen
 import com.example.induztek_ingeniera_app.ui.screens.RestablecerContrasenaScreen
 import com.example.induztek_ingeniera_app.viewmodel.AdminEmpresasViewModel
 import com.example.induztek_ingeniera_app.viewmodel.AdminEquiposViewModel
@@ -89,18 +88,7 @@ fun AppNavegacion(
                 onOlvideContrasena = {
                     restablecerViewModel.limpiar()
                     navController.navigate(Ruta.RestablecerContrasena.ruta)
-                },
-                onRegistrarseCliente = {
-                    loginViewModel.limpiarRegistro()
-                    navController.navigate(Ruta.RegistroCliente.ruta)
                 }
-            )
-        }
-
-        composable(Ruta.RegistroCliente.ruta) {
-            RegistroClienteScreen(
-                viewModel = loginViewModel,
-                onVolver = { navController.navigateUp() }
             )
         }
 
@@ -262,8 +250,13 @@ fun AppNavegacion(
         }
 
         composable(Ruta.AdminUsuarios.ruta) {
+            val esSupervisor = usuarioActual?.rolId == Rol.ID_SUPERVISOR
             AdminUsuariosScreen(
-                usuarios = usuariosAdmin,
+                usuarios = if (esSupervisor) {
+                    usuariosAdmin.filter { it.rolId == Rol.ID_TECNICO || it.rolId == Rol.ID_CLIENTE }
+                } else {
+                    usuariosAdmin
+                },
                 onNuevoUsuario = {
                     adminUsuariosViewModel.abrirFormulario(0)
                     navController.navigate(Ruta.AdminUsuarioForm.ruta)
@@ -279,6 +272,7 @@ fun AppNavegacion(
         composable(Ruta.AdminUsuarioForm.ruta) {
             AdminUsuarioFormScreen(
                 viewModel = adminUsuariosViewModel,
+                esSupervisor = usuarioActual?.rolId == Rol.ID_SUPERVISOR,
                 onVolver = { navController.navigateUp() }
             )
         }
@@ -408,6 +402,7 @@ fun AppNavegacion(
             InicioSupervisorScreen(
                 usuario = usuarioActual,
                 viewModel = supervisorViewModel,
+                onIrGestionUsuarios = { navController.navigate(Ruta.AdminUsuarios.ruta) },
                 onEditarPerfil = { navController.navigate(Ruta.Perfil.ruta) },
                 onCerrarSesion = {
                     protocolosViewModel.cerrarSesion()

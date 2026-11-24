@@ -1,6 +1,5 @@
 package com.example.induztek_ingeniera_app.model
 
-
 enum class Resultado(val etiqueta: String) {
     APROBADO("Aprobado"),
     CON_OBSERVACION("Con observación"),
@@ -18,7 +17,6 @@ data class Protocolo(
     val fechaHora: Long,
     val tipoPrueba: String,
 
-
     val atBt: Double,
     val atTierra: Double,
     val btTierra: Double,
@@ -28,7 +26,7 @@ data class Protocolo(
     val resultado: Resultado,
     val observaciones: String,
     val estado: EstadoProtocolo = EstadoProtocolo.REGISTRADO_EN_TERRENO,
-    val foto: ByteArray? = null,
+    val foto: String? = null,
     val id: Long = 0,
 
     val codigoEquipo: String = "",

@@ -14,5 +14,5 @@ data class EmpresaEntity(
     @ColumnInfo(name = "id_empresa") val idEmpresa: Long = 0,
     @ColumnInfo(collate = ColumnInfo.NOCASE) val nombre: String,
     @ColumnInfo(defaultValue = "''") val direccion: String = "",
-    @ColumnInfo(typeAffinity = ColumnInfo.BLOB) val logo: ByteArray? = null
+    val logo: String? = null // Ruta del archivo en /files/imagenes/
 )

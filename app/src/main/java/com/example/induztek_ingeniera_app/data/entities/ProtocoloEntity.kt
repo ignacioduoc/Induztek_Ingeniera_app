@@ -34,6 +34,6 @@ data class ProtocoloEntity(
     val resultado: String, // Guardado como String del Enum (.name)
     val observaciones: String,
     val estado: String,    // Guardado como String del Enum (.name)
-    @ColumnInfo(typeAffinity = ColumnInfo.BLOB) val foto: ByteArray?,
+    val foto: String? = null, // Ruta del archivo en /files/imagenes/
     val sincronizado: Boolean = false // Tu flag de control offline-first
 )

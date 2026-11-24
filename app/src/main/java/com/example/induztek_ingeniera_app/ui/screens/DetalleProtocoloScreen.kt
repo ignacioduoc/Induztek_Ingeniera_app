@@ -90,7 +90,7 @@ fun DetalleProtocoloScreen(
     }
 
     val foto = remember(protocolo.foto) {
-        protocolo.foto?.let { bytes -> ConvertidorImagen.aBitmap(bytes)?.asImageBitmap() }
+        ConvertidorImagen.desdeRuta(protocolo.foto)?.asImageBitmap()
     }
 
     Scaffold(

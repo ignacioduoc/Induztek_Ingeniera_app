@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
         EquipoEntity::class,
         ProtocoloEntity::class
     ],
-    version = 20,
+    version = 21,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

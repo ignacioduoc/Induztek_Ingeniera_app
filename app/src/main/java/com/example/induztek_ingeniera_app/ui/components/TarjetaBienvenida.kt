@@ -1,6 +1,5 @@
 package com.example.induztek_ingeniera_app.ui.components
 
-import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -31,11 +30,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.induztek_ingeniera_app.R
+import com.example.induztek_ingeniera_app.data.ConvertidorImagen
 import com.example.induztek_ingeniera_app.model.Rol
 import com.example.induztek_ingeniera_app.model.Usuario
 import com.example.induztek_ingeniera_app.ui.theme.Dimens
 import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
-
 
 /**
  * Tarjeta de bienvenida de las pantallas de inicio (técnico y cliente):
@@ -44,7 +43,7 @@ import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
 @Composable
 fun TarjetaBienvenida(usuario: Usuario?, modifier: Modifier = Modifier) {
     val bitmapFoto = remember(usuario?.fotoPerfil) {
-        usuario?.fotoPerfil?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
+        ConvertidorImagen.desdeRuta(usuario?.fotoPerfil)
     }
 
     Card(
@@ -122,7 +121,6 @@ fun TarjetaBienvenida(usuario: Usuario?, modifier: Modifier = Modifier) {
         }
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable

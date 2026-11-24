@@ -1,6 +1,5 @@
 package com.example.induztek_ingeniera_app.ui.components
 
-import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -58,12 +57,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.induztek_ingeniera_app.R
+import com.example.induztek_ingeniera_app.data.ConvertidorImagen
 import com.example.induztek_ingeniera_app.model.Rol
 import com.example.induztek_ingeniera_app.model.Usuario
 import com.example.induztek_ingeniera_app.ui.theme.Dimens
 import com.example.induztek_ingeniera_app.ui.theme.InduztekTheme
 import kotlinx.coroutines.launch
-
 
 /** Una opción del menú lateral (ej: Usuarios, Equipos, Mi perfil). */
 data class OpcionMenu(
@@ -72,7 +71,6 @@ data class OpcionMenu(
     val onClick: () -> Unit,
     val seleccionada: Boolean = false       // true = la pantalla en la que estás (se pinta resaltada)
 )
-
 
 /**
  * Menú lateral de los tres roles: encabezado con la foto y los datos del usuario,
@@ -171,12 +169,11 @@ fun MenuSesion(
     }
 }
 
-
 /** Parte de arriba del menú: foto (o inicial), nombre, correo, rol y empresa. */
 @Composable
 private fun EncabezadoMenu(usuario: Usuario?) {
     val bitmapFoto = remember(usuario?.fotoPerfil) {
-        usuario?.fotoPerfil?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
+        ConvertidorImagen.desdeRuta(usuario?.fotoPerfil)
     }
 
     Column(
@@ -265,7 +262,6 @@ private fun EncabezadoMenu(usuario: Usuario?) {
         }
     }
 }
-
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

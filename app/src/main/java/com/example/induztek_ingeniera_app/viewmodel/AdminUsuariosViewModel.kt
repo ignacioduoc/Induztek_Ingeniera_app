@@ -17,14 +17,11 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.security.SecureRandom
 
 
 class AdminUsuariosViewModel(private val repository: ProtocoloRepository) : ViewModel() {
 
-    // ---------- Lista ----------
-
-    // Une dos listas de Room (usuarios y empresas) para mostrar el nombre de la empresa de cada usuario.
-    // Si se agrega o edita un usuario, la lista se actualiza sola.
     val usuarios: StateFlow<List<Usuario>> = combine(
         repository.listarUsuarios(),
         repository.obtenerEmpresas()
@@ -49,7 +46,6 @@ class AdminUsuariosViewModel(private val repository: ProtocoloRepository) : View
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // Para la lista desplegable de empresas del formulario
     val empresas: StateFlow<List<EmpresaEntity>> = repository.obtenerEmpresas()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -61,14 +57,22 @@ class AdminUsuariosViewModel(private val repository: ProtocoloRepository) : View
         else -> "Usuario"
     }
 
-
-    // ---------- Formulario (crear / editar) ----------
-
     private val _formulario = MutableStateFlow(FormularioUsuarioState())
     val formulario: StateFlow<FormularioUsuarioState> = _formulario.asStateFlow()
 
-    // idUsuario = 0 -> formulario vacío para crear. Otro id -> carga ese usuario para editarlo.
+    // Almacena temporalmente la clave generada al azar solo para el Intent de correo y luego se limpia
+    private var claveGeneradaPendiente: String? = null
+    private var solicitarReinicioClave = false
+
+    fun consumirClaveGeneradaParaCorreo(): String? {
+        val temp = claveGeneradaPendiente
+        claveGeneradaPendiente = null
+        return temp
+    }
+
     fun abrirFormulario(idUsuario: Long) {
+        claveGeneradaPendiente = null
+        solicitarReinicioClave = false
         if (idUsuario == 0L) {
             _formulario.value = FormularioUsuarioState()
             return
@@ -86,7 +90,6 @@ class AdminUsuariosViewModel(private val repository: ProtocoloRepository) : View
                     correo = u.correo,
                     idRol = u.idRol,
                     idEmpresa = u.idEmpresa ?: 0L
-                    // La contraseña queda vacía: si no se escribe, se conserva la actual
                 )
             } else {
                 _formulario.update { it.copy(cargando = false, errorGeneral = "No se encontró el usuario") }
@@ -94,7 +97,6 @@ class AdminUsuariosViewModel(private val repository: ProtocoloRepository) : View
         }
     }
 
-    // Cada vez que se escribe en un campo, se borra su error
     fun onNombreCambia(v: String) = _formulario.update { it.copy(nombre = v, errorNombre = null) }
     fun onApellidoCambia(v: String) = _formulario.update { it.copy(apellido = v, errorApellido = null) }
     fun onRutCambia(v: String) = _formulario.update { it.copy(rut = v, errorRut = null) }
@@ -105,7 +107,20 @@ class AdminUsuariosViewModel(private val repository: ProtocoloRepository) : View
     fun onContrasenaCambia(v: String) = _formulario.update { it.copy(contrasena = v, errorContrasena = null) }
     fun onAlternarVisibilidad() = _formulario.update { it.copy(contrasenaVisible = !it.contrasenaVisible) }
 
+    fun onReiniciarClaveAleatoria() {
+        solicitarReinicioClave = true
+        onGuardar()
+    }
+
     fun limpiarGuardado() = _formulario.update { it.copy(guardado = false) }
+
+    private fun generarContrasenaAleatoria(longitud: Int = 8): String {
+        val caracteres = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789"
+        val random = SecureRandom()
+        return (1..longitud)
+            .map { caracteres[random.nextInt(caracteres.length)] }
+            .joinToString("")
+    }
 
     fun onGuardar() {
         val f = _formulario.value
@@ -114,7 +129,6 @@ class AdminUsuariosViewModel(private val repository: ProtocoloRepository) : View
         val correo = f.correo.trim().lowercase()
         val rutNormalizado = Validaciones.normalizarRut(f.rut)
 
-        // 1) Validaciones que no necesitan la base de datos
         val errorNombre = if (!Validaciones.nombreValido(f.nombre)) "Usa solo letras (mínimo 2)" else null
         val errorApellido = if (!Validaciones.nombreValido(f.apellido)) "Usa solo letras (mínimo 2)" else null
         val errorRut = when {
@@ -129,34 +143,28 @@ class AdminUsuariosViewModel(private val repository: ProtocoloRepository) : View
             else -> null
         }
         val errorEmpresa = if (f.idEmpresa == 0L) "Elige la empresa" else null
-        val errorContrasena = when {
-            f.contrasena.isBlank() && !esEdicion -> "Ingresa la contraseña"
-            f.contrasena.isNotBlank() && f.contrasena.length < 6 -> "Mínimo 6 caracteres"
-            else -> null
-        }
 
         val hayError = listOf(
-            errorNombre, errorApellido, errorRut, errorTelefono, errorCorreo,
-            errorEmpresa, errorContrasena
+            errorNombre, errorApellido, errorRut, errorTelefono, errorCorreo, errorEmpresa
         ).any { it != null }
 
         if (hayError) {
+            solicitarReinicioClave = false
             _formulario.update {
                 it.copy(
                     errorNombre = errorNombre, errorApellido = errorApellido, errorRut = errorRut,
-                    errorTelefono = errorTelefono, errorCorreo = errorCorreo, errorEmpresa = errorEmpresa,
-                    errorContrasena = errorContrasena
+                    errorTelefono = errorTelefono, errorCorreo = errorCorreo, errorEmpresa = errorEmpresa
                 )
             }
             return
         }
 
-        // 2) Correo y RUT repetidos (consulta a la base). Al editar se excluye al propio usuario.
         _formulario.update { it.copy(guardando = true, errorGeneral = null) }
         viewModelScope.launch {
             val correoRepetido = repository.existeCorreo(correo, f.idUsuario)
             val rutRepetido = repository.existeRut(rutNormalizado!!, f.idUsuario)
             if (correoRepetido || rutRepetido) {
+                solicitarReinicioClave = false
                 _formulario.update {
                     it.copy(
                         guardando = false,
@@ -167,22 +175,22 @@ class AdminUsuariosViewModel(private val repository: ProtocoloRepository) : View
                 return@launch
             }
 
-            // 3) Guardar. Al editar, lo que no se escribió (contraseña) y la foto se conservan.
             val original = if (esEdicion) repository.buscarUsuarioEntity(f.idUsuario) else null
 
-            // La pregunta de seguridad la elige el propio usuario (no el administrador):
-            //  - usuario nuevo: queda sin pregunta y se la pedirán en su primer ingreso;
-            //  - edición sin cambiar la contraseña: se conserva la pregunta que ya tenía;
-            //  - edición con contraseña nueva (cuenta reiniciada): se borra para que cree una nueva.
-            val reinicioDeClave = esEdicion && f.contrasena.isNotBlank()
-            val preguntaActual = if (original != null && !reinicioDeClave) original.preguntaSeguridad else ""
-            val respuestaActual = if (original != null && !reinicioDeClave) original.respuestaSeguridad else ""
+            // Si es usuario nuevo o se pidió reiniciar clave, se genera una clave aleatoria oculta
+            val generarNuevaClave = !esEdicion || solicitarReinicioClave
+            val nuevaClave = if (generarNuevaClave) generarContrasenaAleatoria() else null
+
+            val contrasenaFinal = nuevaClave ?: original?.contrasena ?: generarContrasenaAleatoria()
+            val preguntaActual = if (original != null && !generarNuevaClave) original.preguntaSeguridad else ""
+            val respuestaActual = if (original != null && !generarNuevaClave) original.respuestaSeguridad else ""
+
             val entidad = UsuarioEntity(
                 idUsuario = f.idUsuario,
                 nombre = f.nombre.trim(),
                 apellido = f.apellido.trim(),
                 correo = correo,
-                contrasena = if (f.contrasena.isBlank() && original != null) original.contrasena else f.contrasena,
+                contrasena = contrasenaFinal,
                 idRol = f.idRol,
                 fotoPerfil = original?.fotoPerfil,
                 rut = rutNormalizado,
@@ -193,6 +201,11 @@ class AdminUsuariosViewModel(private val repository: ProtocoloRepository) : View
             )
 
             val exito = if (esEdicion) repository.actualizarUsuario(entidad) else repository.crearUsuario(entidad) > 0
+            if (exito && nuevaClave != null) {
+                claveGeneradaPendiente = nuevaClave
+            }
+            solicitarReinicioClave = false
+
             _formulario.update {
                 it.copy(
                     guardando = false,

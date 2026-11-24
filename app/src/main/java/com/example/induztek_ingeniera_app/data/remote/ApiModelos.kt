@@ -1,12 +1,11 @@
 package com.example.induztek_ingeniera_app.data.remote
 
-import android.util.Base64
 import com.example.induztek_ingeniera_app.data.entities.EquipoEntity
 import com.example.induztek_ingeniera_app.data.entities.ProtocoloConDetalles
 import com.example.induztek_ingeniera_app.data.entities.ProtocoloEntity
 import com.example.induztek_ingeniera_app.model.Usuario
 
-
+// ---------------- equipos ----------------
 data class UbicacionRequestDto(
     val direccion: String,
     val latitud: Double,
@@ -35,7 +34,7 @@ data class EquipoApiDto(
     )
 }
 
-
+// ---------------- protocolos ----------------
 data class ProtocoloApiDto(
     val idProtocolo: Long? = null,
     val idEquipo: Long,
@@ -64,7 +63,7 @@ data class ProtocoloApiDto(
         resultado = resultado,
         observaciones = observaciones ?: "",
         estado = estado,
-        foto = foto?.let { Base64.decode(it, Base64.DEFAULT) },
+        foto = foto,
         sincronizado = true
     )
 }
@@ -87,12 +86,11 @@ data class ProtocoloDetalleApiDto(
     )
 }
 
-
+// ---------------- auth ----------------
 data class LoginRequest(
     val correo: String,
     val contrasena: String
 )
-
 
 data class LoginResponse(
     val token: String,
@@ -101,13 +99,11 @@ data class LoginResponse(
     val primerIngreso: Boolean
 )
 
-
 data class CredencialRequest(
     val usuarioId: Long,
     val correo: String,
     val contrasena: String
 )
-
 
 data class CambiarContrasenaRequest(
     val correo: String,
@@ -125,7 +121,7 @@ data class RestablecerRequest(
     val contrasenaNueva: String
 )
 
-
+// ---------------- usuarios ----------------
 data class RegistroRequest(
     val nombre: String,
     val apellido: String,
@@ -144,7 +140,6 @@ data class ActualizarUsuarioRequest(
     val rolId: Long
 )
 
-
 data class UsuarioResponse(
     val id: Long,
     val nombre: String,
@@ -158,7 +153,7 @@ data class UsuarioResponse(
     val avatarUrl: String?
 )
 
-
+// ---------------- empresas ----------------
 data class EmpresaRequest(
     val nombre: String,
     val direccion: String
@@ -170,7 +165,7 @@ data class EmpresaResponse(
     val direccion: String
 )
 
-
+// ---------------- conversión a modelo de la app ----------------
 fun UsuarioResponse.aUsuario(correo: String = "", cuentaConfigurada: Boolean = true) = Usuario(
     nombre = nombre,
     correo = correo,

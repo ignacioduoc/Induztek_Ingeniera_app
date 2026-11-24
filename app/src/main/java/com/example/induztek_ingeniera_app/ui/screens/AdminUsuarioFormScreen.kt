@@ -1,5 +1,8 @@
 package com.example.induztek_ingeniera_app.ui.screens
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,6 +15,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -28,7 +32,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.induztek_ingeniera_app.R
 import com.example.induztek_ingeniera_app.model.Rol
 import com.example.induztek_ingeniera_app.ui.components.BotonPrincipal
-import com.example.induztek_ingeniera_app.ui.components.CampoContrasena
 import com.example.induztek_ingeniera_app.ui.components.CampoTexto
 import com.example.induztek_ingeniera_app.ui.components.GrupoRadio
 import com.example.induztek_ingeniera_app.ui.components.ListaDesplegable
@@ -41,16 +44,29 @@ import com.example.induztek_ingeniera_app.viewmodel.AdminUsuariosViewModel
 @Composable
 fun AdminUsuarioFormScreen(
     viewModel: AdminUsuariosViewModel,
+    esSupervisor: Boolean = false,
     onVolver: () -> Unit
 ) {
     val f by viewModel.formulario.collectAsStateWithLifecycle()
     val empresas by viewModel.empresas.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    // Cuando el ViewModel avisa que se guardó: mensaje, se limpia la señal y se vuelve a la lista
     LaunchedEffect(f.guardado) {
         if (f.guardado) {
-            Toast.makeText(context, "Usuario guardado correctamente", Toast.LENGTH_SHORT).show()
+            val claveGenerada = viewModel.consumirClaveGeneradaParaCorreo()
+            if (!claveGenerada.isNullOrBlank()) {
+                enviarCorreoCredenciales(
+                    context = context,
+                    destinatario = f.correo.trim(),
+                    nombre = f.nombre.trim(),
+                    claveTemporal = claveGenerada
+                )
+            }
+            Toast.makeText(
+                context,
+                "Usuario guardado. Se generó la clave automática y se preparó el envío por correo.",
+                Toast.LENGTH_LONG
+            ).show()
             viewModel.limpiarGuardado()
             onVolver()
         }
@@ -107,7 +123,6 @@ fun AdminUsuarioFormScreen(
                 )
                 CampoTexto(
                     valor = f.rut,
-                    // Se aceptan números, K, puntos y guion. Al guardar se deja como 12345678-5
                     onValorCambia = { viewModel.onRutCambia(it.filter { c -> c.isDigit() || c in "kK.-" }.take(12)) },
                     etiqueta = stringResource(R.string.campo_rut),
                     error = f.errorRut
@@ -132,7 +147,6 @@ fun AdminUsuarioFormScreen(
                     tipoTeclado = KeyboardType.Email
                 )
 
-                // Si es Administrador queda fijo para evitar quitarse el rol por error; en otros casos se puede elegir o cambiar a Supervisor
                 if (f.esEdicion && f.idRol == Rol.ID_ADMINISTRADOR) {
                     Text(
                         text = stringResource(R.string.rol_fijo, nombreDeRol(f.idRol)),
@@ -140,8 +154,13 @@ fun AdminUsuarioFormScreen(
                     )
                 } else {
                     Text(stringResource(R.string.etiqueta_rol), style = MaterialTheme.typography.labelLarge)
+                    val rolesPermitidos = if (esSupervisor) {
+                        listOf(Rol.ID_TECNICO, Rol.ID_CLIENTE)
+                    } else {
+                        listOf(Rol.ID_TECNICO, Rol.ID_CLIENTE, Rol.ID_SUPERVISOR)
+                    }
                     GrupoRadio(
-                        opciones = listOf(Rol.ID_TECNICO, Rol.ID_CLIENTE, Rol.ID_SUPERVISOR),
+                        opciones = rolesPermitidos,
                         seleccionada = f.idRol,
                         onSeleccionar = viewModel::onRolCambia,
                         textoDe = { nombreDeRol(it) }
@@ -157,22 +176,25 @@ fun AdminUsuarioFormScreen(
                     error = f.errorEmpresa
                 )
 
-                CampoContrasena(
-                    valor = f.contrasena,
-                    onValorCambia = viewModel::onContrasenaCambia,
-                    etiqueta = stringResource(
-                        if (f.esEdicion) R.string.campo_contrasena_opcional else R.string.campo_contrasena
-                    ),
-                    visible = f.contrasenaVisible,
-                    onAlternarVisible = viewModel::onAlternarVisibilidad,
-                    error = f.errorContrasena
-                )
-                // La pregunta de seguridad la elige el propio usuario al ingresar
+                // Seguridad: ni Admin ni Supervisor escriben o visualizan la contraseña
                 Text(
-                    text = stringResource(R.string.ayuda_pregunta_seguridad),
+                    text = if (f.esEdicion) {
+                        "Por seguridad, la contraseña actual es confidencial y no se muestra."
+                    } else {
+                        "Seguridad: Se generará una contraseña aleatoria oculta y se enviará directamente al correo del usuario."
+                    },
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.primary
                 )
+
+                if (f.esEdicion) {
+                    OutlinedButton(
+                        onClick = { viewModel.onReiniciarClaveAleatoria() },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Generar y enviar nueva contraseña aleatoria por correo")
+                    }
+                }
             }
 
             if (f.errorGeneral != null) {
@@ -194,6 +216,36 @@ fun AdminUsuarioFormScreen(
     }
 }
 
+private fun enviarCorreoCredenciales(
+    context: Context,
+    destinatario: String,
+    nombre: String,
+    claveTemporal: String
+) {
+    val asunto = "Credenciales de acceso - Induztek Ingeniería"
+    val cuerpo = """
+        Hola $nombre,
+        
+        Se ha creado o actualizado tu cuenta en la aplicación móvil de Induztek Ingeniería.
+        
+        Usuario: $destinatario
+        Contraseña temporal: $claveTemporal
+        
+        Por seguridad, al iniciar sesión por primera vez el sistema te pedirá cambiar esta contraseña y configurar tu pregunta de seguridad.
+    """.trimIndent()
+
+    val intent = Intent(Intent.ACTION_SENDTO).apply {
+        data = Uri.parse("mailto:")
+        putExtra(Intent.EXTRA_EMAIL, arrayOf(destinatario))
+        putExtra(Intent.EXTRA_SUBJECT, asunto)
+        putExtra(Intent.EXTRA_TEXT, cuerpo)
+    }
+    try {
+        context.startActivity(Intent.createChooser(intent, "Enviar credenciales por correo"))
+    } catch (_: Exception) {
+        Toast.makeText(context, "No hay app de correo configurada en el dispositivo", Toast.LENGTH_SHORT).show()
+    }
+}
 
 private fun nombreDeRol(idRol: Long): String = when (idRol) {
     Rol.ID_TECNICO -> "Técnico"

@@ -26,13 +26,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-
 class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewModel() {
 
     // Usuario con sesión iniciada
     private val _usuarioActual = MutableStateFlow<Usuario?>(null)
     val usuarioActual: StateFlow<Usuario?> = _usuarioActual.asStateFlow()
-
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val equipos: StateFlow<List<Equipo>> = _usuarioActual
@@ -68,7 +66,6 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
             initialValue = emptyList()
         )
 
-
     // Tarea 4: datos para el formulario "Agregar equipo".
     // Empiezan a cargar después del login (como "equipos"), cuando los datos de ejemplo ya existen.
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -94,7 +91,6 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
             initialValue = emptyList()
         )
 
-
     fun registrarIngreso(usuario: Usuario) {
         _usuarioActual.value = usuario
     }
@@ -107,7 +103,7 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
         }
     }
 
-    fun actualizarPerfil(nombre: String, correo: String, fotoPerfil: ByteArray?) {
+    fun actualizarPerfil(nombre: String, correo: String, fotoPerfil: String?) {
         val usuario = _usuarioActual.value ?: return
         viewModelScope.launch {
             repository.actualizarPerfilUsuario(usuario.id, nombre, correo, fotoPerfil)
@@ -118,7 +114,6 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
             )
         }
     }
-
 
     // Tarea 4: el técnico agrega un equipo. onResultado(false) = el código ya existía.
     fun agregarEquipo(
@@ -183,13 +178,11 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
         }
     }
 
-
     fun actualizarUbicacionEquipo(idEquipo: Long, direccion: String, latitud: Double, longitud: Double) {
         viewModelScope.launch {
             repository.actualizarUbicacionEquipo(idEquipo, direccion, latitud, longitud)
         }
     }
-
 
     fun guardarProtocolo(protocolo: Protocolo) {
         viewModelScope.launch {
@@ -212,18 +205,15 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
         }
     }
 
-
     fun formalizar(id: Long) {
         viewModelScope.launch {
             repository.formalizarProtocolo(id)
         }
     }
 
-
     fun cerrarSesion() {
         _usuarioActual.value = null
     }
-
 
     fun obtenerProtocolo(id: Long, onResultado: (Protocolo?) -> Unit) {
         viewModelScope.launch {
@@ -231,7 +221,6 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
             onResultado(entity?.toDomainModel())
         }
     }
-
 
     fun historialDe(equipoId: Long): StateFlow<List<Protocolo>> {
         return repository.listarProtocolosDeEquipo(equipoId)
@@ -246,7 +235,6 @@ class ProtocolosViewModel(private val repository: ProtocoloRepository) : ViewMod
     fun obtenerEquipo(id: Long): Equipo? {
         return equipos.value.find { it.id == id }
     }
-
 
     private fun EquipoConDetalles.toDomainModel(): Equipo {
         return Equipo(

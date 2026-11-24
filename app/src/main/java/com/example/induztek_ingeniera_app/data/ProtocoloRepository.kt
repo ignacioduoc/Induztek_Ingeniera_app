@@ -11,16 +11,20 @@ import com.example.induztek_ingeniera_app.data.entities.ProtocoloConDetalles
 import com.example.induztek_ingeniera_app.data.entities.ProtocoloEntity
 import com.example.induztek_ingeniera_app.data.entities.UsuarioEntity
 import com.example.induztek_ingeniera_app.data.remote.EquipoApiDto
+import com.example.induztek_ingeniera_app.data.remote.LoginRequest
 import com.example.induztek_ingeniera_app.data.remote.ProtocoloApiDto
 import com.example.induztek_ingeniera_app.data.remote.RetrofitClient
 import com.example.induztek_ingeniera_app.data.remote.UbicacionRequestDto
+import com.example.induztek_ingeniera_app.data.remote.aUsuario
 import com.example.induztek_ingeniera_app.model.Rol
 import com.example.induztek_ingeniera_app.model.Usuario
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onStart
+import retrofit2.HttpException
 import java.io.File
+import java.io.IOException
 import java.security.MessageDigest
 import java.security.SecureRandom
 
@@ -51,9 +55,33 @@ class ProtocoloRepository(
     private val protocoloDao: ProtocoloDao,
     private val equipoDao: EquipoDao
 ) {
+
+    var tokenSesion: String? = null
+        private set
+
+    // ---------- Sesión ----------
+
     suspend fun iniciarSesion(correo: String, contrasena: String): Usuario? {
-        val entity = usuarioDao.iniciarSesion(correo, contrasena)
-        return entity?.toDomainModel()
+        return try {
+            // 1) auth revisa correo y contraseña y entrega el token
+            val login = RetrofitClient.authApi.iniciarSesion(LoginRequest(correo, contrasena))
+            tokenSesion = login.token
+
+            // 2) usuarios entrega los datos de la persona
+            val usuario = RetrofitClient.usuarioApi.obtener(login.usuarioId)
+
+            // 3) se arma el Usuario de la app
+            usuario.aUsuario(correo = correo, cuentaConfigurada = !login.primerIngreso)
+
+        } catch (e: HttpException) {
+            // El servidor respondió con error
+            if (e.code() == 401) null                                  // correo o clave incorrectos
+            else throw Exception("Error del servidor (${e.code()})")    // 503: un servicio apagado, etc.
+
+        } catch (e: IOException) {
+            // Sin conexión con el servidor: respaldo local en Room (modo híbrido)
+            usuarioDao.iniciarSesion(correo, contrasena)?.toDomainModel()
+        }
     }
 
     suspend fun buscarUsuarioPorId(id: Long): Usuario? {
@@ -143,8 +171,6 @@ class ProtocoloRepository(
     }
 
 
-    // ---------- Equipos (Sincronizado con ms-equipos:8083 + Room) ----------
-
     fun obtenerTodosLosEquipos(): Flow<List<EquipoConDetalles>> {
         return equipoDao.obtenerTodos().onStart {
             try {
@@ -153,7 +179,7 @@ class ProtocoloRepository(
                     equipoDao.insertarEquipos(remotos)
                 }
             } catch (_: Exception) {
-                // Modo offline: Room emite lo que tiene localmente
+
             }
         }
     }
@@ -220,7 +246,6 @@ class ProtocoloRepository(
     }
 
 
-    // ---------- Protocolos (Sincronizado con ms-protocolos:8084 + Room) ----------
 
     suspend fun insertarProtocolo(protocolo: ProtocoloEntity): Long {
         val bytesFoto = protocolo.foto

@@ -11,20 +11,7 @@ import com.example.induztek_ingeniera_app.data.entities.ProtocoloEntity
 import com.example.induztek_ingeniera_app.data.entities.UsuarioEntity
 import kotlinx.coroutines.flow.Flow
 
-// =====================================================================
-//  NUEVO (Pruebas unitarias) — FakeUsuarioDao.kt
-//  ---------------------------------------------------------------------
-//  Una prueba unitaria NO debe depender de la base de datos:
-//  Room necesita un teléfono o emulador.
-//
-//  Solución: DAO "falsos". Implementan las MISMAS interfaces que Room,
-//  pero no hacen nada. El Repository no nota la diferencia.
-//
-//  Atajo en Android Studio: escribir "class FakeUsuarioDao : UsuarioDao",
-//  Alt+Enter -> Implement members -> seleccionar todos -> OK.
-// =====================================================================
 
-// Las que no usamos en las pruebas quedan con TODO() (si alguien las llama, la prueba falla)
 class FakeUsuarioDao : UsuarioDao {
     override suspend fun insertarUsuario(usuario: UsuarioEntity): Long = TODO()
     override suspend fun actualizarUsuario(usuario: UsuarioEntity): Int = TODO()
@@ -32,7 +19,7 @@ class FakeUsuarioDao : UsuarioDao {
     override fun buscarUsuarioPorId(id: Long): Flow<UsuarioEntity?> = TODO()
     override fun listarUsuarios(): Flow<List<UsuarioEntity>> = TODO()
     override suspend fun obtenerCantidadUsuarios(): Int = TODO()
-    override suspend fun actualizarPerfil(idUsuario: Long, nombre: String, correo: String, fotoPerfil: ByteArray?) = TODO()
+    override suspend fun actualizarPerfil(idUsuario: Long, nombre: String, correo: String, fotoPerfil: String?) = TODO()
     override suspend fun actualizarContrasena(correo: String, nueva: String): Int = TODO()
     override suspend fun contarPorCorreo(correo: String, idExcluir: Long): Int = TODO()
     override suspend fun contarPorRut(rut: String, idExcluir: Long): Int = TODO()

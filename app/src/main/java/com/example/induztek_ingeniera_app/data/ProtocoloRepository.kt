@@ -10,6 +10,7 @@ import com.example.induztek_ingeniera_app.data.entities.EquipoEntity
 import com.example.induztek_ingeniera_app.data.entities.ProtocoloConDetalles
 import com.example.induztek_ingeniera_app.data.entities.ProtocoloEntity
 import com.example.induztek_ingeniera_app.data.entities.UsuarioEntity
+import com.example.induztek_ingeniera_app.data.remote.AsignarTecnicoRequest
 import com.example.induztek_ingeniera_app.data.remote.EmpresaRequest
 import com.example.induztek_ingeniera_app.data.remote.EquipoApiDto
 import com.example.induztek_ingeniera_app.data.remote.LoginRequest
@@ -236,7 +237,9 @@ class ProtocoloRepository(
                         direccion = equipo.direccion,
                         latitud = equipo.latitud,
                         longitud = equipo.longitud,
-                        idCliente = equipo.id_cliente
+                        idCliente = equipo.id_cliente,
+                        idEmpresa = equipo.id_empresa,
+                        idTecnico = equipo.id_tecnico
                     )
                 )
             } catch (_: Exception) { }
@@ -250,6 +253,9 @@ class ProtocoloRepository(
 
     suspend fun asignarTecnicoAEquipo(idEquipo: Long, idTecnico: Long?) {
         equipoDao.asignarTecnico(idEquipo, idTecnico)
+        try {
+            RetrofitClient.equipoApi.asignarTecnico(idEquipo, AsignarTecnicoRequest(idTecnico))
+        } catch (_: Exception) { }
     }
 
     suspend fun existeCodigoEquipo(codigo: String, idExcluir: Long = 0): Boolean {

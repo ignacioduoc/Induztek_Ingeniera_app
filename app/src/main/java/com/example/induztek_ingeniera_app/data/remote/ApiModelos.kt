@@ -12,6 +12,10 @@ data class UbicacionRequestDto(
     val longitud: Double
 )
 
+data class AsignarTecnicoRequest(
+    val idTecnico: Long?
+)
+
 data class EquipoApiDto(
     val idEquipo: Long? = null,
     val codigo: String,
@@ -20,7 +24,9 @@ data class EquipoApiDto(
     val direccion: String?,
     val latitud: Double?,
     val longitud: Double?,
-    val idCliente: Long
+    val idCliente: Long,
+    val idEmpresa: Long? = null,
+    val idTecnico: Long? = null
 ) {
     fun toEntity() = EquipoEntity(
         id_equipo = idEquipo ?: 0L,
@@ -30,7 +36,9 @@ data class EquipoApiDto(
         direccion = direccion ?: "",
         latitud = latitud ?: 0.0,
         longitud = longitud ?: 0.0,
-        id_cliente = idCliente
+        id_cliente = idCliente,
+        id_empresa = idEmpresa,
+        id_tecnico = idTecnico
     )
 }
 

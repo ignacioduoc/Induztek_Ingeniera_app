@@ -7,7 +7,6 @@ import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 
-
 interface EquipoApi {
 
     @GET("api/equipos")
@@ -23,5 +22,11 @@ interface EquipoApi {
     suspend fun actualizarUbicacion(
         @Path("id") id: Long,
         @Body req: UbicacionRequestDto
+    ): Response<EquipoApiDto>
+
+    @PATCH("api/equipos/{id}/tecnico")
+    suspend fun asignarTecnico(
+        @Path("id") id: Long,
+        @Body req: AsignarTecnicoRequest
     ): Response<EquipoApiDto>
 }
